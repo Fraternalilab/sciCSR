@@ -1,4 +1,38 @@
-scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB", 
+#' Scan reads mapped to a given genomic range
+#'
+#' @description
+#' `scanBam` looks for reads in a BAM file which are mapped to a genomic
+#' range given by the parameter `gRange`.
+#'
+#' @details
+#' The function looks for BAM alignments which are mapped to the genomic
+#' range given by the parameter `gRange`. All alignments which *span across*
+#' `gRange` but do not have bases which reside within the range will be ignored
+#' (e.g. a spliced read spans across a given range but will not have any bases which
+#' map to the spliced range). The function expects [standard BAM/SAM format specification](https://samtools.github.io/hts-specs/SAMv1.pdf)
+#' plus additional tags indicating the associated cell and molecule barcodes.
+#' Set `cellBarcodeTag` and/or `umiTag` as NULL or NA if these tags are absent from
+#' the given BAM file.
+#'
+#' @param bam filepath to the BAM file to read
+#' @param gRange `GenomicRanges::GRanges` object specifying the genomic range to scan. See Examples.
+#' @param cellBarcodeTag Name of tag holding information about cell barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "CB")
+#' @param umiTag Name of tag holding information about molecule barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "UB")
+#' @param paired Are the sequencing reads paired-end? (Default: FALSE)
+#'
+#' @return A data.frame:
+#' \describe{
+#'   \item{}
+#'
+#' }
+#'
+#' @importFrom Rsamtools scanBamFlag ScanBamParam
+#' @importFrom GenomicAlignments readGAlignments findOverlaps
+#' @importFrom GenomeInfoDb seqlevelsStyle
+#' @importFrom GenomicRanges mcols
+#' @importFrom S4Vectors countQueryHits
+
+scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
                     paired = FALSE)
 {
   tags <- c(cellBarcodeTag, umiTag)
@@ -9,7 +43,7 @@ scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
                                  isDuplicate=NA)#FALSE)
   if( paired ){
     flags <- Rsamtools::scanBamFlag(isSecondaryAlignment=NA,#FALSE,
-                                    isDuplicate=NA,#FALSE, 
+                                    isDuplicate=NA,#FALSE,
                                     isPaired=TRUE,
                                     isProperPair=TRUE, isFirstMateRead=TRUE)
   }
@@ -22,7 +56,7 @@ scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
   if ( !file.exists(  paste0(bam, '.bai') ) ){
     stop("BAM index (*.bai) file is not present. Sort your bam file on the command line with e.g. samtools sort <BAM_FILE> -o <BAM_SORTED> if you haven't done so, and then generate BAM index on the command line with: samtools index <BAM_SORTED>")
   }
-  bam_entries <- try( GenomicAlignments::readGAlignments(file = bam, index = paste0(bam, '.bai'), 
+  bam_entries <- try( GenomicAlignments::readGAlignments(file = bam, index = paste0(bam, '.bai'),
                                                          param = params), silent = TRUE )
   if( class( bam_entries ) == 'try-error' ){
     # try edit the seqlevel style (i.e. '1' --> 'chr1')
@@ -32,7 +66,7 @@ scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
                                       tag = tags,
                                       reverseComplement = FALSE,
                                       flag = flags)
-    bam_entries <- try( GenomicAlignments::readGAlignments(file = bam, index = paste0(bam, '.bai'), 
+    bam_entries <- try( GenomicAlignments::readGAlignments(file = bam, index = paste0(bam, '.bai'),
                                                            param = params), silent = TRUE )
     if( class( bam_entries ) == 'try-error'){
       stop("Failed to fetch any alignment in the given genomic region. Are you sure you have indicated the correct BAM file and/or genomic region?")
@@ -52,6 +86,35 @@ scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
   unique(out)
 }
 
+#' Deduce type of IGH reads
+#'
+#' @description
+#' `getIGHreadType` deduces, for each molecule in each cell identified via `scanBam`,
+#' whether it corresponds to a productive (labelled "-P") or a sterile ("-S") IGH
+#' molecule. A third category ("-C") is assigned if insufficient information is present
+#' to distinguish "-P" and "-S".
+#'
+#' @details
+#' The function loops through each cell barcode - molecule barcode combination
+#' and looks for evidence of reads mapping to the following three regions: VDJ,
+#' C as well as the 5' intron to C. Each molecule is assigned based on these criteria:
+#' \itemize{
+#'  \item Productive (-P): at least one read mapping to VDJ region and at least one
+#' read mapping to the C exonic region. NOTE: here we are not making the distinction
+#' of whether the VDJ has already been spliced to the C exons at the RNA level. We are
+#' simply asking whether the molecule can encode a Ig protein with both V and C regions.
+#'  \item Sterile (-S): at least one read mapping to the 5' intronic region to a C gene,
+#'  without reads mapping to the VDJ region. These represent the 'sterile'/'germline'
+#'  IgH transcripts which primes class-switch recombination.
+#' }
+#' A third category (-C) is assigned if insufficient information is available to classify
+#' the molecule in to the '-P' or the '-S' groups.
+#'
+#' @param tb A data.frame, output from `scanBam`.
+#'
+#' @return
+#'
+#' @importFrom stringr str_extract_all
 
 getIGHreadType <- function(tb)
 {
@@ -77,12 +140,12 @@ getIGHreadType <- function(tb)
     }
     # check the intronic reads first
     if( all(i_reads == 0) ){
-      # if all 0, it is not a GLT - either JC or uninformative
+      # if all 0, it is not a Sterile - either Productive or uninformative
       # check majority-voted C gene on the CDS reads and report
       # based on whether J reads are found
       c_isotypes <- gsub("_C$", "", columns[ c_col[which(c_reads == max(c_reads))] ], "")
       if( length(c_isotypes) == 1 ){
-        if( x[j_col] > 0 ) o <- c("isotype" = c_isotypes, "transcript_type" = "JC")
+        if( x[j_col] > 0 ) o <- c("isotype" = c_isotypes, "transcript_type" = "P")
         else o <- c("isotype" = c_isotypes, "transcript_type" = "C")
         return( paste(o, collapse = "_") )
       } else {
@@ -94,13 +157,13 @@ getIGHreadType <- function(tb)
       # check the intronic reads; get the majority-voted C gene
       i_isotypes <- gsub("_I$", "", columns[ i_col[which(i_reads == max(i_reads))] ], "")
       # majority voting on CDS reads:
-      # (1) If no CDS reads at all, either set GLT or JC depending on J reads
+      # (1) If no CDS reads at all, either set Sterile or Productive depending on J reads
       #     (if unique intronic isotype) or set indeterminate (since failed to
       #     resolve isotype using BOTH I and C reads)
       if( all( c_reads == 0 ) ){
         if( length(i_isotypes) == 1 ){
-          if( x[j_col] > 0 ) o <- c("isotype" = i_isotypes, "transcript_type" = "JC")
-          else o <- c("isotype" = i_isotypes, "transcript_type" = "IC")
+          if( x[j_col] > 0 ) o <- c("isotype" = i_isotypes, "transcript_type" = "P")
+          else o <- c("isotype" = i_isotypes, "transcript_type" = "S")
           return( paste(o, collapse = "_") )
         } else {
           o <- c("isotype" = NA, "transcript_type" = NA)
@@ -110,14 +173,15 @@ getIGHreadType <- function(tb)
       # check the CDS reads; get the majority-voted C gene
       c_isotypes <- gsub("_C$", "", columns[ c_col[which(c_reads == max(c_reads))] ], "")
       if( length(i_isotypes) == 1 ){
-        # (2) check re JC or GLT depending on whether CDS reads of the 
+        # (2) check re Productive or Sterile depending on whether CDS reads of the
         #     *same isotype* are found
-        # (3) If CDS reads are found but isotype does not agree with the 
+        # (3) If CDS reads are found but isotype does not agree with the
         #     majority-voted intronic isotype --> indeterminate. set NA_NA
-        # (4) If CDS reads are found and isotype_i and _c agrees, determine GLT or JC
+        # (4) If CDS reads are found and isotype_i and _c agrees, determine
+        #     Sterile or Productive
         if( length(c_isotypes) >= 1 && i_isotypes %in% c_isotypes ){
-          if( x[j_col] > 0 ) o <- c("isotype" = i_isotypes, "transcript_type" = "JC")
-          else o <- c("isotype" = i_isotypes, "transcript_type" = "IC")
+          if( x[j_col] > 0 ) o <- c("isotype" = i_isotypes, "transcript_type" = "P")
+          else o <- c("isotype" = i_isotypes, "transcript_type" = "S")
           return( paste(o, collapse = "_") )
         } else {
           # indeterminate. Set NA_NA
@@ -125,11 +189,11 @@ getIGHreadType <- function(tb)
           return( paste(o, collapse = "_") )
         }
       } else {
-        # check CDS reads to determine which of the possible 
+        # check CDS reads to determine which of the possible
         # isotypes is the most likely
         if( length(c_isotypes) == 1 && c_isotypes %in% i_isotypes ){
-          if( x[j_col] > 0 ) o <- c("isotype" = c_isotypes, "transcript_type" = "JC")
-          else o <- c("isotype" = c_isotypes, "transcript_type" = "IC")
+          if( x[j_col] > 0 ) o <- c("isotype" = c_isotypes, "transcript_type" = "P")
+          else o <- c("isotype" = c_isotypes, "transcript_type" = "S")
           return( paste(o, collapse = "_") )
         } else {
           # indeterminate. Set NA_NA
@@ -147,24 +211,14 @@ getIGHreadType <- function(tb)
 
 summariseIGHreads <- function(tb, IGHC_granges)
 {
-  tb$anno <- factor(tb$anno, 
-                    levels = c(unlist(lapply(names(IGHC_granges), 
-                                           function(x) paste(x, c("IC", "JC", "C"), sep = "_")))))
-  reshape2::acast(plyr::ddply(tb, c("CB", "anno"), nrow), CB ~ anno, 
+  tb$anno <- factor(tb$anno,
+                    levels = c(unlist(lapply(names(IGHC_granges),
+                                           function(x) paste(x, c("S", "P", "C"), sep = "_")))))
+  reshape2::acast(plyr::ddply(tb, c("CB", "anno"), nrow), CB ~ anno,
                   fill = 0, value.var = "V1", drop = FALSE)
-#  list("GLT" = reshape2::acast(plyr::ddply(tb[grepl("GLT$", tb$anno), ], 
-#                                           c("CB", "anno"), nrow), CB ~ anno, 
-#                               fill = 0, value.var = "V1"),
-#       "switched" = reshape2::acast(plyr::ddply(tb[grepl("switched$", tb$anno), ], 
-#                                           c("CB", "anno"), nrow), CB ~ anno, 
-#                               fill = 0, value.var = "V1"),
-#       "uninformative" = reshape2::acast(plyr::ddply(tb[grepl("uninformative$", tb$anno), ], 
-#                                           c("CB", "anno"), nrow), CB ~ anno, 
-#                               fill = 0, value.var = "V1")
-#       )
 }
 
-getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges, 
+getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
                           cellBarcodeTag = "CB", umiTag = "UB",
                           paired = FALSE, flank_size = 5000)
 {
@@ -182,7 +236,7 @@ getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
   }))
   message("Fetching reads mapped to C gene 5' regions ...\n")
   intronic <- do.call("rbind", lapply(names(IGHC_granges), function(isotype){
-    out <- scanBam(bam, GenomicRanges::flank(IGHC[isotype], flank_size, start = FALSE), 
+    out <- scanBam(bam, GenomicRanges::flank(IGHC[isotype], flank_size, start = FALSE),
                    cellBarcodeTag = cellBarcodeTag,
                    umiTag = umiTag, paired = paired)
     #out <- unique(out[, c("CB", "UB")])
@@ -204,16 +258,16 @@ getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
   junction_reads <- getJunctionReads( rbind(J, C, intronic) )
   J <- plyr::ddply(J, c(cellBarcodeTag, umiTag, "type"), function(x) length(unique(x[, "qname"])))
   C <- plyr::ddply(C, c(cellBarcodeTag, umiTag, "type"), function(x) length(unique(x[, "qname"])))
-  intronic <- plyr::ddply(intronic, c(cellBarcodeTag, umiTag, "type"), 
+  intronic <- plyr::ddply(intronic, c(cellBarcodeTag, umiTag, "type"),
                           function(x) length(unique(x[, "qname"])))
   o <- rbind(J, C, intronic)
   cols <- c(cellBarcodeTag, umiTag,
-            unlist(lapply(names(IGHC_granges), 
+            unlist(lapply(names(IGHC_granges),
                             function(x) paste(x, c("C", "I"), sep = "_"))),
             "J")
   if( nrow(o) == 0 ) return( data.frame() )
   o <- reshape2::dcast(o, as.formula( paste0( cellBarcodeTag, " + ",
-                                              umiTag, " ~ type")), 
+                                              umiTag, " ~ type")),
                        value.var = "V1", fill = 0)
   for( col in cols[ which( !cols %in% colnames( o ) )]){
     o[, col] <- 0
@@ -225,7 +279,7 @@ getJunctionReads <- function(read_info)
 {
   # reads (& molecules) which capture different C genes (either CDS and/or Intronic)
   # return data.frame of CB, UB, qname and list of junctions captured
-  
+
   # spliced reads (i.e. those with 'N' in cigar)
   read_info <- read_info[ which(grepl("N", read_info$cigar)), ]
   # eliminate splicing within a C gene CDS by selecting only those appearing in
@@ -239,6 +293,6 @@ getJunctionReads <- function(read_info)
   reads <- reads[ which( !is.na( reads$duplicate ) ), ]
   reads <- plyr::ddply( reads, 1:4, function(x) paste(sort(x[, 5]), collapse = "-"))
   reads <- plyr::ddply( reads, 1:3, function(x) paste(unique(x[, 5]), collapse = ";"))
-  # disregard reads concerning CDS of 
+  # disregard reads concerning CDS of
   reads
 }
