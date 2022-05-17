@@ -1,0 +1,12 @@
+Package: sciCSR
+Type: Package
+Title: Single-cell Cluster-based Inference of Class Switch Recombination
+Version: 0.1.0
+Authors@R: c( person( given = "Joseph", family = "Ng",
+                      email = "joseph.chifung.ng@gmail.com", role = c( "aut", "cre" ) ) )
+Author: Joseph Ng [aut, cre]
+Maintainer: Joseph Ng <joseph.chifung.ng@gmail.com>
+Description: Package for inferring the dynamics of class-switch recombination of B cells from single-cell RNA sequencing data.
+License: GPL-3 + file LICENSE
+Encoding: UTF-8
+LazyData: true
