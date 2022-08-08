@@ -11,6 +11,7 @@ import numpy as np
 from scipy.linalg import solve
 from scipy.sparse.linalg import spsolve
 import scipy.sparse as sparse
+import os
 import random
 import pandas as pd
 
@@ -299,7 +300,8 @@ def getReshuffledFlux(transition_matrix, cluster_ident, source, target, n = 100,
                 tqdm = None
         
     out = []
-    with multiprocessing.Pool(5) as p:
+    n_cpus = os.cpu_count()
+    with multiprocessing.Pool(int(n_cpus / 2)) as p:
         out = list(tqdm(p.imap(partial(getReshuffledFlux_, tm = transition_matrix, cluster_ident = cluster_ident, source = source, target = target), range(n)), total=n))
 
     return out
