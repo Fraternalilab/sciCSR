@@ -11,6 +11,7 @@ import numpy as np
 from scipy.linalg import solve
 from scipy.sparse.linalg import spsolve
 import scipy.sparse as sparse
+from scipy.stats import norm
 import os
 import random
 import pandas as pd
@@ -311,9 +312,16 @@ def getReshuffledFlux_(i, tm, cluster_ident, source, target):
     # random reshuffle columns
     indices = np.arange(tm.shape[1])
     random.shuffle(indices)
-    tm = tm[:, indices]
-    flux = fit_tpt(tm, cluster_ident[source], cluster_ident[target], verbose=False)
-    (tpt_sets, tpt_coarse) = flux.coarse_grain([np.array(item) for c, item in cluster_ident.items()])
+    # tm = tm[:, indices]
+    cluster_ident_random = dict()
+    j = 0
+    for key, item in cluster_ident.items():
+        cluster_ident_random[key] = indices[j:(j + len(item))]
+        j += len(item)
+    flux = fit_tpt(tm, cluster_ident_random[source], cluster_ident_random[target], verbose=False)
+    (tpt_sets, tpt_coarse) = flux.coarse_grain([np.array(item) for c, item in cluster_ident_random.items()])
+    # flux = fit_tpt(tm, cluster_ident[source], cluster_ident[target], verbose=False)
+    # (tpt_sets, tpt_coarse) = flux.coarse_grain([np.array(item) for c, item in cluster_ident.items()])
     # get the gross_flux matrix
     gross_flux = tpt_coarse.gross_flux
     gross_flux = gross_flux * 100 / gross_flux.sum()
@@ -322,6 +330,24 @@ def getReshuffledFlux_(i, tm, cluster_ident, source, target):
     net_flux = net_flux * 100 / net_flux.sum()
     return {"tpt": tpt_coarse, "gross_flux": gross_flux, "net_flux": net_flux}
 
+def getStationaryDistribution(stationary_microstates, cluster_ident, seed):
+    """
+    calculate stationary distribution of macrostates (i.e. coarse-grained 
+    Markov State Model) given a transition matrix.
+    Used as function to compute stationary distribution of bootstrapped microstates for
+    confidence intervals
+
+    ;args stationary_microstates: (M, ) array, stationary distribution of the microstates.
+    :args cluster_ident: dict, user-defined coarse-graining scheme. Keys are the cluster labels, and values are lists of row/col indices of transition_matrix which belongs to the given cluster label
+    :args seed: int, random seed
+    """
+    random.seed(seed)
+    out = dict()
+    for key, item in cluster_ident.items():
+        indices = item
+        bs_indices = [random.choice(indices) for _ in indices]
+        out[key] = np.sum([stationary_microstates[i] for i in bs_indices])
+    return out    
 
 def fit_coarse_grain_tpt(transition_matrix, cluster_ident, 
                          source_state, target_state, random_n = 100, verbose = True):
@@ -349,6 +375,7 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     - 'total_net_flux': sum of all entries in `net_flux`, but before the normalisation as percentages.
     - 'total_gross_flux_randomised': analogous to `total_gross_flux`, but for each iteration of `randomised_tpt`.
     - 'total_net_flux_randomised': analogous to `total_net_flux`, but for each iteration of `randomised_tpt`.
+    - "bootstrap_stationary': stationary distribution in TPT models fitted on `random_n` bootstrap sampling of cells.
     """
     if verbose:
         print("fit TPT with source state: '" + source_state + "' and target state: '" + target_state + "'.")
@@ -385,12 +412,22 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     # determine 'significance' of each transition (one-sided test,
     # i.e. number of times the observed gross-flux is larger than the randomised flux
     comparison = np.zeros(gross_flux.shape)
-    for m in random_flux:
-        comparison = np.add(comparison, np.greater_equal(gross_flux.todense(), m['gross_flux'].todense()))
-    comparison /= len(random_flux)
+    random_gross_flux = np.array([m['gross_flux'].todense() for m in random_flux], dtype = 'float64')
+    mean = np.mean(random_gross_flux[:, :, :])
+    sd = np.std(random_gross_flux[:, :, :])
+    for i in range(gross_flux.shape[0]):
+        for j in range(gross_flux.shape[1]):
+            comparison[i, j] = norm(loc = mean, scale = sd).cdf( gross_flux[i, j] )
+    #for m in random_flux:
+    #    comparison = np.add(comparison, np.greater_equal(gross_flux.todense(), m['gross_flux'].todense()))
+    #comparison /= len(random_flux)
     
+    # get bootstrap sampling of stationary distribution
+    bootstrap_stationary = [getStationaryDistribution( flux.stationary_distribution, cluster_ident, i) for i in range(random_n)]
+    bootstrap_stationary = { state: [j[state] for j in bootstrap_stationary] for state in cluster_ident.keys() }
+
     return {'coarse_grain_tpt': tpt_coarse, 'gross_flux': gross_flux.todense(), \
             'net_flux': net_flux.todense(), 'pathways': pd.DataFrame(path_dist), 'randomised_tpt': random_flux, \
             'significance': comparison, 'total_gross_flux': tpt_coarse.gross_flux.sum(), \
             'total_net_flux': tpt_coarse.net_flux.sum(), 'total_gross_flux_randomised': total_gross_flux_randomised, \
-            'total_net_flux_randomised': total_net_flux_randomised}
+            'total_net_flux_randomised': total_net_flux_randomised, 'stationary_bootstrapping': bootstrap_stationary }

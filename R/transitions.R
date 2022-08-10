@@ -100,7 +100,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
       else return(max(pos) - 1)
     })
     # now change these numbers to string and add to SeuratObj meta.data
-    c_gene_anno <- factor(furthest_jc, levels = sort(unique(furthest_jc)),
+    c_gene_anno <- factor(furthest_jc, levels = (1:length(c_genes)) - 1,
                           labels = c_genes)
     names(c_gene_anno) <- colnames(ighc_counts)
     SeuratObj <- Seurat::AddMetaData(SeuratObj, c_gene_anno,
@@ -121,7 +121,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
     jc_anno <- factor(jc_anno, levels = stringr::str_to_upper(c_genes))
     furthest_jc <- as.numeric(jc_anno) - 1
     furthest_jc[is.na(furthest_jc)] <- 0
-    c_gene_anno <- factor(furthest_jc, levels = sort(unique(furthest_jc)),
+    c_gene_anno <- factor(furthest_jc, levels = (1:length(c_genes)) - 1,
                           labels = stringr::str_to_sentence(c_genes))
     names(c_gene_anno) <- colnames(ighc_counts)
     SeuratObj <- Seurat::AddMetaData(SeuratObj, c_gene_anno,
@@ -500,12 +500,14 @@ splitAnnData <- function(anndata_file, split.by, levels, conda_env)
 #' `fitTransitionModel` currently implements either the velocity kernel in cellrank (i.e. uses RNA velocity
 #' information to fit transition probabilities) or the pseudotime kernel; a user-indicated column in the metadata
 #' will be used as pseudotime reference to fit transition probabiltiies.
+#' **NOTE:** In cases where the warning 'Biased KNN graph is disconnected' which will subsequently cause the `fitTPT` function in the pipeline to falied with error, in our experience it is likely to be caused by subsetting the data prior to computing transitions. Try setting `do_pca = FALSE` will preserve the original PCA and avoid this error.
 #'
 #' @param anndata_file filename pointing to the AnnData file.
 #' @param conda_env character, if not NULL this named conda environment is used to perform the merge.
 #' (Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy`, `scvelo` and `cellrank` are installed in the local python)
 #' @param mode character, either 'pseudotime' (uses the cellrank 'PseudotimeKernel') or 'velocity' (cellrank 'VelocityKernel'). (Default: 'pseudotime')
 #' @param pseudotime_key character, column name which indicates the ranking to be used as pseudotime ordering of the cells. Not considered if mode is 'velocity'. (Default: 'csr_pot')
+#' @param do_pca Should principal component analysis (PCA) be re-computed on the data? (Default: TRUE)
 #'
 #' @return a list with three entries:
 #' \describe{
@@ -516,15 +518,19 @@ splitAnnData <- function(anndata_file, split.by, levels, conda_env)
 #'
 #' @import reticulate
 fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotime',
-                               pseudotime_key = 'csr_pot')
+                               pseudotime_key = 'csr_pot', do_pca = TRUE, do_neighbors = TRUE)
 {
   if( ! mode %in% c("pseudotime", "velocity"))
     stop("Currently 'mode' must be either 'pseudotime' (cellrank PseudotimeKernel) or 'velocity' (cellrank VelocityKernel).")
   use_condaenv(conda_env)
   py_run_string("import scanpy as sc")
   py_run_string(paste0("adata = sc.read_h5ad('", anndata_file, "')"))
-  py_run_string("sc.tl.pca(adata)")
-  py_run_string("sc.pp.neighbors(adata)")
+  if( do_pca ){
+    py_run_string("sc.tl.pca(adata)")
+  }
+  if( do_neighbors ){
+    py_run_string("sc.pp.neighbors(adata)")
+  }
   source_python(paste0( system.file( package = "sciCSR" ), "/python/cellrank_functions.py" ) )
   if( mode == 'pseudotime' ){
     g <- fit_cellrank_pseudotime_kernel(py$adata, pseudotime_key = pseudotime_key)
@@ -591,6 +597,7 @@ fitTPT <- function(anndata_file, CellrankObj, conda_env,
                               py$cluster_ident,
                               source_state, target_state, random_n = random_n)
   tpt[["pathways"]] <- reticulate::py_to_r(tpt[["pathways"]])
+  tpt[["stationary_distribution_bootstrapping"]] <- lapply(tpt[["stationary_bootstrapping"]], unlist)
   tpt[["total_gross_flux"]] <- tpt[["total_gross_flux"]]
   tpt[["total_gross_flux_reshuffled"]] <- unlist(tpt[["total_gross_flux_randomised"]])
   tpt[["total_net_flux"]] <- tpt[["total_net_flux"]]
@@ -620,7 +627,8 @@ fitTPT <- function(anndata_file, CellrankObj, conda_env,
                "total_gross_flux", "total_gross_flux_reshuffled",
                "total_net_flux", "total_net_flux_reshuffled",
                "mfpt", "stationary_distribution",
-               "mfpt_reshuffled", "stationary_distribution_reshuffled")])
+i              "mfpt_reshuffled", "stationary_distribution_reshuffled", 
+               "stationary_distribution_bootstrapping")])
 }
 
 #' Find the centroid of each cell cluster in the dimensionality-reduced space.
@@ -820,6 +828,7 @@ prepareCSRtransitions <- function(TPTObj, SeuratObj,
   flux_matrix <- TPTObj$gross_flux
   significance_matrix <- TPTObj$significance
   stationary_distribution <- TPTObj$stationary_distribution
+  bs_stationary <- TPTObj$stationary_distribution_bootstrapping
   total_flux <- TPTObj$total_gross_flux
 
   # check whether the flux matrix contains all isotypes; if not, add them back
@@ -868,12 +877,20 @@ prepareCSRtransitions <- function(TPTObj, SeuratObj,
   # initialise node annotations
   stationary_distribution <- stationary_distribution[c_genes]
   isotypes <- data.frame(isotype = c_genes, x = 1:length(c_genes), y = 1)
+  # calculate bootstrapped 95% confidence intervals
+  bs_stationary <- data.frame(t(sapply(bs_stationary, quantile, probs = c(0.025, 0.975))))
+  bs_stationary$isotype <- rownames(bs_stationary)
+  colnames(bs_stationary) <- c("lowq", "highq", "isotype")
   isotypes <- merge(
     isotypes,
     data.frame("stationary" = stationary_distribution),
     by.x = "isotype", by.y = "row.names", all.x = TRUE, all.y = FALSE, sort = FALSE
   )
+  isotypes <- merge(isotypes, bs_stationary, 
+		    by = "isotype", all.x = TRUE, all.y = FALSE, sort = FALSE)
   isotypes[is.na(isotypes[, "stationary"]), "stationary"] <- 0
+  isotypes[is.na(isotypes[, "lowq"]), "lowq"] <- 0
+  isotypes[is.na(isotypes[, "highq"]), "highq"] <- 0
   isotypes[, "isotype"] <- factor(isotypes[, "isotype"], levels = c_genes)
   # weight the fluxes by stationary distribution
   # graph <- merge(graph, isotypes[, c("x", "stationary")], by.x = "from", by.y = "x",
@@ -999,12 +1016,16 @@ plotCSRtransitions_ <- function(prepared,
   arrow_pos <- max(arrow_pos)
   if( !is.null(bar_colour) ){
     p <- ggplot(isotypes) +
-      geom_bar(aes_string(x = "isotype", y = "stationary", fill = bar_colour),
-               stat = "identity", position = position_dodge2())
+      geom_bar(aes_string(x = "isotype", y = "stationary", fill = bar_colour), 
+               stat = "identity", position = position_dodge2()) +
+      geom_errorbar(aes_string(x = "isotype", ymin = "lowq", ymax = "highq"), 
+		    width = 0, position = position_dodge2())
   } else {
     p <- ggplot(isotypes) +
-      geom_bar(aes_string(x = "isotype", y = "stationary"),
-               stat = "identity", position = position_dodge2())
+      geom_bar(aes_string(x = "isotype", y = "stationary"), 
+               stat = "identity", position = position_dodge2()) +
+      geom_errorbar(aes_string(x = "isotype", ymin = "lowq", ymax = "highq"),
+                    width = 0, position = position_dodge2())
   }
   if( !is.null(arrow_colour) ){
     alpha <- abs(graph[, arrow_colour])/max(abs(graph[, arrow_colour]))
@@ -1022,10 +1043,10 @@ plotCSRtransitions_ <- function(prepared,
                             stat = "identity", position = position_nudge(y = 0.1),
                             geom = ggplot2::GeomCurve, params = params)
   }
-  p <- p + scale_y_continuous(limits = c(0, 1), name = "startionary distribution") +
+  p <- p + scale_y_continuous(limits = c(0, 1), name = "stationary distribution") +
     scale_x_discrete(drop=FALSE) +
     geom_text(aes(x = isotype, y = max(stationary), label = isotype), vjust = -1) +
-    scale_color_gradient2(name = arrow_colour) + scale_alpha_continuous(guide = "none") +
+    scale_color_gradient2(name = arrow_colour) + scale_alpha_continuous(limits = c(0, 1), guide = "none") +
     cowplot::theme_cowplot() + #scale_x_discrete(breaks = rev(c_genes)) +
     theme(axis.line.x = element_blank(), axis.ticks.x = element_blank(),
           axis.text.x = element_blank(), axis.title.x = element_blank())
