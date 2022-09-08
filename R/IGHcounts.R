@@ -37,6 +37,8 @@
 #' @importFrom GenomeInfoDb seqlevelsStyle
 #' @importFrom GenomicRanges mcols
 #' @importFrom S4Vectors countQueryHits
+#'
+#' @export scanBam
 
 scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
                     paired = FALSE)
@@ -118,9 +120,8 @@ scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
 #'
 #' @param tb A data.frame, output from `scanBam`.
 #'
-#' @return
-#'
 #' @importFrom stringr str_extract_all
+#' @export getIGHreadType
 
 getIGHreadType <- function(tb)
 {
@@ -129,15 +130,15 @@ getIGHreadType <- function(tb)
   columns <- colnames( tb )
   c_col <- which(grepl("C$", columns))
   i_col <- which(grepl("I$", columns))
-  j_col <- which(columns == "J")
+  j_col <- which(columns == "VDJ")
   out <- apply(tb, MARGIN = 1, function(x){
     o <- c("isotype" = NA, "transcript_type" = NA)
     # first check whether it is a M/D/G/A/E only read
     # if not, indeterminate. set NA_NA
     c_reads <- x[c_col]; names(c_reads) <- columns[c_col]
     i_reads <- x[i_col]; names(i_reads) <- columns[i_col]
-    all_c <- stringr::str_extract_all( names(c_reads[ c_reads > 0]), "IGH[MDEGA]" )
-    all_i <- stringr::str_extract_all( names(i_reads[ i_reads > 0]), "IGH[MDEGA]" )
+    all_c <- stringr::str_extract_all( names(c_reads[ c_reads > 0]), "I[Gg][Hh][MmDdEeGgAaTtYyXxWw]" )
+    all_i <- stringr::str_extract_all( names(i_reads[ i_reads > 0]), "I[Gg][Hh][MmDdEeGgAaTtYyXxWw]" )
     all_c <- unique(unlist(all_c))
     all_i <- unique(unlist(all_i))
     if( length(all_c) > 1 | length(all_i) > 1 ){
@@ -225,11 +226,14 @@ getIGHreadType <- function(tb)
 #' over molecules per cell barcode and cast this count into a matrix of cell barcodes by IGH molecule type.
 #'
 #' @param tb A data.frame, output from `getIGHreadType`.
+#' @param IGHC_granges `GenomicRanges` object detailing the positions of IgH C genes in the genome.
 #'
 #' @return An array of cell barcode by IGH gene type (i.e. S/P/C per C gene)
 #'
 #' @importFrom reshape2 acast
 #' @importFrom plyr ddply
+#'
+#' @export summariseIGHreads
 summariseIGHreads <- function(tb, IGHC_granges)
 {
   tb$anno <- factor(tb$anno,
@@ -277,7 +281,11 @@ summariseIGHreads <- function(tb, IGHC_granges)
 #'
 #' @importFrom GenomicRanges sort start end flank GRanges seqnames
 #' @importFrom IRanges IRanges
-#' @importFrom plyr ddply dcast
+#' @importFrom plyr ddply
+#' @importFrom reshape2 dcast
+#' @importFrom stats as.formula
+#'
+#' @export getIGHmapping
 getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
                           cellBarcodeTag = "CB", umiTag = "UB",
                           paired = FALSE, flank = 5000)
@@ -291,7 +299,7 @@ getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
   if( nrow(J) > 0 ) J$type <- "VDJ"
   message("Fetching reads mapped to C gene coding regions ...")
   C <- do.call("rbind", lapply(names(IGHC_granges), function(isotype){
-    out <- scanBam(bam, IGHC[isotype], cellBarcodeTag = cellBarcodeTag,
+    out <- scanBam(bam, IGHC_granges[isotype], cellBarcodeTag = cellBarcodeTag,
                    umiTag = umiTag, paired = paired)
     #out <- unique(out[, c("CB", "UB")])
     if( nrow(out) > 0 ) out$type <- paste0(isotype, "_C")

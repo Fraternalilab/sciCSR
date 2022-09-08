@@ -1,5 +1,5 @@
 # implement functions in python 'sceb' package for
-# empirical Bayes estimator of gene-gene covariance matrix & inactive probabilities 
+# empirical Bayes estimator of gene-gene covariance matrix & inactive probabilities
 # (as a better alternative for directly using the observed gene counts)
 
 # all based on https://github.com/martinjzhang/single_cell_eb/blob/master/sceb/scdd.py
@@ -70,28 +70,28 @@ dd_covariance <- function(SeuratObj, size_factor = NULL, assay.name = "IGHC", PC
   X <- get_count_matrix( SeuratObj, assay.name = assay.name )
   G = dim( X )[1]; Nc <- dim( X )[2]
   gene_name <- rownames( X )
-  
+
   # normalise by size_factor
   if( !is.null( size_factor ) ){
     row_weight <- 1 / size_factor
     X <- assign_row_weight( X, row_weight )
   }
-  
+
   # Statistics after the first normalisation
   mean_dd <- rowMeans( X )
   M2_dd <- X %*% Matrix::t(X) / Nc
-      
+
   # double normalisation to get what we need
   if( !is.null( size_factor ) ){
     X <- assign_row_weight( X, row_weight )
   }
-  
+
   # Statistics after the second normalisation
   mean_doublenorm_dd <- rowMeans( X )
-  
+
   # Bias correction
   Matrix::diag(M2_dd) <- Matrix::diag(M2_dd) - mean_doublenorm_dd
-  
+
   # covariance matrix
   temp <- matrix( mean_doublenorm_dd )
   cov_dd <- M2_dd - temp %*% t(temp)
@@ -101,19 +101,19 @@ dd_covariance <- function(SeuratObj, size_factor = NULL, assay.name = "IGHC", PC
   index_bad[ which((diag_cov_dd / mean_dd) < 0.1) ] <- TRUE
   diag_cov_dd[ which(diag_cov_dd < 1e-12) ] <- 1e-12
   Matrix::diag(cov_dd) <- diag_cov_dd
-  
+
   # Pearson correlation
   std_dd <- diag_cov_dd ^ 0.5
   temp <- matrix( std_dd )
   PC_dd <- cov_dd / ( std_dd %*% t(std_dd) )
   PC_dd[ PC_dd < -1 ] <- -1
   PC_dd[ PC_dd > 1 ] <- 1
-  
+
   if( PC_prune ){
     PC_dd[, index_bad] <- 0
     PC_dd[index_bad, ] <- 0
   }
-  
+
   return( list("mean_dd" = mean_dd, "cov_dd" = cov_dd, "PC_dd" = PC_dd) )
 }
 
@@ -133,23 +133,23 @@ ml_covariance <- function(SeuratObj, size_factor = NULL, assay.name = "IGHC", PC
   G = dim( X )[1]; Nc <- dim( X )[2]
   Nr <- sum( X ) / Nc
   gene_name <- rownames( X )
-  
+
   # normalise by size_factor
   if( !is.null( size_factor ) ){
     row_weight <- 1 / size_factor
     X <- assign_row_weight( X, row_weight )
   }
-  
+
   # mean
   mean_ml <- rowMeans( X )
-  
+
   # 2nd moment
   M2_ml <- X %*% Matrix::t(X) / Nc
-  
+
   # covariance matrix
   temp <- matrix( mean_ml )
   cov_ml <- M2_ml - temp %*% t(temp)
-  
+
   # Pearson correlation
   std_ml <- Matrix::diag(cov_ml)
   std_ml[ which(std_ml < 0) ] <- 0
@@ -158,9 +158,9 @@ ml_covariance <- function(SeuratObj, size_factor = NULL, assay.name = "IGHC", PC
   PC_ml <- cov_ml / temp %*% t(temp)
   PC_ml[ PC_ml < -1 ] <- -1
   PC_ml[ PC_ml > 1 ] <- 1
-  
+
   return( list("mean_ml" = mean_ml, "cov_ml" = cov_ml, "PC_ml" = PC_ml) )
-  
+
 }
 
 smooth_zero_estimator <- function(L, t = 1, n = 500, require_param = FALSE, restrict_t = TRUE)
@@ -174,7 +174,7 @@ smooth_zero_estimator <- function(L, t = 1, n = 500, require_param = FALSE, rest
   w <- (- t_) ** v_L
   if( t > 2 ){
     k <- ceiling( 0.5 * log2( n * t_ ** 2 / (t_ - 1)) )
-    w <- w * ( 1 - pbinom(v_L - 1, k, 1 / t))
+    w <- w * ( 1 - stats::pbinom(v_L - 1, k, 1 / t))
   }
   if( require_param ){
     return( list('w' = w, 't' = t, 'k' = k, 'q' = 1 / (t + 1)) )
@@ -197,9 +197,9 @@ bincount <- function(x, n_gene, weights = 1)
   if( length(weights) == 1 && weights == 1 ) weights <- rep(1, length(x))
   dt <- data.frame(vec = x, w = weights)
   dt$vec <- factor(dt$vec, levels = lvls)
-  rez <- plyr::ddply(dt, .variables = "vec", plyr::summarise, wg_sum = sum(w), .drop = FALSE)
-  o <- as.vector(rez$wg_sum)
-  names(o) <- rez$vec
+  rez <- plyr::ddply(dt, .variables = "vec", function(x) sum(x[, "w"]))#plyr::summarise, wg_sum = sum(w), .drop = FALSE)
+  o <- as.vector(rez[, 2])
+  names(o) <- rez[, 1]
   o <- o[lvls]
   o[is.na(o)] <- 0
   unname(o)
@@ -255,7 +255,7 @@ dd_inactive_prob <- function(Y, genes = NULL, relative_depth = 1, size_factor = 
   } else {
     size_factor <- size_factor[ colnames(Y) ]
     tc <- 1 / relative_depth / size_factor
-    amp <- max(20, 1 / quantile(tc, probs = 0.001))
+    amp <- max(20, 1 / stats::quantile(tc, probs = 0.001))
     tc <- round( tc * amp ) / amp
     tc[ which(tc < 1 / amp)] <- 1 / amp
     p0_ml <- rep(0, G); p0_dd <- rep(0, G)
@@ -313,9 +313,9 @@ dd_pairwise_inactive_prob <- function(Y, genes = NULL, relative_depth = 1, size_
       zero_matrix_dd[i_gene, ] <- zero_matrix_dd[i_gene, ] + temp_w_list[i_gene]
       zero_matrix_dd[, i_gene] <- zero_matrix_dd[, i_gene] + temp_w_list[i_gene]
     }
-    
+
     # update the intersection part of the ml matrix
-    temp_ml <- Matrix::sparseMatrix(x = rep(1, length(A)), i = IA, j = JA, 
+    temp_ml <- Matrix::sparseMatrix(x = rep(1, length(A)), i = IA, j = JA,
                                     dims = c(Nc_sub, G))
     zero_matrix_ml <- zero_matrix_ml - as.matrix( Matrix::t( temp_ml ) %*% temp_ml )
 
@@ -359,13 +359,13 @@ dd_pairwise_inactive_prob <- function(Y, genes = NULL, relative_depth = 1, size_
   } else {
     size_factor <- size_factor[ colnames(Y) ]
     tc <- 1 / relative_depth / size_factor
-    amp <- max(20, 1 / quantile(tc, probs = 0.001))
+    amp <- max(20, 1 / stats::quantile(tc, probs = 0.001))
     tc <- round( tc * amp ) / amp
     tc[ which(tc < 1 / amp)] <- 1 / amp
     zero_matrix_ml <- matrix(0, nrow = G, ncol = G)
     zero_matrix_dd <- matrix(0, nrow = G, ncol = G)
     # set a progress bar
-    #pb <- utils::txtProgressBar( min = 0, max = length( unique( tc ) ), 
+    #pb <- utils::txtProgressBar( min = 0, max = length( unique( tc ) ),
     #                             style = 3, file = stderr() )
     i <- 1
     for(tc_ in sort(unique(tc))){
@@ -374,7 +374,7 @@ dd_pairwise_inactive_prob <- function(Y, genes = NULL, relative_depth = 1, size_
       if( Nc_sub > 0 ){
         Y_sub <- Matrix::Matrix( Y[, which(tc == tc_)], sparse = TRUE)
         Y_sub <- Matrix::t( Y_sub )
-        Y_sub <- as(Y_sub, "dgTMatrix")
+        Y_sub <- methods::as(Y_sub, "dgTMatrix")
         zero_matrix_sub <- sub_dd_pairwise_inactive_prob( Y_sub, tc_, Nc_sub, n = n )
         zero_matrix_sub_ml <- zero_matrix_sub[['p0_ml']]
         zero_matrix_sub_dd <- zero_matrix_sub[['p0_dd']]
@@ -386,10 +386,10 @@ dd_pairwise_inactive_prob <- function(Y, genes = NULL, relative_depth = 1, size_
     }
   }
 
-  # fill in diagonals  
+  # fill in diagonals
   diag( zero_matrix_ml ) <- p0[['p0_ml']]
   diag( zero_matrix_dd ) <- p0[['p0_dd']]
-  
+
   zero_matrix_ml[ zero_matrix_ml < 0 ] <- 0
   zero_matrix_dd[ zero_matrix_dd < 0 ] <- 0
   colnames(zero_matrix_ml) <- genes
@@ -427,7 +427,7 @@ get_coex_by_cluster <- function( SeuratObj, assay.name = 'IGHC', group.by = 'seu
   count_matrix <- get_count_matrix( SeuratObj, assay.name = assay.name )
   count_matrix <- get_JIC( count_matrix )
   genes <- rownames( count_matrix )
-  cluster_info <- FetchData( SeuratObj, group.by )
+  cluster_info <- Seurat::FetchData( SeuratObj, group.by )
   if( is.factor( cluster_info[, group.by] ) ){
     cluster_list <- levels( cluster_info[, group.by] )
   } else {
@@ -453,10 +453,10 @@ get_coex_by_cluster <- function( SeuratObj, assay.name = 'IGHC', group.by = 'seu
     ic_jc_co <- rbind( csr_history, csr_potential )
     ic_jc_co$int <- gsub("-[JI]*C$", "", gsub("^IGH", "", ic_jc_co$int))
     ic_jc_co$JC <- gsub("-[JI]*C$", "", gsub("^IGH", "", ic_jc_co$JC))
-    ic_jc_co$int <- factor(ic_jc_co$int, levels = c("M", "D", "G3", "G1", 
+    ic_jc_co$int <- factor(ic_jc_co$int, levels = c("M", "D", "G3", "G1",
                                                     "A1", "G2", "G4", "E", "A2"),
                           ordered = TRUE)
-    ic_jc_co$JC <- factor(ic_jc_co$JC, levels = c("M", "D", "G3", "G1", 
+    ic_jc_co$JC <- factor(ic_jc_co$JC, levels = c("M", "D", "G3", "G1",
                                                   "A1", "G2", "G4", "E", "A2"),
                           ordered = TRUE)
     ic_jc_co$int_n <- as.numeric(ic_jc_co$int)

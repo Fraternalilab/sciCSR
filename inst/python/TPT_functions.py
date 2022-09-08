@@ -302,8 +302,9 @@ def getReshuffledFlux(transition_matrix, cluster_ident, source, target, n = 100,
         
     out = []
     n_cpus = os.cpu_count()
+    
     with multiprocessing.Pool(int(n_cpus / 2)) as p:
-        out = list(tqdm(p.imap(partial(getReshuffledFlux_, tm = transition_matrix, cluster_ident = cluster_ident, source = source, target = target), range(n)), total=n))
+        out = list(tqdm(p.imap(partial(getReshuffledFlux_, tm = transition_matrix, cluster_ident = cluster_ident, source = source, target = target), range(int(n))), total=int(n)))
 
     return out
 
@@ -423,7 +424,7 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     #comparison /= len(random_flux)
     
     # get bootstrap sampling of stationary distribution
-    bootstrap_stationary = [getStationaryDistribution( flux.stationary_distribution, cluster_ident, i) for i in range(random_n)]
+    bootstrap_stationary = [getStationaryDistribution( flux.stationary_distribution, cluster_ident, i) for i in range(int(random_n))]
     bootstrap_stationary = { state: [j[state] for j in bootstrap_stationary] for state in cluster_ident.keys() }
 
     return {'coarse_grain_tpt': tpt_coarse, 'gross_flux': gross_flux.todense(), \

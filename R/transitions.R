@@ -19,6 +19,7 @@
 #' the calculated SHM frequency.
 #'
 #' @importFrom Seurat AddMetaData
+#' @export getSHM
 getSHM <- function(SeuratObj, v_identity_anno_name,
                    shm_column_to_add = "shm")
 {
@@ -37,37 +38,41 @@ getSHM <- function(SeuratObj, v_identity_anno_name,
 #'
 #' @details
 #' `getCSRpotential` calculates a "CSR potential" score which ranks the cells in the given Seurat Obj by their status in the CSR process.
-#' This is given by the Euclidean norm of (furthest_jc, total_ic) (i.e.\eqn{ \sqrt{ \text{furthest\_jc}^2 + \text{total\_ic}^2} } ), where
+#' This is given by the Euclidean norm of (furthest_p, total_s) (i.e.\eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} } ), where
 #' \itemize{
-#'   \item{furthest_jc}{: the productive isotype for each cell furthest along the IGH loci (0 = IgM, 1 = IgG3 ... ), and}
-#'   \item{total_ic}{: amount of sterile IgH molecules for each cell.}
+#'   \item{representative_p}{: the productive isotype for each cell (in human this will be 0 = IgM, 1 = IgG3 ... ), and}
+#'   \item{total_s}{: amount of sterile IgH molecules for each cell.}
 #' }
-#' For `total_ic`, the default is to use the scale.data slot which already normalises the IGHC counts by library size. If this doesn't exist the function will calculate this while regressing out the library size.
-#' For `furthest_jc`, users can either use a specified column in the Seurat object meta.data which indicates the isotype of the cell, or, if not provided, used the productive reads counted using the productive/sterile quantification workflow implemented in this package.
+#' For `total_s`, the default is to use the scale.data slot which already normalises the IGHC counts by library size. If this doesn't exist the function will calculate this while regressing out the library size.
+#' For `representative_p`, users can either use a specified column in the Seurat object meta.data which indicates the isotype of the cell, or, if not provided, used the productive reads counted using the productive/sterile quantification workflow implemented in this package.
 #'
 #' @param SeuratObj Seurat Object
 #' @param ighc_count_assay_name name of assay in `SeuratObj` which holds the IgH productive/sterile transcript count data. (Default: "IGHC")
 #' @param ighc_slot the slot in `slot(SeuratObj, "assays")[[ighc_count_assay_name]]` to be used to access productive/sterile transcript counts (Default: "scale_data")
+#' @param knn_graph should the k-nearest neighbour graph calculated on the gene expression assay be used to impute the annotation of productive transcripts for cells where no such transcripts are found across all isotypes? If TRUE, majority voting on the direct neighbours of the cell in the kNN graph will be used to impute. Otherwise, the cell will be assume to express IgM productive transcript. Expects TRUE or FALSE, or a `igraph` object containing kNN graph (in which case this graph will be used for majority voting imputation). (Default: TRUE)
 #' @param vars.to.regress list of variables to be regressed out in calculating the scale.data slot, if `ighc_slot` is given as `scale.data` but it has not been populated. (Default: "nCount_RNA", i.e. per-cell library size)
-#' @param c_gene_anno_name If not NULL, this column from the Seurat Object meta.data will be used to indicate `furthest_jc` in calculaing the CSR potential score, in lieu of the productive transcript counts in the IGHC assay (Default: NULL)
+#' @param mode Interpretation of the isotype expressed by the cell. Either "furthest" (i.e. the isotype furthest along the IGH locus with non-zero expression of productive transcript will be taken as the isotype representative of the cell) or "highest" (the isotype with highest expression). (Default: "furthest")
+#' @param c_gene_anno_name If not NULL, this column from the Seurat Object meta.data will be used to indicate `furthest_p` in calculaing the CSR potential score, in lieu of the productive transcript counts in the IGHC assay (Default: NULL)
 #' @param isotype_column_to_add name of column to be added to the SeuratObj meta.data to indicate the isotype of the cell. Used for subsequent grouping of cells in calculating transitions.
 #'
 #' @return Seurat object with these following columns added to the meta.data slot:
 #' \itemize{
-#'   \item{furthest_jc}{an integer indicating the productive isotype for each cell furthest along the IGH loci (0 = IgM, 1 = IgG3 ... )}
-#'   \item{total_ic}{amount of sterile IgH molecules for each cell, calculated from the given `ighc_slot` of the IGHC assay.}
-#'   \item{csr_pot}{Euclidean norm of furhest_jc and total_ic (i.e. \eqn{ \sqrt{ \text{furthest\_jc}^2 + \text{total\_ic}^2} }), and normalised into range [0, 1] across the given dataset with 0 indicating that the cell at the earliest point in terms of CSR across the dataset.}
+#'   \item{representative_p}{an integer indicating the productive isotype for each cell (in human: 0 = IgM, 1 = IgG3 ... )}
+#'   \item{total_s}{amount of sterile IgH molecules for each cell, calculated from the given `ighc_slot` of the IGHC assay.}
+#'   \item{csr_pot}{Euclidean norm of representative_p and total_s (i.e. \eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} }), and normalised into range [0, 1] across the given dataset with 0 indicating that the cell at the earliest point in terms of CSR across the dataset.}
 #'   \item{`isotype_column_to_add`}{isotype labelled as M, G3, etc. (added only when c_gene_anno_name is FALSE and the ighc_count_assay_name Assay is used to calculate CSR potential.}
 #' }
 #'
 #' @importFrom Seurat Assays ScaleData AddMetaData
 #' @importFrom Matrix colSums
+#' @importFrom igraph graph_from_adjacency_matrix neighbors
+#' @importFrom methods slotNames slot
 #' @importFrom stringr str_replace str_to_sentence str_to_upper
-#'
+#' @export getCSRpotential
 getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
-                            ighc_slot = "scale.data",
+                            ighc_slot = "scale.data", knn_graph = TRUE,
                             vars.to.regress = c("nCount_RNA"),
-                            c_gene_anno_name = NULL,
+                            mode = "furthest", c_gene_anno_name = NULL,
                             isotype_column_to_add = "isotype")
 {
   if(! ighc_count_assay_name %in% Seurat::Assays(SeuratObj))
@@ -75,6 +80,20 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
   if( ! ighc_slot %in% slotNames(SeuratObj@assays[[ighc_count_assay_name]]) )
     stop(paste0("The named slot '", ighc_slot, "' cannot be found in the '",
                 ighc_count_assay_name, "' assay in SeuratObj."))
+  if( ! mode %in% c("furthest", "highest") )
+    stop(paste0("'mode' must be either 'furthest' or 'highest'."))
+  if( !is.logical( knn_graph ) ){
+    if( class( knn_graph ) != 'igraph' ){
+      stop("'knn_graph' must either be TRUE or FALSE, or an igraph object of the k-nearest neighbour graph.")
+    }
+  } else {
+    if( knn_graph ){
+      default_assay <- Seurat::DefaultAssay( SeuratObj )
+      knn_graph <- igraph::graph_from_adjacency_matrix( slot(SeuratObj, "graphs")[[ paste0(default_assay, "_nn") ]],
+                                                        diag = FALSE, mode = "undirected" )
+    }
+  }
+
   if( ighc_slot == "scale.data" &&
       all(dim(SeuratObj@assays[[ighc_count_assay_name]]@scale.data) == 0)){
     # populate the scale.data matrix by running Seurat::ScaleData
@@ -82,7 +101,8 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
                                    assay = ighc_count_assay_name)
   }
   ighc_counts <- slot(SeuratObj@assays[[ighc_count_assay_name]], ighc_slot)
-  ic_genes <- rownames(ighc_counts)[grepl("IC$", rownames(ighc_counts))]
+  raw_counts <- slot(SeuratObj@assays[[ighc_count_assay_name]], "counts")
+  ic_genes <- rownames(ighc_counts)[grepl("S$", rownames(ighc_counts))]
   total_ic <- Matrix::colSums(ighc_counts[ic_genes, ])
   c_genes <- rownames(ighc_counts)[grepl("-C$", rownames(ighc_counts))]
   c_genes <- stringr::str_replace(stringr::str_replace(c_genes, "-C$", ""),
@@ -92,12 +112,42 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
   if( is.null( c_gene_anno_name ) ){
     if( is.null( isotype_column_to_add ) )
       stop("'isotype_column_to_add' needs to be given if 'c_gene_anno_name' is NULL.")
-    jc_genes <- rownames(ighc_counts)[grepl("JC$", rownames(ighc_counts))]
-    jc_counts <- ighc_counts[jc_genes, ]
-    furthest_jc <- apply(jc_counts, MARGIN = 2, function(x) {
-      pos <- which(x > 0) # positive entries
-      if(length(pos) == 0) return(0)
-      else return(max(pos) - 1)
+    jc_genes <- rownames(ighc_counts)[grepl("P$", rownames(ighc_counts))]
+    jc_counts <- raw_counts[jc_genes, ] # use raw counts for productive reads
+    furthest_jc <- sapply(colnames(jc_counts), function(y) {
+      x <- jc_counts[, y]
+      if( mode == "furthest" ) {
+	      pos <- which(x > 0) # positive entries
+        if(length(pos) == 0) { # no productive IgH detected
+	        if( class(knn_graph) == 'igraph' ){
+	          # majority voting using neighbours in the kNN graph where this information does exist
+	          neighbours <- names(igraph::neighbors(knn_graph, y))
+	          if( length(neighbours) == 0 ) return( 0 ) # assume IgM
+	          neighbours_jc <- apply(jc_counts[, neighbours, drop = FALSE], 2, function(xx){
+	            poss <- which(xx > 0)
+	            if( length(poss) > 0 ) return(max(poss) - 1) else return(NA)
+            })
+	          o <- as.numeric( names(which.max(table(neighbours_jc))) )
+	          if( length( o ) == 0 ) return(0) # assume IgM
+	          else return(o)
+	        } else return(0) # assume IgM
+	      } else return(max(pos) - 1)
+      } else if ( mode == "highest" ){
+        pos <- which(x > 0) # positive entries
+        if(length(pos) == 0) { # no productive IgH detected
+          if( class(knn_graph) == 'igraph' ){
+            # majority voting using neighbours in the SNN graph where this information does exist
+            neighbours <- names(igraph::neighbors(knn_graph, y))
+	    if( length(neighbours) == 0 ) return( 0 ) # assume IgM
+            neighbours_jc <- apply(jc_counts[, neighbours, drop = FALSE], 2, function(xx){
+              poss <- which(xx > 0)
+              if( length(poss) > 0 ) return(max(which(xx == max(xx, na.rm = TRUE))) - 1) else return(NA)
+            })
+            o <- as.numeric( names(which.max(table(neighbours_jc))) )
+	    if( length( o ) == 0 ) return(0) else return( o )
+          } else return(0) # assume IgM
+        } else return(max(which(x == max(x, na.rm = TRUE))) - 1)
+      }
     })
     # now change these numbers to string and add to SeuratObj meta.data
     c_gene_anno <- factor(furthest_jc, levels = (1:length(c_genes)) - 1,
@@ -115,12 +165,28 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
     # convert the remaining substring into upper case.
     # use the order in ighc_count c_genes to generate a factor and from there get the numerical order
     jc_anno <- stringr::str_replace(jc_anno, "^IGH|^Igh", "")
+    jc_anno <- stringr::str_replace(jc_anno, "^Ig", "")
     jc_anno <- stringr::str_to_upper(jc_anno)
-    c_genes <- stringr::str_replace(stringr::str_replace(ic_genes, "-IC$", ""),
+    c_genes <- stringr::str_replace(stringr::str_replace(ic_genes, "-S$", ""),
                                     "^IGH|^Igh", "")
     jc_anno <- factor(jc_anno, levels = stringr::str_to_upper(c_genes))
     furthest_jc <- as.numeric(jc_anno) - 1
-    furthest_jc[is.na(furthest_jc)] <- 0
+    names(furthest_jc) <- Seurat::Cells(SeuratObj)
+    if( class(knn_graph) == 'igraph' ){
+      furthest_jc <- sapply(names(furthest_jc), function(x){
+        if( !is.na(furthest_jc[x]) ) return( furthest_jc[x] )
+        else{
+          # majority voting using neighbours in the SNN graph where this information does exist
+          neighbours <- names(igraph::neighbors(knn_graph, x))
+	  if( length(neighbours) == 0 ) return(0) # assume IgM
+          neighbours_jc <- furthest_jc[neighbours]
+          o <- as.numeric( names(which.max(table(neighbours_jc))) )
+          if( length( o ) == 0 ) return(0) else return(o)
+	}
+      })
+    } else {
+      furthest_jc[is.na(furthest_jc)] <- 0
+    }
     c_gene_anno <- factor(furthest_jc, levels = (1:length(c_genes)) - 1,
                           labels = stringr::str_to_sentence(c_genes))
     names(c_gene_anno) <- colnames(ighc_counts)
@@ -132,7 +198,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
   furthest_jc[is.na(furthest_jc)] <- 0
   total_ic[is.na(total_ic)] <- 0
   csr_pot[is.na(csr_pot)] <- 0
-  o <- data.frame(furthest_jc = furthest_jc, total_ic = total_ic,
+  o <- data.frame(representative_p = furthest_jc, total_s = total_ic,
                   csr_pot = csr_pot)
   rownames(o) <- colnames(ighc_counts)
   SeuratObj <- Seurat::AddMetaData(SeuratObj, o)
@@ -156,7 +222,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
 #'
 #' @importFrom Seurat Assays
 #' @importFrom SeuratDisk SaveH5Seurat Convert
-#'
+#' @export convertSeuratToH5ad
 convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename){
   # first convert all metadata columns which are factors into characters
   # this is to preserve them in the anndata object (if they are factors only the levels
@@ -193,16 +259,16 @@ convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename){
 #' This function attempts to resolve such issues by extracting the nucleotide barcodes actually introduced in the experiment.
 #'
 #' @param cell_name character, a cell identifier, typicall with prefix and/or suffix (e.g. "ACTGATGCAT-1", "SampleA_ATGAACCTATGG")
-#' @param min_barcode_name minimum length of the nucleotide barcode (Default: 6)
+#' @param min_barcode_length minimum length of the nucleotide barcode (Default: 6)
 #'
 #' @return a vector with the input `cell_name` decomposed into these three entries:
 #' \describe{
-#'   \item{prefix} {prefix which exists in the input `cell_name` (NA if doesn't exist in `cell_name`)}
-#'   \item{cell_name} {the actual nucleotide barcode}
-#'   \item{suffix} {suffix which exists in the input `cell_name` (NA if doesn't exist in `cell_name`)}
+#'   \item{prefix}{prefix which exists in the input `cell_name` (NA if doesn't exist in `cell_name`)}
+#'   \item{cell_name}{the actual nucleotide barcode}
+#'   \item{suffix}{suffix which exists in the input `cell_name` (NA if doesn't exist in `cell_name`)}
 #' }
 #' @importFrom stringr str_detect str_locate str_sub
-#'
+#' @export guessBarcodes
 guessBarcodes <- function(cell_name, min_barcode_length = 6)
 {
   # guess the barcode contained in cell_name by looking for continuous
@@ -242,7 +308,7 @@ guessBarcodes <- function(cell_name, min_barcode_length = 6)
 #' and finally write out the merged loom matrices into a new loom file, to be used for RNA velocity analysis.
 #'
 #' @param loom_files vector of loom files to be merged
-#' @param new_loom_file, character, name of the new loom file to be written out containing the merged data
+#' @param new_loom_filename, character, name of the new loom file to be written out containing the merged data
 #' @param SeuratObj corresponding Seurat Object
 #' @param sample_names vector of sample names to be looked for in the `seurat_sample_column` column of the Seurat metadata.
 #' Assumed this is in the same order as the order given in `loom_files`.
@@ -252,6 +318,7 @@ guessBarcodes <- function(cell_name, min_barcode_length = 6)
 #'
 #' @importFrom velocyto.R read.loom.matrices
 #' @import hdf5r
+#' @export combineLoomFiles
 combineLoomFiles <- function(loom_files, new_loom_filename,
                              SeuratObj, sample_names,
                              seurat_sample_column = 'sample_id')
@@ -387,6 +454,7 @@ combineLoomFiles <- function(loom_files, new_loom_filename,
 #' @return a output message indicating success of writing out the merged AnnData object into the file given by `anndata_out_filename`.
 #'
 #' @import reticulate
+#' @export mergeVelocytoWithGEX
 mergeVelocytoWithGEX <- function(anndata_file, loom_file, anndata_out_filename,
                                  conda_env = NULL)
 {
@@ -427,6 +495,7 @@ mergeVelocytoWithGEX <- function(anndata_file, loom_file, anndata_out_filename,
 #' @return a output message indicating success of writing out the AnnData object with merged scVelo results into the file given by `anndata_out_filename`.
 #'
 #' @import reticulate
+#' @export run_scVelo
 run_scVelo <- function(anndata_file, anndata_out_filename, conda_env = NULL,
                        scvelo_mode = "dynamical", reduction = "UMAP",
                        min_shared_counts = 20, n_top_genes = 2000)
@@ -471,6 +540,7 @@ run_scVelo <- function(anndata_file, anndata_out_filename, conda_env = NULL,
 #' @return a vector of output .h5ad filenames with the indicated subset of the data (given in the filenames, see examples.)
 #'
 #' @import reticulate
+#' @export splitAnnData
 splitAnnData <- function(anndata_file, split.by, levels, conda_env)
 {
   # split the AnnData object by a given column ('split.by') in Anndata.obs,
@@ -508,6 +578,7 @@ splitAnnData <- function(anndata_file, split.by, levels, conda_env)
 #' @param mode character, either 'pseudotime' (uses the cellrank 'PseudotimeKernel') or 'velocity' (cellrank 'VelocityKernel'). (Default: 'pseudotime')
 #' @param pseudotime_key character, column name which indicates the ranking to be used as pseudotime ordering of the cells. Not considered if mode is 'velocity'. (Default: 'csr_pot')
 #' @param do_pca Should principal component analysis (PCA) be re-computed on the data? (Default: TRUE)
+#' @param do_neighbors Should k-nearest neighbour (kNN) graph be re-computed on the data? (Default: TRUE)
 #'
 #' @return a list with three entries:
 #' \describe{
@@ -517,6 +588,7 @@ splitAnnData <- function(anndata_file, split.by, levels, conda_env)
 #' }
 #'
 #' @import reticulate
+#' @export fitTransitionModel
 fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotime',
                                pseudotime_key = 'csr_pot', do_pca = TRUE, do_neighbors = TRUE)
 {
@@ -531,6 +603,8 @@ fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotim
   if( do_neighbors ){
     py_run_string("sc.pp.neighbors(adata)")
   }
+  fit_cellrank_pseudotime_kernel <- NULL
+  fit_cellrank_velocity_kernel <- NULL
   source_python(paste0( system.file( package = "sciCSR" ), "/python/cellrank_functions.py" ) )
   if( mode == 'pseudotime' ){
     g <- fit_cellrank_pseudotime_kernel(py$adata, pseudotime_key = pseudotime_key)
@@ -582,9 +656,11 @@ fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotim
 #' }
 #'
 #' @import reticulate
+#' @export fitTPT
 fitTPT <- function(anndata_file, CellrankObj, conda_env,
                    group.cells.by, source_state, target_state, random_n = 100)
 {
+  fit_coarse_grain_tpt <- NULL
   use_condaenv(conda_env)
   py_run_string("import scanpy as sc")
   source_python(paste0( system.file( package = "sciCSR" ), "/python/TPT_functions.py" ) )
@@ -627,7 +703,7 @@ fitTPT <- function(anndata_file, CellrankObj, conda_env,
                "total_gross_flux", "total_gross_flux_reshuffled",
                "total_net_flux", "total_net_flux_reshuffled",
                "mfpt", "stationary_distribution",
-i              "mfpt_reshuffled", "stationary_distribution_reshuffled", 
+               "mfpt_reshuffled", "stationary_distribution_reshuffled",
                "stationary_distribution_bootstrapping")])
 }
 
@@ -646,19 +722,22 @@ i              "mfpt_reshuffled", "stationary_distribution_reshuffled",
 #'
 #' @return a data.frame of the coordinates (in the 2 axes of the dimenesionality reduced space) for each cell cluster.
 #'
-#' @importFrom stringr str_to_upper
+#' @importFrom stringr str_to_upper str_to_lower
 #' @importFrom plyr ddply
 #' @importFrom Seurat Reductions
+#' @export FindClusterCentroid
 FindClusterCentroid <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP")
 {
   dim_reduce <- stringr::str_to_upper(dim_reduce)
-  if( ! dim_reduce %in% Seurat::Reductions(SeuratObj) )
-    stop("'dim_reduce' is not found in the list of dimensionality reductions available for the given Seurat object.")
+  if( ! stringr::str_to_lower(dim_reduce) %in% Seurat::Reductions(SeuratObj) )
+    stop(paste0("'", dim_reduce, "' is not found in the list of dimensionality reductions available for the given Seurat object."))
   # calculate cluster centroid (i.e. mean UMAP_1, UMAP_2)
   d <- Seurat::FetchData(SeuratObj, vars = c(paste0(dim_reduce, "_1"), paste0(dim_reduce, "_2"), group.by))
   o <- plyr::ddply(d, .variables = group.by, function(x){
-    c(paste0(dim_reduce, "_1") = mean(x[, paste0(dim_reduce, "_1")]),
-      paste0(dim_reduce, "_2") = mean(x[, paste0(dim_reduce, "_2")]))
+    oo <- c( mean(x[, paste0(dim_reduce, "_1")]),
+             mean(x[, paste0(dim_reduce, "_2")]) )
+    names(oo) <- c(paste0(dim_reduce, "_1"), paste0(dim_reduce, "_2"))
+    return(oo)
   })
   oo <- as.matrix(o[, c(paste0(dim_reduce, "_1"), paste0(dim_reduce, "_2"))])
   rownames(oo) <- o[, group.by]
@@ -692,9 +771,12 @@ FindClusterCentroid <- function(SeuratObj, group.by = "seurat_clusters", dim_red
 #' projection is plotted using the function `dim_plot` implemented in this package).
 #'
 #' @import ggplot2
+#' @import ggnetwork
+#' @importFrom ggnewscale new_scale
 #' @importFrom stringr str_to_upper
 #' @importFrom plyr ddply
 #' @importFrom Seurat Reductions
+#' @export plotFlux
 plotFlux <- function(TPTObj, SeuratObj,
                      significance_threshold = 0.9,
                      mask_lower_tri = FALSE, mask_threshold = 1,
@@ -703,8 +785,7 @@ plotFlux <- function(TPTObj, SeuratObj,
   flux_matrix <- TPTObj$gross_flux
   significance_matrix <- TPTObj$significance
   stationary_distribution <- TPTObj$stationary_distribution
-  source("/media/josephn/Seagate4TB/GLT_datasets/ggplot2_multiple_scales.R")
-  library(ggnetwork)
+  # source("/media/josephn/Seagate4TB/GLT_datasets/ggplot2_multiple_scales.R")
   flux_matrix[significance_matrix < significance_threshold] <- 0
   if(mask_lower_tri){
     flux_matrix[lower.tri(flux_matrix)] <- 0
@@ -717,16 +798,17 @@ plotFlux <- function(TPTObj, SeuratObj,
   # initialise ggnetcombineLoomFileswork
   cluster_pos <- FindClusterCentroid(SeuratObj)
   graph <- ggnetwork(graph, layout = cluster_pos[rownames(flux_matrix), ])
+  graph[, "pointsize"] <- graph[, "nodeweight"] * 2
   if( new_plot ){
     ggplot(graph,
-           aes(x = x, y = y, xend = xend, yend = yend)) +
+           aes_string(x = "x", y = "y", xend = "xend", yend = "yend")) +
       geom_edges(color = "grey50",
                  arrow = arrow(length = unit(6, "pt"), type = "closed"),
-                 curvature = 0.2, aes(size = weight)) +
+                 curvature = 0.2, aes_string(size = "weight")) +
       scale_size_continuous(range = c(0.5, 2)) +
-      new_scale("size") +
-      geom_point(aes(size = nodeweight * 2), color = 'orange') +
-      geom_nodetext(aes(label = name, size = nodeweight)) +
+      ggnewscale::new_scale("size") +
+      geom_point(aes_string(size = "pointsize"), color = 'orange') +
+      geom_nodetext(aes_string(label = "name", size = "nodeweight")) +
       scale_size_continuous(range = c(3, 8)) +
       theme_blank() + theme(legend.position = "none")
   } else {
@@ -739,12 +821,12 @@ plotFlux <- function(TPTObj, SeuratObj,
       geom_edges(color = "grey50",
                  arrow = arrow(length = unit(6, "pt"), type = "closed"),
                  curvature = 0.2, data = graph,
-                 aes(x = x, y = y, xend = xend, yend = yend, size = weight)),
+                 aes_string(x = "x", y = "y", xend = "xend", yend = "yend", size = "weight")),
       scale_size_continuous(range = c(0.5, 2), guide = "none"),
-      new_scale("size"),
-      geom_point(data = graph, aes(x = x, y = y, size = nodeweight * 2),
+      ggnewscale::new_scale("size"),
+      geom_point(data = graph, aes_string(x = "x", y = "y", size = "pointsize"),
                  color = 'orange'),
-      geom_nodetext(data = graph, aes(x = x, y = y, label = name)),
+      geom_nodetext(data = graph, aes_string(x = "x", y = "y", label = "name")),
       scale_size_continuous(range = c(0.1, 2), guide = "none")
 
     )
@@ -770,6 +852,7 @@ plotFlux <- function(TPTObj, SeuratObj,
 #'
 #' @import ggplot2
 #' @importFrom stringr str_to_upper
+#' @export dim_plot
 dim_plot <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP")
 {
   # emulate Seurat::DimPlot
@@ -791,13 +874,10 @@ dim_plot <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP
 #' `prepareCSRtransitions` parse data from `fitTPT` to prepare them for visualising the estimated isotype-switching dynamics.
 #'
 #' @details
-#' `prepareCSRtransitions` performs the following processing steps to parse data from the `fitTPT` function for visualising them using `plotCSRtransitions`:
-#' \itemize{
-#'   \item{filter flux matrix by significance}{the gross_flux matrix from Transition Path Theory (TPT) is filtered using the significance calculated empirically upon
-#'   comparison with fluxes generated in randomised models. Only fluxes greater than the randomised fluxes (threshold given by `significance_threshold`, default 0.9) are shown.}
-#'   \item{filter flux matrix by magnitude}{gross_flux matrix is filtered further such that only those fluxes representing more than a given percentage of total fluxes are shown. Default is 1%.}
-#'   \item{remove improbable CSR combinations}{isotype switches which are improbable (i.e. switching back to an isotype 5' to the current) are removed. This can be turned off by indicating `mask_improbable_csr = FALSE`.}
-#' }
+#' `prepareCSRtransitions` parses data from the `fitTPT` function for visualising them using `plotCSRtransitions`:
+#' * filter flux matrix by significance: the gross_flux matrix from Transition Path Theory (TPT) is filtered using the significance calculated empirically upon comparison with fluxes generated in randomised models. Only fluxes greater than the randomised fluxes (threshold given by `significance_threshold`, default 0.9) are shown.
+#' * filter flux matrix by magnitude: gross_flux matrix is filtered further such that only those fluxes representing more than a given percentage of total fluxes are shown. Default is 1%.
+#' * remove improbable CSR combinations: isotype switches which are improbable (i.e. switching back to an isotype preceding the current isotype) are removed. This can be turned off by indicating `mask_improbable_csr = FALSE`.
 #' A parsed output is returned to be directly fed into `plotCSRtransitions` to visualise the dynamics of CSR in the given dataset estimated using productive/sterile transcript information.
 #'
 #' @param TPTObj List of TPT results, output from the `fitTPT` function.
@@ -819,12 +899,13 @@ dim_plot <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP
 #'
 #' @importFrom reshape2 melt
 #' @importFrom stringr str_to_lower str_replace str_to_sentence
+#' @importFrom stats quantile
+#' @export prepareCSRtransitions
 prepareCSRtransitions <- function(TPTObj, SeuratObj,
                                   ighc_count_assay_name = "IGHC",
                                   significance_threshold = 0.9,
                                   mask_improbable_csr = TRUE, mask_threshold = 1)
 {
-  library(ggplot2)
   flux_matrix <- TPTObj$gross_flux
   significance_matrix <- TPTObj$significance
   stationary_distribution <- TPTObj$stationary_distribution
@@ -886,7 +967,7 @@ prepareCSRtransitions <- function(TPTObj, SeuratObj,
     data.frame("stationary" = stationary_distribution),
     by.x = "isotype", by.y = "row.names", all.x = TRUE, all.y = FALSE, sort = FALSE
   )
-  isotypes <- merge(isotypes, bs_stationary, 
+  isotypes <- merge(isotypes, bs_stationary,
 		    by = "isotype", all.x = TRUE, all.y = FALSE, sort = FALSE)
   isotypes[is.na(isotypes[, "stationary"]), "stationary"] <- 0
   isotypes[is.na(isotypes[, "lowq"]), "lowq"] <- 0
@@ -936,11 +1017,12 @@ prepareCSRtransitions <- function(TPTObj, SeuratObj,
 #'
 #' @return A ggplot2 object containing a bar plot showing stationary distribution of the isotypes, and arrows
 #' indicating the amount of class-switch recombination events estimated from the fitted transition model
+#' @export plotCSRtransitions
 plotCSRtransitions <- function(csr_transitions = NULL,
                                TPTObj = NULL,
                                SeuratObj = NULL,
                                ighc_count_assay_name = "IGHC",
-                               return.plot = TRUE,
+                               return_plot = TRUE,
                                significance_threshold = 0.9,
                                mask_improbable_csr = TRUE, mask_threshold = 1,
                                curvature = 0.1,
@@ -954,7 +1036,7 @@ plotCSRtransitions <- function(csr_transitions = NULL,
            If you start from a TPT object and a Seurat object, indicate the argument names 'TPTObj' and 'SeuratObj' when you pass these objects to this plotCSRtransitions function.")
     }
     return(
-      plotCSRtransitions_(csr_transitions, return.plot = return.plot,
+      plotCSRtransitions_(csr_transitions, return_plot = return_plot,
                           curvature = curvature,
                           arrow = arrow, arrow_colour = arrow_colour,
                           bar_colour = bar_colour)
@@ -966,7 +1048,7 @@ plotCSRtransitions <- function(csr_transitions = NULL,
     significance_threshold = significance_threshold,
     mask_improbable_csr = mask_improbable_csr, mask_threshold = mask_threshold
   )
-  plotCSRtransitions_(prepared, return.plot = return.plot,
+  plotCSRtransitions_(prepared, return_plot = return_plot,
                       curvature = curvature,
                       arrow = arrow, arrow_colour = arrow_colour,
                       bar_colour = bar_colour)
@@ -983,11 +1065,6 @@ plotCSRtransitions <- function(csr_transitions = NULL,
 #'
 #' @param prepared list of parsed transitions from the `prepareCSRtransitions` package. If this is supplied and not NULL, the `TPTObj` and `SeuratObj` arguments will be ignored.
 #' @param return_plot Should the CSR transition plot be returned? If FALSE, a named list of `stationary_distribution` and `flux` will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)
-#' @param significance_threshold The minimum value in the `TPTObj$significance` matrix for a flux to be shown in the
-#' resulting plot (all fluxes with significance below this value will be removed from the visualisation).
-#' @param mask_improbable_csr Should isotype combinations which represents improbable Class-switch recombination events (i.e. switching back to an isotype 5' to the current one) be removed from visualisation? (Default: TRUE)
-#' @param mask_threshold the minimum percentage (max 100) of total flux to be shown in the resulting plot. (Default: 1, i.e.
-#' gross fluxes below 1 will be removed from the visualisation)
 #' @param curvature amount of curvature of the arrows representing CSR fluxes. (Default: 0.1)
 #' @param arrow `grid::arrow` object specifying the size and aesthetics of the plotted arrows representing CSR fluxes.
 #' @param arrow_colour Optional. a column from the 'flux' data frame holding numeric data to be visualised as heat scale in the arrow colours. Useful for
@@ -998,10 +1075,11 @@ plotCSRtransitions <- function(csr_transitions = NULL,
 #'
 #' @return A ggplot2 object containing a bar plot showing stationary distribution of the isotypes, and arrows
 #' indicating the amount of class-switch recombination events estimated from the fitted transition model. If
-#' `return.plot == FALSE`, a list of 2 items containng the 'stationary_distribution' and 'flux' data frames
+#' `return.plot == FALSE`, a list of 2 items containing the 'stationary_distribution' and 'flux' data frames
 #' from `prepared`.
+#' @import ggplot2
 plotCSRtransitions_ <- function(prepared,
-                                return.plot = TRUE,
+                                return_plot = TRUE,
                                 curvature = 0.1,
                                 arrow = grid::arrow(length = unit(6, "pt"), type = "closed"),
                                 arrow_colour = arrow_colour, bar_colour = bar_colour)
@@ -1014,15 +1092,16 @@ plotCSRtransitions_ <- function(prepared,
   arrow_pos <- isotypes[which(isotypes$isotype %in% c_genes[1:max(c(graph$from, graph$to))]),
                         "stationary"]
   arrow_pos <- max(arrow_pos)
+  ypos <- max(isotypes$stationary)
   if( !is.null(bar_colour) ){
     p <- ggplot(isotypes) +
-      geom_bar(aes_string(x = "isotype", y = "stationary", fill = bar_colour), 
+      geom_bar(aes_string(x = "isotype", y = "stationary", fill = bar_colour),
                stat = "identity", position = position_dodge2()) +
-      geom_errorbar(aes_string(x = "isotype", ymin = "lowq", ymax = "highq"), 
+      geom_errorbar(aes_string(x = "isotype", ymin = "lowq", ymax = "highq"),
 		    width = 0, position = position_dodge2())
   } else {
     p <- ggplot(isotypes) +
-      geom_bar(aes_string(x = "isotype", y = "stationary"), 
+      geom_bar(aes_string(x = "isotype", y = "stationary"),
                stat = "identity", position = position_dodge2()) +
       geom_errorbar(aes_string(x = "isotype", ymin = "lowq", ymax = "highq"),
                     width = 0, position = position_dodge2())
@@ -1045,7 +1124,7 @@ plotCSRtransitions_ <- function(prepared,
   }
   p <- p + scale_y_continuous(limits = c(0, 1), name = "stationary distribution") +
     scale_x_discrete(drop=FALSE) +
-    geom_text(aes(x = isotype, y = max(stationary), label = isotype), vjust = -1) +
+    geom_text(aes_string(x = "isotype", y = ypos, label = "isotype"), vjust = -1) +
     scale_color_gradient2(name = arrow_colour) + scale_alpha_continuous(limits = c(0, 1), guide = "none") +
     cowplot::theme_cowplot() + #scale_x_discrete(breaks = rev(c_genes)) +
     theme(axis.line.x = element_blank(), axis.ticks.x = element_blank(),
@@ -1055,7 +1134,7 @@ plotCSRtransitions_ <- function(prepared,
       p <- (p + scale_y_continuous(limits = c(0, 1.3), name = "stationary distribution"))
     )
   }
-  if( return.plot ) return(p)
+  if( return_plot ) return(p)
   else return(list("stationary_distribution" = isotypes, "flux" = graph))
 }
 
@@ -1075,7 +1154,7 @@ plotCSRtransitions_ <- function(prepared,
 #' @param SeuratObj Seurat object. Considered only if `csr_transitions` is NULL.
 #' @param cells vector of cell identifiers corresponding to the row/column order in the transition matrices. (Assumed that all supplied transition matrices have exactly the same row/column ordering.)
 #' @param group.by column in the Seurat object metadata on which cells are grouped. (Default: 'seurat_clusters')
-#' @param n_realisations number of trajectories ('realisations') to be sampled from the Markov model defined using each transition matrix. (Default: 1000)
+#' @param n_realisation number of trajectories ('realisations') to be sampled from the Markov model defined using each transition matrix. (Default: 1000)
 #' @param n_step number of time-steps in each trajectory/realisation to be sampled. (Default: 1000)
 #' @param distance_metric the distance metric to be calculated. Either "KL" (for Kullback-Leibler divergence) or "JSD" (Jensen-Shannon divergence). (Default: "KL")
 #'
@@ -1084,7 +1163,10 @@ plotCSRtransitions_ <- function(prepared,
 #'   \item{distance}{distance (`distance_metric`) between the trajectories sampled from each possible pair of transition matrix.}
 #'   \item{sampled_transitions}{list of trajectories sampled from the transition matrices.}
 #' }
-#'
+#' @import markovchain
+#' @importFrom methods new
+#' @importFrom philentropy KL JSD
+#' @export compareTransitionMatrices
 compareTransitionMatrices <- function(matrix_list, SeuratObj,
                                       cells, group.by = "seurat_clusters",
                                       n_realisation = 1000, n_step = 1000,
@@ -1092,7 +1174,6 @@ compareTransitionMatrices <- function(matrix_list, SeuratObj,
 {
   if( ! distance_metric %in% c("KL", "JSD") )
     stop("'distance_metric' must be one of 'KL' (Kullback-Leibler divergence, default) or 'JSD' (Jensen-Shannon divergence).")
-  library(markovchain)
   mc_list <- list()
   for(i in 1:length(matrix_list)){
     mc_list <- c(mc_list,
@@ -1126,7 +1207,9 @@ compareTransitionMatrices <- function(matrix_list, SeuratObj,
   } else if( distance_metric == "JSD" ){
     dist_mat <- philentropy::JSD(do.call("rbind", lapply(sampled_transitions, c)))
   }
-  dimnames(dist_mat) <- list(names(sampled_transitions), names(sampled_transitions))
+  if( is.array( dist_mat ) ){
+    dimnames(dist_mat) <- list(names(sampled_transitions), names(sampled_transitions))
+  }
   return(list("distance" = dist_mat,
               "sampled_transitions" = sampled_transitions))
 }
