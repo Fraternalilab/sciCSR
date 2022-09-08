@@ -639,16 +639,13 @@ fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotim
 #' @param target_state character, a value in the `group.cells.by` column which is taken as the target state for fitting transition path theory. All cells belonging to this group are considered as the target.
 #' @param random_n number of times to reshuffle transition matrix columns to derive randomised models (default: 100).
 #'
-#' @return a list with three entries:
+#' @return a list with these entries:
 #' \describe{
 #'   \item{gross_flux}{a n-by-n matrix (where n is the total number of states), of total fluxes estimated between from a state (row) to another state (column). }
-#'   \item{net_flux}{a n-by-n matrix (where n is the total number of states), of net fluxes estimated between from a state (row) to another state (column). (i.e. the difference between elements (i, j) and (j, i) of the gross flux matrix.) }
 #'   \item{pathways}{a data.frame indicating the possible paths to take from `source_state` to `target_state`, and the likelihood (max: 100) to travel through each stated path.}
 #'   \item{significance}{a n-by-n matrix (where n is the total number of states), where the observed gross flux is greater than the flux estimated in the randomised models. }
 #'   \item{total_gross_flux}{element-wise sum of the gross_flux matrix. }
 #'   \item{total_gross_flux_reshuffled}{element-wise sum of the gross_flux matrix, calculated over each randomised (randomly reshuffled transition matrix coluns) models.}
-#'   \item{total_net_flux}{element-wise sum of the net_flux matrix. }
-#'   \item{total_net_flux_reshuffled}{element-wise sum of the net_flux matrix, calculated over each randomised (randomly reshuffled transition matrix coluns) models.}
 #'   \item{mfpt}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory. }
 #'   \item{mfpt_reshuffled}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory, calculated over each randomised (randomly reshuffled transition matrix coluns) models. }
 #'   \item{stationary_distribution}{Equilibrium probability of each state as estimated by Transition Path Theory. }
@@ -676,8 +673,6 @@ fitTPT <- function(anndata_file, CellrankObj, conda_env,
   tpt[["stationary_distribution_bootstrapping"]] <- lapply(tpt[["stationary_bootstrapping"]], unlist)
   tpt[["total_gross_flux"]] <- tpt[["total_gross_flux"]]
   tpt[["total_gross_flux_reshuffled"]] <- unlist(tpt[["total_gross_flux_randomised"]])
-  tpt[["total_net_flux"]] <- tpt[["total_net_flux"]]
-  tpt[["total_net_flux_reshuffled"]] <- unlist(tpt[["total_net_flux_randomised"]])
   tpt[["mfpt"]] <- tpt$coarse_grain_tpt$mfpt
   tpt[["mfpt_reshuffled"]] <- sapply(tpt$randomised_tpt, function(x) x$tpt$mfpt)
 
@@ -695,13 +690,10 @@ fitTPT <- function(anndata_file, CellrankObj, conda_env,
   })
   dimnames(tpt[["gross_flux"]]) <- list(cluster_order, cluster_order)
   tpt[["gross_flux"]] <- tpt[["gross_flux"]][cluster_names, cluster_names]
-  dimnames(tpt[["net_flux"]]) <- list(cluster_order, cluster_order)
-  tpt[["net_flux"]] <- tpt[["net_flux"]][cluster_names, cluster_names]
   dimnames(tpt[["significance"]]) <- list(cluster_order, cluster_order)
   tpt[["significance"]] <- tpt[["significance"]][cluster_names, cluster_names]
-  return(tpt[c("gross_flux", "net_flux", "pathways", "significance",
+  return(tpt[c("gross_flux", "pathways", "significance",
                "total_gross_flux", "total_gross_flux_reshuffled",
-               "total_net_flux", "total_net_flux_reshuffled",
                "mfpt", "stationary_distribution",
                "mfpt_reshuffled", "stationary_distribution_reshuffled",
                "stationary_distribution_bootstrapping")])
@@ -757,8 +749,8 @@ FindClusterCentroid <- function(SeuratObj, group.by = "seurat_clusters", dim_red
 #'
 #' @param TPTObj List of TPT results, output from the `fitTPT` function.
 #' @param SeuratObj Seurat object
-#' @param significance_threshold The minimum value in the `TPTObj$significance` matrix for a flux to be shown in the
-#' resulting plot (all fluxes with significance below this value will be removed from the visualisation).
+#' @param significance_threshold The minimum p-value in the `TPTObj$significance` matrix for a flux to be shown in the
+#' resulting plot (all fluxes with significance above this value will be removed from the visualisation). (Default: 0.1)
 #' @param mask_lower_tri Should fluxes which are considered 'reversed' (i.e. in the lower triangle of the flux matrix)
 #' be masked? (Default: FALSE, i.e. all fluxes in the gross_flux matrix is shown)
 #' @param mask_threshold the minimum percentage (max 100) of total flux to be shown in the resulting plot. (Default: 1, i.e.
@@ -778,7 +770,7 @@ FindClusterCentroid <- function(SeuratObj, group.by = "seurat_clusters", dim_red
 #' @importFrom Seurat Reductions
 #' @export plotFlux
 plotFlux <- function(TPTObj, SeuratObj,
-                     significance_threshold = 0.9,
+                     significance_threshold = 0.1,
                      mask_lower_tri = FALSE, mask_threshold = 1,
                      new_plot = TRUE)
 {
@@ -868,6 +860,161 @@ dim_plot <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP
           axis.text = element_blank(), axis.title = element_blank())
 }
 
+#' Visualise flux matrix describing class-switch recombination (CSR) transitions in data
+#'
+#' @description
+#' `plotFluxMatrix` parse data from `fitTPT` and visualises the estimated isotype-switching dynamics in the form of a flux matrix detailing amount of switches from and to each isotype.
+#'
+#' @details
+#' `plotFluxMatrix` parses data from the `fitTPT` function and visualises the results from Transition Path Theory (TPT) in the form of a bubble plot representing the amount of flux from and to each isotype.
+#' * The bubble size is scaled by significance, i.e. the likelihood that the observed flux is greater than randomised flux estimates obtained by reshuffling columns of the transition matrix.
+#' * The bubble colour is scaled by magnitude, i.e. the amount of flux estimated to flow from one isotype to another isotype.
+#' * Improbable CSR combinations (i.e. switching back to an isotype preceding the current isotype) are removed by default. This can be turned off by indicating `mask_improbable_csr = FALSE`.
+#'
+#' @param TPTObj List of TPT results, output from the `fitTPT` function.
+#' @param SeuratObj Seurat object
+#' @param ighc_count_assay_name name of assay in SeuratObj which holds the IgH productive/sterile transcript counts. (Default: "IGHC")
+#' @param mask_improbable_csr Should isotype combinations which represents improbable Class-switch recombination events (i.e. switching back to an isotype 5' to the current one) be removed from visualisation? (Default: TRUE)
+#' @param return_plot Should the CSR transition plot be returned? If FALSE, a named list of `stationary_distribution` and `flux` will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)
+#'
+#' @return A ggplot2 object showing the flux matrix and the associated significance level in the form a bubble plot. See 'Description' for details.
+#'
+#' @importFrom cowplot theme_cowplot
+#' @importFrom reshape2 melt
+#' @importFrom stringr str_to_lower str_replace str_to_sentence
+#' @import ggplot2
+#' @export plotFluxMatrix
+plotFluxMatrix <- function(TPTObj, SeuratObj,
+                           ighc_count_assay_name = "IGHC",
+                           mask_improbable_csr = TRUE,
+                           return_plot = TRUE)
+{
+  flux_matrix <- TPTObj$gross_flux
+  significance_matrix <- TPTObj$significance
+  total_flux <- TPTObj$total_gross_flux
+
+  # check whether the flux matrix contains all isotypes; if not, add them back
+  ighc_counts <- SeuratObj@assays[[ighc_count_assay_name]]@counts
+  c_genes <- rownames(ighc_counts)[grepl("-C$", rownames(ighc_counts))]
+  c_genes <- stringr::str_replace(stringr::str_replace(c_genes, "-C$", ""),
+                                  "^IGH|^Igh", "")
+  c_genes <- stringr::str_to_sentence(c_genes)
+  # check whether row/column names of flux_matrix conform to this format
+  # if not , force them to by removing IGH or Igh
+  if(sum(sapply(c_genes, function(c_gene) c_gene %in% rownames(flux_matrix))) == 0){
+    rownames(flux_matrix) <- stringr::str_replace(rownames(flux_matrix), "^IGH|^Igh", "")
+    rownames(flux_matrix) <- stringr::str_to_sentence(stringr::str_to_lower(rownames(flux_matrix)))
+    colnames(flux_matrix) <- stringr::str_replace(colnames(flux_matrix), "^IGH|^Igh", "")
+    colnames(flux_matrix) <- stringr::str_to_sentence(stringr::str_to_lower(colnames(flux_matrix)))
+  }
+  for(c_gene in c_genes){
+    if( ! c_gene %in% rownames(flux_matrix) ){
+      flux_matrix <- rbind(flux_matrix, rep(0, ncol(flux_matrix)))
+      rownames(flux_matrix)[nrow(flux_matrix)] <- c_gene
+      flux_matrix <- cbind(flux_matrix, rep(0, nrow(flux_matrix)))
+      colnames(flux_matrix)[ncol(flux_matrix)] <- c_gene
+      significance_matrix <- rbind(significance_matrix, rep(0, ncol(significance_matrix)))
+      rownames(significance_matrix)[nrow(significance_matrix)] <- c_gene
+      significance_matrix <- cbind(significance_matrix, rep(0, nrow(significance_matrix)))
+      colnames(significance_matrix)[ncol(significance_matrix)] <- c_gene
+    }
+  }
+  flux_matrix <- flux_matrix[c_genes, c_genes]
+  significance_matrix <- significance_matrix[c_genes, c_genes]
+  # filtering
+  #  flux_matrix[significance_matrix < significance_threshold] <- 0
+  if(mask_improbable_csr){
+    flux_matrix[lower.tri(flux_matrix)] <- 0
+  }
+  #  if( is.numeric(mask_threshold) ) {
+  #    flux_matrix[flux_matrix <= mask_threshold] <- 0
+  #  }
+  graph <- reshape2::melt(flux_matrix, value.name = "flux", varnames = c("from", "to"))
+  graph$from <- as.numeric(graph$from)
+  graph$to <- as.numeric(graph$to)
+  graph <- graph[which(graph$flux > 0), ]
+  graph <- merge(graph,
+                 reshape2::melt(significance_matrix, varnames = c("from", "to"),
+                                value.name = "signif"))
+  p <- ggplot(graph, aes_string(x = "from", y = "to", color = "flux", size = -log("signif"))) +
+    geom_point() + cowplot::theme_cowplot() + scale_colour_gradient2() +
+    scale_size_continuous(name = "p-value")
+  if( return_plot ) return(p)
+  else return(graph)
+}
+
+#' Visualise stationary distribution of isotypes in the data
+#'
+#' @description
+#' `plotStationaryDistribution` parse data from `fitTPT` to plot a bar-plot of isotypes in the given data. The stationary distribution represents the equilibrium distribution of cells harbouring each isotype, taking the underlying isotype-switching dynamics into consideration.
+#'
+#' @details
+#' `plotStationaryDistribution` parses data from the `fitTPT` function for visualising the stationary distribution of isotypes. The resulting plot is a bar plot of stationary distribution, with error-bars obtained from bootstrapping (i.e. sampling with replacement) cells harbouring each isotype. The error-bar shown are 95% confidence intervals resulting from the bootstrap sampling.
+#'
+#' @param TPTObj List of TPT results, output from the `fitTPT` function.
+#' @param SeuratObj Seurat object
+#' @param ighc_count_assay_name name of assay in SeuratObj which holds the IgH productive/sterile transcript counts. (Default: "IGHC")
+#' @param return_plot Should the CSR transition plot be returned? If FALSE, a named list of `stationary_distribution` and `flux` will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)
+#'
+#' @return A ggplot2 object of the bar-plot of stationary distribution with 95% bootstrapped confidence intervals.
+#'
+#' @importFrom cowplot theme_cowplot
+#' @importFrom reshape2 melt
+#' @importFrom stringr str_to_lower str_replace str_to_sentence
+#' @importFrom stats quantile
+#' @import ggplot2
+#' @export prepareCSRtransitions
+plotStationaryDistribution <- function(TPTObj, SeuratObj,
+                                       ighc_count_assay_name = "IGHC",
+                                       return_plot = TRUE)
+{
+  stationary_distribution <- TPTObj$stationary_distribution
+  bs_stationary <- TPTObj$stationary_distribution_bootstrapping
+
+  # check whether the flux matrix contains all isotypes; if not, add them back
+  ighc_counts <- SeuratObj@assays[[ighc_count_assay_name]]@counts
+  c_genes <- rownames(ighc_counts)[grepl("-C$", rownames(ighc_counts))]
+  c_genes <- stringr::str_replace(stringr::str_replace(c_genes, "-C$", ""),
+                                  "^IGH|^Igh", "")
+  c_genes <- stringr::str_to_sentence(c_genes)
+  for(c_gene in c_genes){
+    if( ! c_gene %in% rownames(flux_matrix) ){
+      stationary_distribution <- c(stationary_distribution, 0)
+      names(stationary_distribution)[length(stationary_distribution)] <- c_gene
+    }
+  }
+  # initialise node annotations
+  stationary_distribution <- stationary_distribution[c_genes]
+  isotypes <- data.frame(isotype = c_genes, x = 1:length(c_genes), y = 1)
+  # calculate bootstrapped 95% confidence intervals
+  bs_stationary <- data.frame(t(sapply(bs_stationary, quantile, probs = c(0.025, 0.975))))
+  bs_stationary$isotype <- rownames(bs_stationary)
+  colnames(bs_stationary) <- c("lowq", "highq", "isotype")
+  isotypes <- merge(
+    isotypes,
+    data.frame("stationary" = stationary_distribution),
+    by.x = "isotype", by.y = "row.names", all.x = TRUE, all.y = FALSE, sort = FALSE
+  )
+  isotypes <- merge(isotypes, bs_stationary,
+                    by = "isotype", all.x = TRUE, all.y = FALSE, sort = FALSE)
+  isotypes[is.na(isotypes[, "stationary"]), "stationary"] <- 0
+  isotypes[is.na(isotypes[, "lowq"]), "lowq"] <- 0
+  isotypes[is.na(isotypes[, "highq"]), "highq"] <- 0
+  isotypes[, "isotype"] <- factor(isotypes[, "isotype"], levels = c_genes)
+
+  # now do plotting
+  p <- ggplot(isotypes) +
+    geom_bar(aes_string(x = "isotype", y = "stationary"),
+             stat = "identity", position = position_dodge2()) +
+    geom_errorbar(aes_string(x = "isotype", ymin = "lowq", ymax = "highq"),
+                  width = 0, position = position_dodge2())
+  p <- p + scale_y_continuous(limits = c(0, 1), name = "stationary distribution") +
+    scale_x_discrete(drop=FALSE) +
+    cowplot::theme_cowplot() #+ scale_x_discrete(breaks = rev(c_genes)) +
+  if( return_plot ) return(p)
+  else return(isotypes)
+}
+
 #' Prepare class-switch recombination (CSR) transition data for visualisation
 #'
 #' @description
@@ -883,11 +1030,7 @@ dim_plot <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP
 #' @param TPTObj List of TPT results, output from the `fitTPT` function.
 #' @param SeuratObj Seurat object
 #' @param ighc_count_assay_name name of assay in SeuratObj which holds the IgH productive/sterile transcript counts. (Default: "IGHC")
-#' @param significance_threshold The minimum value in the `TPTObj$significance` matrix for a flux to be shown in the
-#' resulting plot (all fluxes with significance below this value will be removed from the visualisation).
 #' @param mask_improbable_csr Should isotype combinations which represents improbable Class-switch recombination events (i.e. switching back to an isotype 5' to the current one) be removed from visualisation? (Default: TRUE)
-#' @param mask_threshold the minimum percentage (max 100) of total flux to be shown in the resulting plot. (Default: 1, i.e.
-#' gross fluxes below 1 will be removed from the visualisation)
 #'
 #' @return A named list of three entries:
 #' \describe{
@@ -903,8 +1046,9 @@ dim_plot <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP
 #' @export prepareCSRtransitions
 prepareCSRtransitions <- function(TPTObj, SeuratObj,
                                   ighc_count_assay_name = "IGHC",
-                                  significance_threshold = 0.9,
-                                  mask_improbable_csr = TRUE, mask_threshold = 1)
+                                  #significance_threshold = 0.9,
+                                  mask_improbable_csr = TRUE)
+                                  #mask_threshold = 1)
 {
   flux_matrix <- TPTObj$gross_flux
   significance_matrix <- TPTObj$significance
@@ -943,13 +1087,13 @@ prepareCSRtransitions <- function(TPTObj, SeuratObj,
   flux_matrix <- flux_matrix[c_genes, c_genes]
   significance_matrix <- significance_matrix[c_genes, c_genes]
   # filtering
-  flux_matrix[significance_matrix < significance_threshold] <- 0
+#  flux_matrix[significance_matrix < significance_threshold] <- 0
   if(mask_improbable_csr){
     flux_matrix[lower.tri(flux_matrix)] <- 0
   }
-  if( is.numeric(mask_threshold) ) {
-    flux_matrix[flux_matrix <= mask_threshold] <- 0
-  }
+#  if( is.numeric(mask_threshold) ) {
+#    flux_matrix[flux_matrix <= mask_threshold] <- 0
+#  }
   graph <- reshape2::melt(flux_matrix, value.name = "flux", varnames = c("from", "to"))
   graph$from <- as.numeric(graph$from)
   graph$to <- as.numeric(graph$to)
@@ -1002,11 +1146,7 @@ prepareCSRtransitions <- function(TPTObj, SeuratObj,
 #' @param SeuratObj Seurat object. Considered only if `csr_transitions` is NULL.
 #' @param ighc_count_assay_name name of assay in SeuratObj which holds the IgH productive/sterile transcript counts. (Default: "IGHC")
 #' @param return_plot Should the CSR transition plot be returned? If FALSE, a named list of `stationary_distribution` and `flux` will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)
-#' @param significance_threshold The minimum value in the `TPTObj$significance` matrix for a flux to be shown in the
-#' resulting plot (all fluxes with significance below this value will be removed from the visualisation).
 #' @param mask_improbable_csr Should isotype combinations which represents improbable Class-switch recombination events (i.e. switching back to an isotype 5' to the current one) be removed from visualisation? (Default: TRUE)
-#' @param mask_threshold the minimum percentage (max 100) of total flux to be shown in the resulting plot. (Default: 1, i.e.
-#' gross fluxes below 1 will be removed from the visualisation)
 #' @param curvature amount of curvature of the arrows representing CSR fluxes. (Default: 0.1)
 #' @param arrow `grid::arrow` object specifying the size and aesthetics of the plotted arrows representing CSR fluxes.
 #' @param arrow_colour Optional. a column from the 'flux' data frame holding numeric data to be visualised as heat scale in the arrow colours. Useful for
@@ -1023,8 +1163,9 @@ plotCSRtransitions <- function(csr_transitions = NULL,
                                SeuratObj = NULL,
                                ighc_count_assay_name = "IGHC",
                                return_plot = TRUE,
-                               significance_threshold = 0.9,
-                               mask_improbable_csr = TRUE, mask_threshold = 1,
+                               #significance_threshold = 0.9,
+                               mask_improbable_csr = TRUE,
+                               #mask_threshold = 1,
                                curvature = 0.1,
                                arrow = grid::arrow(length = unit(6, "pt"),
                                                    type = "closed"),
