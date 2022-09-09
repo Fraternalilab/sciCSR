@@ -7,7 +7,7 @@
 plotFlux(
   TPTObj,
   SeuratObj,
-  significance_threshold = 0.9,
+  significance_threshold = 0.1,
   mask_lower_tri = FALSE,
   mask_threshold = 1,
   new_plot = TRUE
@@ -18,8 +18,8 @@ plotFlux(
 
 \item{SeuratObj}{Seurat object}
 
-\item{significance_threshold}{The minimum value in the `TPTObj$significance` matrix for a flux to be shown in the
-resulting plot (all fluxes with significance below this value will be removed from the visualisation).}
+\item{significance_threshold}{The minimum p-value in the `TPTObj$significance` matrix for a flux to be shown in the
+resulting plot (all fluxes with significance above this value will be removed from the visualisation). (Default: 0.1)}
 
 \item{mask_lower_tri}{Should fluxes which are considered 'reversed' (i.e. in the lower triangle of the flux matrix)
 be masked? (Default: FALSE, i.e. all fluxes in the gross_flux matrix is shown)}

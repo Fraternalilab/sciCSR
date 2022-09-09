@@ -366,16 +366,13 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     :returns: a dictionary with the following keys:
     - 'coarse_grain_tpt': coarse-grained ReactiveFlux object. TPT applied based on cluster_ident, source_state and target_state.
     - 'gross_flux': matrix of gross_flux from coarse_graind_tpt, normalised as % of total flux which flows from cluster i to j  
-    - 'net_flux': matrix of net flux from coarse_graind_tpt, normalised as % of net flux which flows from cluster i to j
     - 'pathways': pd.DataFrame of possible pathways and their likelihood of traversal under the coarse-grained TPT, from source_state to target_state. A dataframe of two columns: 
       * 'path': pathway to flow from source_state to target_state, 
       * 'p_path': % of traversals following this pathway.
     - 'randomised_tpt': output of 'getReshuffledFlux'. coarse-grained TPT fitted based on random reshuffling of columns of transition_matrix.
-    - 'significance': A matrix storing % of times the observed gross_flux from cluster i to j is *greater* than those sampled in random_flux.
+    - 'significance': IOne-sided P-value that the observed gross_flux from cluster i to j is *greater* than those sampled in random_flux.
     - 'total_gross_flux': sum of all entries in `gross_flux`, but before the normalisation as percentages.
-    - 'total_net_flux': sum of all entries in `net_flux`, but before the normalisation as percentages.
     - 'total_gross_flux_randomised': analogous to `total_gross_flux`, but for each iteration of `randomised_tpt`.
-    - 'total_net_flux_randomised': analogous to `total_net_flux`, but for each iteration of `randomised_tpt`.
     - "bootstrap_stationary': stationary distribution in TPT models fitted on `random_n` bootstrap sampling of cells.
     """
     if verbose:
@@ -388,16 +385,11 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     random_flux = getReshuffledFlux(transition_matrix, cluster_ident,
                                     source_state, target_state, n = random_n)
     total_gross_flux_randomised = [m['tpt'].gross_flux.sum() for m in random_flux]
-    total_net_flux_randomised = [m['tpt'].net_flux.sum() for m in random_flux]
     (tpt_sets, tpt_coarse) = flux.coarse_grain([np.array(item) for c, item in cluster_ident.items()])
     # get the coarse-grained gross-flux and net-flux matrices
     gross_flux = tpt_coarse.gross_flux
     # normalised flux (i.e. % of flux over a given edge of the graph)
     gross_flux = gross_flux * 100.0/gross_flux.sum()
-    
-    # now net flux    
-    net_flux = tpt_coarse.net_flux
-    net_flux = net_flux * 100.0/net_flux.sum()
 
     # pathways
     (paths, pathfluxes) = tpt_coarse.pathways()
@@ -418,7 +410,7 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     sd = np.std(random_gross_flux[:, :, :])
     for i in range(gross_flux.shape[0]):
         for j in range(gross_flux.shape[1]):
-            comparison[i, j] = norm(loc = mean, scale = sd).cdf( gross_flux[i, j] )
+            comparison[i, j] = 1.0 - norm(loc = mean, scale = sd).cdf( gross_flux[i, j] )
     #for m in random_flux:
     #    comparison = np.add(comparison, np.greater_equal(gross_flux.todense(), m['gross_flux'].todense()))
     #comparison /= len(random_flux)
@@ -428,7 +420,8 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     bootstrap_stationary = { state: [j[state] for j in bootstrap_stationary] for state in cluster_ident.keys() }
 
     return {'coarse_grain_tpt': tpt_coarse, 'gross_flux': gross_flux.todense(), \
-            'net_flux': net_flux.todense(), 'pathways': pd.DataFrame(path_dist), 'randomised_tpt': random_flux, \
-            'significance': comparison, 'total_gross_flux': tpt_coarse.gross_flux.sum(), \
-            'total_net_flux': tpt_coarse.net_flux.sum(), 'total_gross_flux_randomised': total_gross_flux_randomised, \
-            'total_net_flux_randomised': total_net_flux_randomised, 'stationary_bootstrapping': bootstrap_stationary }
+            'pathways': pd.DataFrame(path_dist), 'randomised_tpt': random_flux, \
+            'significance': comparison, 
+            'total_gross_flux': tpt_coarse.gross_flux.sum(), \
+            'total_gross_flux_randomised': total_gross_flux_randomised, \
+            'stationary_bootstrapping': bootstrap_stationary }

@@ -31,16 +31,13 @@ fitTPT(
 \item{random_n}{number of times to reshuffle transition matrix columns to derive randomised models (default: 100).}
 }
 \value{
-a list with three entries:
+a list with these entries:
 \describe{
   \item{gross_flux}{a n-by-n matrix (where n is the total number of states), of total fluxes estimated between from a state (row) to another state (column). }
-  \item{net_flux}{a n-by-n matrix (where n is the total number of states), of net fluxes estimated between from a state (row) to another state (column). (i.e. the difference between elements (i, j) and (j, i) of the gross flux matrix.) }
   \item{pathways}{a data.frame indicating the possible paths to take from `source_state` to `target_state`, and the likelihood (max: 100) to travel through each stated path.}
   \item{significance}{a n-by-n matrix (where n is the total number of states), where the observed gross flux is greater than the flux estimated in the randomised models. }
   \item{total_gross_flux}{element-wise sum of the gross_flux matrix. }
   \item{total_gross_flux_reshuffled}{element-wise sum of the gross_flux matrix, calculated over each randomised (randomly reshuffled transition matrix coluns) models.}
-  \item{total_net_flux}{element-wise sum of the net_flux matrix. }
-  \item{total_net_flux_reshuffled}{element-wise sum of the net_flux matrix, calculated over each randomised (randomly reshuffled transition matrix coluns) models.}
   \item{mfpt}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory. }
   \item{mfpt_reshuffled}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory, calculated over each randomised (randomly reshuffled transition matrix coluns) models. }
   \item{stationary_distribution}{Equilibrium probability of each state as estimated by Transition Path Theory. }

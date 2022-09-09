@@ -28,16 +28,16 @@ getCSRpotential(
 
 \item{mode}{Interpretation of the isotype expressed by the cell. Either "furthest" (i.e. the isotype furthest along the IGH locus with non-zero expression of productive transcript will be taken as the isotype representative of the cell) or "highest" (the isotype with highest expression). (Default: "furthest")}
 
-\item{c_gene_anno_name}{If not NULL, this column from the Seurat Object meta.data will be used to indicate `furthest_jc` in calculaing the CSR potential score, in lieu of the productive transcript counts in the IGHC assay (Default: NULL)}
+\item{c_gene_anno_name}{If not NULL, this column from the Seurat Object meta.data will be used to indicate `furthest_p` in calculaing the CSR potential score, in lieu of the productive transcript counts in the IGHC assay (Default: NULL)}
 
 \item{isotype_column_to_add}{name of column to be added to the SeuratObj meta.data to indicate the isotype of the cell. Used for subsequent grouping of cells in calculating transitions.}
 }
 \value{
 Seurat object with these following columns added to the meta.data slot:
 \itemize{
-  \item{furthest_jc}{an integer indicating the productive isotype for each cell furthest along the IGH loci (0 = IgM, 1 = IgG3 ... )}
-  \item{total_ic}{amount of sterile IgH molecules for each cell, calculated from the given `ighc_slot` of the IGHC assay.}
-  \item{csr_pot}{Euclidean norm of furhest_jc and total_ic (i.e. \eqn{ \sqrt{ \text{furthest\_jc}^2 + \text{total\_ic}^2} }), and normalised into range [0, 1] across the given dataset with 0 indicating that the cell at the earliest point in terms of CSR across the dataset.}
+  \item{representative_p}{an integer indicating the productive isotype for each cell (in human: 0 = IgM, 1 = IgG3 ... )}
+  \item{total_s}{amount of sterile IgH molecules for each cell, calculated from the given `ighc_slot` of the IGHC assay.}
+  \item{csr_pot}{Euclidean norm of representative_p and total_s (i.e. \eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} }), and normalised into range [0, 1] across the given dataset with 0 indicating that the cell at the earliest point in terms of CSR across the dataset.}
   \item{`isotype_column_to_add`}{isotype labelled as M, G3, etc. (added only when c_gene_anno_name is FALSE and the ighc_count_assay_name Assay is used to calculate CSR potential.}
 }
 }
@@ -46,11 +46,11 @@ Seurat object with these following columns added to the meta.data slot:
 }
 \details{
 `getCSRpotential` calculates a "CSR potential" score which ranks the cells in the given Seurat Obj by their status in the CSR process.
-This is given by the Euclidean norm of (furthest_jc, total_ic) (i.e.\eqn{ \sqrt{ \text{furthest\_jc}^2 + \text{total\_ic}^2} } ), where
+This is given by the Euclidean norm of (furthest_p, total_s) (i.e.\eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} } ), where
 \itemize{
-  \item{furthest_jc}{: the productive isotype for each cell furthest along the IGH loci (0 = IgM, 1 = IgG3 ... ), and}
-  \item{total_ic}{: amount of sterile IgH molecules for each cell.}
+  \item{representative_p}{: the productive isotype for each cell (in human this will be 0 = IgM, 1 = IgG3 ... ), and}
+  \item{total_s}{: amount of sterile IgH molecules for each cell.}
 }
-For `total_ic`, the default is to use the scale.data slot which already normalises the IGHC counts by library size. If this doesn't exist the function will calculate this while regressing out the library size.
-For `furthest_jc`, users can either use a specified column in the Seurat object meta.data which indicates the isotype of the cell, or, if not provided, used the productive reads counted using the productive/sterile quantification workflow implemented in this package.
+For `total_s`, the default is to use the scale.data slot which already normalises the IGHC counts by library size. If this doesn't exist the function will calculate this while regressing out the library size.
+For `representative_p`, users can either use a specified column in the Seurat object meta.data which indicates the isotype of the cell, or, if not provided, used the productive reads counted using the productive/sterile quantification workflow implemented in this package.
 }
