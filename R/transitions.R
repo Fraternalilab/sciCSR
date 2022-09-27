@@ -37,8 +37,9 @@ getSHM <- function(SeuratObj, v_identity_anno_name,
 #' `getCSRpotential` scores each cell by their status in temrs of class switch recombination (CSR), by considering the mapped sterile and productive IgH transcripts..
 #'
 #' @details
-#' `getCSRpotential` calculates a "CSR potential" score which ranks the cells in the given Seurat Obj by their status in the CSR process.
-#' This is given by the Euclidean norm of (furthest_p, total_s) (i.e.\eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} } ), where
+#' `getCSRpotential` calculates a "CSR potential" score which ranks the cells in the given Seurat Obj by their status in the CSR process. The default is to calculate this by estimating the contribution (weight) of a 'naive' isotype signature for each cell, given its sterile/productive expression profile.
+#' The CSR potential will be 1 - (Naive signature weight). This method is available for either human or mouse for which isotype signatures were trained on reference B cell atlas data. Alternatively, CSR potential can also be calculated empirically (by setting `reference_based = NULL`),
+#' given by the Euclidean norm of (furthest_p, total_s) (i.e.\eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} } ), where
 #' \itemize{
 #'   \item{representative_p}{: the productive isotype for each cell (in human this will be 0 = IgM, 1 = IgG3 ... ), and}
 #'   \item{total_s}{: amount of sterile IgH molecules for each cell.}
@@ -50,6 +51,7 @@ getSHM <- function(SeuratObj, v_identity_anno_name,
 #' @param ighc_count_assay_name name of assay in `SeuratObj` which holds the IgH productive/sterile transcript count data. (Default: "IGHC")
 #' @param ighc_slot the slot in `slot(SeuratObj, "assays")[[ighc_count_assay_name]]` to be used to access productive/sterile transcript counts (Default: "scale_data")
 #' @param knn_graph should the k-nearest neighbour graph calculated on the gene expression assay be used to impute the annotation of productive transcripts for cells where no such transcripts are found across all isotypes? If TRUE, majority voting on the direct neighbours of the cell in the kNN graph will be used to impute. Otherwise, the cell will be assume to express IgM productive transcript. Expects TRUE or FALSE, or a `igraph` object containing kNN graph (in which case this graph will be used for majority voting imputation). (Default: TRUE)
+#' @param reference_based indicate the species. The function will use a naive isotype signature (sterile/productive gene counts) trained on reference B cell atlas for the given species. For now either 'human' or 'mouse' are accepted. If NULL, the function calculates CSR potential by taking the Euclidean norm of (furthest_p, total_s) (see above).
 #' @param vars.to.regress list of variables to be regressed out in calculating the scale.data slot, if `ighc_slot` is given as `scale.data` but it has not been populated. (Default: "nCount_RNA", i.e. per-cell library size)
 #' @param mode Interpretation of the isotype expressed by the cell. Either "furthest" (i.e. the isotype furthest along the IGH locus with non-zero expression of productive transcript will be taken as the isotype representative of the cell) or "highest" (the isotype with highest expression). (Default: "furthest")
 #' @param c_gene_anno_name If not NULL, this column from the Seurat Object meta.data will be used to indicate `furthest_p` in calculaing the CSR potential score, in lieu of the productive transcript counts in the IGHC assay (Default: NULL)
@@ -59,7 +61,7 @@ getSHM <- function(SeuratObj, v_identity_anno_name,
 #' \itemize{
 #'   \item{representative_p}{an integer indicating the productive isotype for each cell (in human: 0 = IgM, 1 = IgG3 ... )}
 #'   \item{total_s}{amount of sterile IgH molecules for each cell, calculated from the given `ighc_slot` of the IGHC assay.}
-#'   \item{csr_pot}{Euclidean norm of representative_p and total_s (i.e. \eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} }), and normalised into range [0, 1] across the given dataset with 0 indicating that the cell at the earliest point in terms of CSR across the dataset.}
+#'   \item{csr_pot}{CSR potential. Depending on the argument `reference_based` the method of calculation will be different (see above).}
 #'   \item{`isotype_column_to_add`}{isotype labelled as M, G3, etc. (added only when c_gene_anno_name is FALSE and the ighc_count_assay_name Assay is used to calculate CSR potential.}
 #' }
 #'
@@ -67,10 +69,12 @@ getSHM <- function(SeuratObj, v_identity_anno_name,
 #' @importFrom Matrix colSums
 #' @importFrom igraph graph_from_adjacency_matrix neighbors
 #' @importFrom methods slotNames slot
+#' @importFrom nnls nnls
 #' @importFrom stringr str_replace str_to_sentence str_to_upper
 #' @export getCSRpotential
 getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
                             ighc_slot = "scale.data", knn_graph = TRUE,
+                            reference_based = NULL,
                             vars.to.regress = c("nCount_RNA"),
                             mode = "furthest", c_gene_anno_name = NULL,
                             isotype_column_to_add = "isotype")
@@ -82,6 +86,8 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
                 ighc_count_assay_name, "' assay in SeuratObj."))
   if( ! mode %in% c("furthest", "highest") )
     stop(paste0("'mode' must be either 'furthest' or 'highest'."))
+  if( ! reference_based %in% c("human", "mouse") )
+    stop("'reference_based' must be either 'human' or 'mouse'. If your data come from another species, or you wish to calculate CSR potential empirically, set reference_based = NULL. ")
   if( !is.logical( knn_graph ) ){
     if( class( knn_graph ) != 'igraph' ){
       stop("'knn_graph' must either be TRUE or FALSE, or an igraph object of the k-nearest neighbour graph.")
@@ -89,6 +95,9 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
   } else {
     if( knn_graph ){
       default_assay <- Seurat::DefaultAssay( SeuratObj )
+      if( ! paste0(default_assay, "_nn") %in% names( slot(SeuratObj, "graphs") ) ){
+        stop("no k-nearest neighbour graph found. Please run Seurat::FindNeighbors first.")
+      }
       knn_graph <- igraph::graph_from_adjacency_matrix( slot(SeuratObj, "graphs")[[ paste0(default_assay, "_nn") ]],
                                                         diag = FALSE, mode = "undirected" )
     }
@@ -193,11 +202,26 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
     SeuratObj <- Seurat::AddMetaData(SeuratObj, c_gene_anno,
                                      col.name = isotype_column_to_add)
   }
-  csr_pot <- sqrt( furthest_jc^2 + total_ic^2)
-  csr_pot <- (csr_pot - min(csr_pot, na.rm = TRUE)) / abs(diff(range(csr_pot, na.rm = TRUE)))
-  furthest_jc[is.na(furthest_jc)] <- 0
-  total_ic[is.na(total_ic)] <- 0
-  csr_pot[is.na(csr_pot)] <- 0
+  if( reference_based %in% c("human", "mouse") ){
+    # use a reference 'signature' matrix and apply non-negative least-square
+    # to infer the coefficients of each signature given the expression profile
+    # of Igh sterile/productive transcripts
+    # CSR potential = 1 - coef of the naive signature
+    assign("nmf_signatures", get(paste0(reference_based, "_nmf")))
+    naive_signature <- sapply(Cells(SeuratObj),
+                              function(n) nnls::nnls(nmf_signatures,
+                                                     ighc_counts[rownames(nmf_signatures), n])$x[1])
+    # scale into range [0, 1] and invert
+    naive_signature <- (naive_signature - min(naive_signature)) / abs(diff(range(naive_signature)))
+    csr_pot <- 1 - naive_signature
+  } else {
+    # use the empirical method = sqrt( furthest_productive ^ 2 + total_sterile ^ 2)
+    csr_pot <- sqrt( furthest_jc^2 + total_ic^2)
+    csr_pot <- (csr_pot - min(csr_pot, na.rm = TRUE)) / abs(diff(range(csr_pot, na.rm = TRUE)))
+    furthest_jc[is.na(furthest_jc)] <- 0
+    total_ic[is.na(total_ic)] <- 0
+    csr_pot[is.na(csr_pot)] <- 0
+  }
   o <- data.frame(representative_p = furthest_jc, total_s = total_ic,
                   csr_pot = csr_pot)
   rownames(o) <- colnames(ighc_counts)
@@ -333,7 +357,7 @@ combineLoomFiles <- function(loom_files, new_loom_filename,
   loom_objs <- lapply(loom_files, velocyto.R::read.loom.matrices)
   # strip the -[0-9] suffix in the VDJ data frame barcode column
   barcodes_loom <- list()
-  message("Assuming the order in sample_names correspond to the order in loom_files. If this is not the case please rerun this function ensuring the orderings of these vectors match up.")
+  message("Assuming the order in sample_names correspond to the order in loom_files. If this is not the case please rerun this function ensuring the order of these vectors match up.")
   for (i in seq_along(sample_names)) {
     barcodes_loom[[i]] <- sapply(colnames(loom_objs[[i]]$spliced), guessBarcodes)
   }
@@ -555,6 +579,8 @@ splitAnnData <- function(anndata_file, split.by, levels, conda_env)
     py_run_string(paste0("adata_subset = adata[adata.obs['", split.by, "'] == '", lvl, "']"))
     subset_filename <- paste0(gsub(".h5ad", "", basename(anndata_file)), "_", lvl, ".h5ad")
     subset_filename <- paste0(dirname(anndata_file), "/", fs::path_sanitize(subset_filename))
+    # see https://github.com/theislab/scvelo/issues/255
+    py_run_string("adata_subset.__dict__['_raw'].__dict__['_var'] = adata_subset.__dict__['_raw'].__dict__['_var'].rename(columns={'_index': 'features'})")
     py_run_string(paste0("adata_subset.write_h5ad('", subset_filename, "')"))
     out_fn <- c(out_fn, subset_filename)
   }
@@ -694,7 +720,7 @@ fitTPT <- function(anndata_file, CellrankObj, conda_env,
   tpt[["significance"]] <- tpt[["significance"]][cluster_names, cluster_names]
   return(tpt[c("gross_flux", "pathways", "significance",
                "total_gross_flux", "total_gross_flux_reshuffled",
-               "mfpt", "stationary_distribution",
+               "randomised_tpt", "mfpt", "stationary_distribution",
                "mfpt_reshuffled", "stationary_distribution_reshuffled",
                "stationary_distribution_bootstrapping")])
 }
