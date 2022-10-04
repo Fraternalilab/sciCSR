@@ -672,6 +672,7 @@ fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotim
 #'   \item{significance}{a n-by-n matrix (where n is the total number of states), where the observed gross flux is greater than the flux estimated in the randomised models. }
 #'   \item{total_gross_flux}{element-wise sum of the gross_flux matrix. }
 #'   \item{total_gross_flux_reshuffled}{element-wise sum of the gross_flux matrix, calculated over each randomised (randomly reshuffled transition matrix coluns) models.}
+#'   \item{gross_flux_randomised}{gross_flux matrix but from the randomised (randomly reshuffled transition matrix coluns) TPT models.}
 #'   \item{mfpt}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory. }
 #'   \item{mfpt_reshuffled}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory, calculated over each randomised (randomly reshuffled transition matrix coluns) models. }
 #'   \item{stationary_distribution}{Equilibrium probability of each state as estimated by Transition Path Theory. }
@@ -699,6 +700,7 @@ fitTPT <- function(anndata_file, CellrankObj, conda_env,
   tpt[["stationary_distribution_bootstrapping"]] <- lapply(tpt[["stationary_bootstrapping"]], unlist)
   tpt[["total_gross_flux"]] <- tpt[["total_gross_flux"]]
   tpt[["total_gross_flux_reshuffled"]] <- unlist(tpt[["total_gross_flux_randomised"]])
+  tpt[["gross_flux_randomised"]] <- lapply(1:random_n, function(i) tpt[["gross_flux_randomised"]][i, , ])
   tpt[["mfpt"]] <- tpt$coarse_grain_tpt$mfpt
   tpt[["mfpt_reshuffled"]] <- sapply(tpt$randomised_tpt, function(x) x$tpt$mfpt)
 
@@ -718,9 +720,13 @@ fitTPT <- function(anndata_file, CellrankObj, conda_env,
   tpt[["gross_flux"]] <- tpt[["gross_flux"]][cluster_names, cluster_names]
   dimnames(tpt[["significance"]]) <- list(cluster_order, cluster_order)
   tpt[["significance"]] <- tpt[["significance"]][cluster_names, cluster_names]
+  for(i in 1:random_n){
+    dimnames(tpt[["gross_flux_randomised"]][[i]]) <- list(cluster_order, cluster_order)
+    tpt[["gross_flux_randomised"]][[i]] <-tpt[["gross_flux_randomised"]][[i]][cluster_names, cluster_names]
+  }
   return(tpt[c("gross_flux", "pathways", "significance",
                "total_gross_flux", "total_gross_flux_reshuffled",
-               "randomised_tpt", "mfpt", "stationary_distribution",
+               "gross_flux_randomised", "mfpt", "stationary_distribution",
                "mfpt_reshuffled", "stationary_distribution_reshuffled",
                "stationary_distribution_bootstrapping")])
 }
@@ -959,7 +965,7 @@ plotFluxMatrix <- function(TPTObj, SeuratObj,
   graph <- merge(graph,
                  reshape2::melt(significance_matrix, varnames = c("from", "to"),
                                 value.name = "pval"))
-  graph$signif <- -log(graph$pval)
+  graph$signif <- -log(p.adjust(graph$pval))
   p <- ggplot(graph, aes_string(x = "from", y = "to", color = "flux", size = "signif")) +
     geom_point() + cowplot::theme_cowplot() + scale_colour_gradient2(name = "% flux") +
     scale_size_continuous(name = "p-value", breaks = c(-log(1), -log(0.5), -log(0.1), -log(0.05)),

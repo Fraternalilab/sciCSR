@@ -420,6 +420,7 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     bootstrap_stationary = { state: [j[state] for j in bootstrap_stationary] for state in cluster_ident.keys() }
 
     return {'coarse_grain_tpt': tpt_coarse, 'gross_flux': gross_flux.todense(), \
+            'gross_flux_randomised': random_gross_flux, \
             'pathways': pd.DataFrame(path_dist), 'randomised_tpt': random_flux, \
             'significance': comparison, 
             'total_gross_flux': tpt_coarse.gross_flux.sum(), \
