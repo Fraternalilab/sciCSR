@@ -86,8 +86,10 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
                 ighc_count_assay_name, "' assay in SeuratObj."))
   if( ! mode %in% c("furthest", "highest") )
     stop(paste0("'mode' must be either 'furthest' or 'highest'."))
-  if( ! reference_based %in% c("human", "mouse") )
-    stop("'reference_based' must be either 'human' or 'mouse'. If your data come from another species, or you wish to calculate CSR potential empirically, set reference_based = NULL. ")
+  if( !is.null( reference_based) ){
+    if( ! reference_based %in% c("human", "mouse") )
+      stop("'reference_based' must be either 'human' or 'mouse'. If your data come from another species, or you wish to calculate CSR potential empirically, set reference_based = NULL. ")
+  }
   if( !is.logical( knn_graph ) ){
     if( class( knn_graph ) != 'igraph' ){
       stop("'knn_graph' must either be TRUE or FALSE, or an igraph object of the k-nearest neighbour graph.")
