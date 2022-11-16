@@ -303,7 +303,6 @@ dependencies:
     - optax==0.1.2
     - outdated==0.2.1
     - pandas-flavor==0.3.0
-    - pingouin==0.5.2
     - protobuf==3.20.1
     - pyasn1==0.4.8
     - pyasn1-modules==0.2.8
@@ -317,7 +316,7 @@ dependencies:
     - rsa==4.8
     - scikit-learn==1.1.1
     - scvi-tools==0.16.2
-    - setuptools==63.1.0
+    - setuptools
     - sniffio==1.2.0
     - soupsieve==2.3.2.post1
     - tabulate==0.8.10
