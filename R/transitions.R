@@ -91,7 +91,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
       stop("'reference_based' must be either 'human' or 'mouse'. If your data come from another species, or you wish to calculate CSR potential empirically, set reference_based = NULL. ")
   }
   if( !is.logical( knn_graph ) ){
-    if( class( knn_graph ) != 'igraph' ){
+    if( inherits( knn_graph, 'igraph') ){
       stop("'knn_graph' must either be TRUE or FALSE, or an igraph object of the k-nearest neighbour graph.")
     }
   } else {
@@ -130,7 +130,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
       if( mode == "furthest" ) {
 	      pos <- which(x > 0) # positive entries
         if(length(pos) == 0) { # no productive IgH detected
-	        if( class(knn_graph) == 'igraph' ){
+	        if( inherits(knn_graph, 'igraph') ){
 	          # majority voting using neighbours in the kNN graph where this information does exist
 	          neighbours <- names(igraph::neighbors(knn_graph, y))
 	          if( length(neighbours) == 0 ) return( 0 ) # assume IgM
@@ -146,7 +146,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
       } else if ( mode == "highest" ){
         pos <- which(x > 0) # positive entries
         if(length(pos) == 0) { # no productive IgH detected
-          if( class(knn_graph) == 'igraph' ){
+          if( inherits(knn_graph, 'igraph') ){
             # majority voting using neighbours in the SNN graph where this information does exist
             neighbours <- names(igraph::neighbors(knn_graph, y))
 	    if( length(neighbours) == 0 ) return( 0 ) # assume IgM
@@ -183,7 +183,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
     jc_anno <- factor(jc_anno, levels = stringr::str_to_upper(c_genes))
     furthest_jc <- as.numeric(jc_anno) - 1
     names(furthest_jc) <- Seurat::Cells(SeuratObj)
-    if( class(knn_graph) == 'igraph' ){
+    if( inherits(knn_graph, 'igraph') ){
       furthest_jc <- sapply(names(furthest_jc), function(x){
         if( !is.na(furthest_jc[x]) ) return( furthest_jc[x] )
         else{
@@ -204,7 +204,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
     SeuratObj <- Seurat::AddMetaData(SeuratObj, c_gene_anno,
                                      col.name = isotype_column_to_add)
   }
-  if( reference_based %in% c("human", "mouse") ){
+  if( !is.null(reference_based) && reference_based %in% c("human", "mouse") ){
     # use a reference 'signature' matrix and apply non-negative least-square
     # to infer the coefficients of each signature given the expression profile
     # of Igh sterile/productive transcripts
@@ -254,7 +254,7 @@ convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename){
   # this is to preserve them in the anndata object (if they are factors only the levels
   # will be retained, not the labels)
   for(col in colnames(SeuratObj@meta.data)){
-    if(class(SeuratObj@meta.data[, col]) == "factor"){
+    if(inherits(SeuratObj@meta.data[, col], "factor")){
       SeuratObj@meta.data[, col] <- as.character( SeuratObj@meta.data[, col] )
     }
   }
@@ -475,14 +475,14 @@ combineLoomFiles <- function(loom_files, new_loom_filename,
 #' @param loom_file, character, name of the new loom file to be written out containing the merged data
 #' @param anndata_out_filename output filename of the merged AnnData object to be written containing both the velocyto data and the gene expression data.
 #' @param conda_env character, if not NULL this named conda environment is used to perform the merge.
-#' (Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)
+#' (Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)
 #'
 #' @return a output message indicating success of writing out the merged AnnData object into the file given by `anndata_out_filename`.
 #'
 #' @import reticulate
 #' @export mergeVelocytoWithGEX
 mergeVelocytoWithGEX <- function(anndata_file, loom_file, anndata_out_filename,
-                                 conda_env = NULL)
+                                 conda_env = 'scicsr')
 {
   use_condaenv(conda_env)
   py_run_string("import scanpy as sc")
@@ -512,7 +512,7 @@ mergeVelocytoWithGEX <- function(anndata_file, loom_file, anndata_out_filename,
 #' @param anndata_file filename pointing to the AnnData file containing gene expression data and merged velocyto spliced/unspliced gene counts.
 #' @param anndata_out_filename output filename of the merged AnnData object to be written the fitted RNA velocity estimates calculated using scvelo.
 #' @param conda_env character, if not NULL this named conda environment is used to perform the merge.
-#' (Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)
+#' (Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)
 #' @param scvelo_mode the 'mode' parameter in the python scvelo function `scv.tl.velocity`. (Default: "dynamical")
 #' @param reduction the dimensionality reduction to project RNA velocity estimates onto (Default: "UMAP")
 #' @param min_shared_counts include only genes detected in at least this number of cells. (Default: 20)
@@ -522,7 +522,7 @@ mergeVelocytoWithGEX <- function(anndata_file, loom_file, anndata_out_filename,
 #'
 #' @import reticulate
 #' @export run_scVelo
-run_scVelo <- function(anndata_file, anndata_out_filename, conda_env = NULL,
+run_scVelo <- function(anndata_file, anndata_out_filename, conda_env = 'scicsr',
                        scvelo_mode = "dynamical", reduction = "UMAP",
                        min_shared_counts = 20, n_top_genes = 2000)
 {
@@ -561,13 +561,13 @@ run_scVelo <- function(anndata_file, anndata_out_filename, conda_env = NULL,
 #' indicating distinct levels to split the AnnData.
 #' @param levels vector of values which can be found in the column given by `split.by`. Subsets of the Anndata by each value of `levels` will be made and written out into .h5ad files.
 #' @param conda_env character, if not NULL this named conda environment is used to perform the merge.
-#' (Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)
+#' (Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)
 #'
 #' @return a vector of output .h5ad filenames with the indicated subset of the data (given in the filenames, see examples.)
 #'
 #' @import reticulate
 #' @export splitAnnData
-splitAnnData <- function(anndata_file, split.by, levels, conda_env)
+splitAnnData <- function(anndata_file, split.by, levels, conda_env = 'scicsr')
 {
   # split the AnnData object by a given column ('split.by') in Anndata.obs,
   # given the set of values ('levels') to subset for.
@@ -666,6 +666,8 @@ fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotim
 #' @param source_state character, a value in the `group.cells.by` column which is taken as the source state for fitting transition path theory. All cells belonging to this group are considered as the source.
 #' @param target_state character, a value in the `group.cells.by` column which is taken as the target state for fitting transition path theory. All cells belonging to this group are considered as the target.
 #' @param random_n number of times to reshuffle transition matrix columns to derive randomised models (default: 100).
+#' @param do_pca Should principal component analysis (PCA) be re-computed on the data? (Default: TRUE)
+#' @param do_neighbors Should k-nearest neighbour (kNN) graph be re-computed on the data? (Default: TRUE)
 #'
 #' @return a list with these entries:
 #' \describe{
@@ -684,7 +686,8 @@ fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotim
 #' @import reticulate
 #' @export fitTPT
 fitTPT <- function(anndata_file, CellrankObj, conda_env,
-                   group.cells.by, source_state, target_state, random_n = 100)
+                   group.cells.by, source_state, target_state, random_n = 100,
+                   do_pca = TRUE, do_neighbors = TRUE)
 {
   fit_coarse_grain_tpt <- NULL
   use_condaenv(conda_env)
@@ -916,6 +919,7 @@ dim_plot <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP
 #' @importFrom cowplot theme_cowplot
 #' @importFrom reshape2 melt
 #' @importFrom stringr str_to_lower str_replace str_to_sentence
+#' @importFrom stats p.adjust
 #' @import ggplot2
 #' @export plotFluxMatrix
 plotFluxMatrix <- function(TPTObj, SeuratObj,
@@ -1123,4 +1127,52 @@ compareTransitionMatrices <- function(matrix_list, SeuratObj,
   }
   return(list("distance" = dist_mat,
               "sampled_transitions" = sampled_transitions))
+}
+
+#' Plot arrows showing transitions in the style of RNA velocity plots
+#'
+#' @description
+#' `plot_arrows` plots arrows on top of UMAP projection to show transitions in the style of conventional RNA velocity analysis. You can indicate whether to use RNA velocity (`type = 'velocity'`), CSR (`type = 'CSR'`) or SHM (`type = 'SHM'`) information to project the arrows.
+#'
+#' @details
+#' `plot_arrows` uses the plotting functionalities in scVelo in python to generate a plot of arrows indicating transitions, given the type of biological information (velocity/CSR/SHM). You can choose between projecting transitions as arrows laid out on a grid (`style = 'grid'`) or as streams of arrows (`style = 'stream'`). The plot is saved as a SVG/PDF/PNG (depending on file extension given in `img_path`, see below), and re-rendered in the 'plot' panel in R.
+#'
+#' @param anndata_file input anndata_file. If `type` is 'velocity', this file needs to be output from `run_scVelo`. If `type` is 'CSR' or 'SHM', the columns 'csr_pot' or 'shm' should be in the .obs slot of the AnnData object.
+#' @param img_path path to write out output PNG/SVG/PDF file containing the arrow plot. The exact output format is selected according to the file extension. A PNG of 600 dots per inch will be rendered.
+#' @param type one of 'velocity', 'CSR', 'SHM'. The type of information to be used to project arrows. Each has requirements on the input `anndata_file` (see above).
+#' @param style one of 'grid' (lay out arrows on a grid of fixed width/height on the UMAP plot) or 'stream' (draw arrows as streams), in the style of the scvelo 'pl.velocity_embedding_grid' or 'pl.velocity_embedding_stream' respectively.
+#' @param colour.by column in gene expression metadata to group and colour the cells by (Default: 'seurat_clusters')
+#' @param cols Optional, a vector of characters containing the HEX code of colours to be used. Has to be the same length as the number of levels found in the `colour.by` variable in the gene expression metadata.
+#' @param components component of dimensionality reduction to show in the plot. e.g. put \'1,3\' if desired UMAP plot displays the UMAP_1 and UMAP_3 axes.(Default: '1,2')
+#' @param conda_env character, if not NULL this named conda environment is used to perform the merge.
+#' (Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)
+#'
+#' @return plot of UMAP dimensionality reduction with arrows projected on top depicting inferred transitions. The same plot is saved in the path given by `img_path`. If `img_path` indicates PNG output, it is rendered at 600 dots-per-inch (dpi).
+#'
+#' @importFrom png readPNG
+#' @importFrom reticulate py_config use_condaenv
+#' @importFrom grid grid.raster
+#' @export plot_arrows
+plot_arrows <- function(anndata_file, img_path, type = 'velocity',
+                        style = "grid",
+                        colour.by = 'seurat_clusters',
+                        cols = NULL, components = '1,2',
+                        conda_env = 'scicsr')
+{
+  use_condaenv(conda_env)
+  arguments <- paste0(
+    paste0( system.file( package = "sciCSR" ), "/python/plot_velocity.py" ),
+    " --anndata ", anndata_file,
+    " --output ", img_path,
+    " --color ", colour.by,
+    " --components ", components,
+    " --style ", style
+  )
+  if( !is.null( cols ) ){
+    cols <- paste(cols, collapse = ",")
+    arguments <- paste0(arguments, " --palette ", cols)
+  }
+  system2(command = py_config()[["python"]], args = arguments)
+  img <- readPNG(img_path)
+  grid.raster(img)
 }

@@ -9,6 +9,7 @@ getCSRpotential(
   ighc_count_assay_name = "IGHC",
   ighc_slot = "scale.data",
   knn_graph = TRUE,
+  reference_based = NULL,
   vars.to.regress = c("nCount_RNA"),
   mode = "furthest",
   c_gene_anno_name = NULL,
@@ -24,6 +25,8 @@ getCSRpotential(
 
 \item{knn_graph}{should the k-nearest neighbour graph calculated on the gene expression assay be used to impute the annotation of productive transcripts for cells where no such transcripts are found across all isotypes? If TRUE, majority voting on the direct neighbours of the cell in the kNN graph will be used to impute. Otherwise, the cell will be assume to express IgM productive transcript. Expects TRUE or FALSE, or a `igraph` object containing kNN graph (in which case this graph will be used for majority voting imputation). (Default: TRUE)}
 
+\item{reference_based}{indicate the species. The function will use a naive isotype signature (sterile/productive gene counts) trained on reference B cell atlas for the given species. For now either 'human' or 'mouse' are accepted. If NULL, the function calculates CSR potential by taking the Euclidean norm of (furthest_p, total_s) (see above).}
+
 \item{vars.to.regress}{list of variables to be regressed out in calculating the scale.data slot, if `ighc_slot` is given as `scale.data` but it has not been populated. (Default: "nCount_RNA", i.e. per-cell library size)}
 
 \item{mode}{Interpretation of the isotype expressed by the cell. Either "furthest" (i.e. the isotype furthest along the IGH locus with non-zero expression of productive transcript will be taken as the isotype representative of the cell) or "highest" (the isotype with highest expression). (Default: "furthest")}
@@ -37,7 +40,7 @@ Seurat object with these following columns added to the meta.data slot:
 \itemize{
   \item{representative_p}{an integer indicating the productive isotype for each cell (in human: 0 = IgM, 1 = IgG3 ... )}
   \item{total_s}{amount of sterile IgH molecules for each cell, calculated from the given `ighc_slot` of the IGHC assay.}
-  \item{csr_pot}{Euclidean norm of representative_p and total_s (i.e. \eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} }), and normalised into range [0, 1] across the given dataset with 0 indicating that the cell at the earliest point in terms of CSR across the dataset.}
+  \item{csr_pot}{CSR potential. Depending on the argument `reference_based` the method of calculation will be different (see above).}
   \item{`isotype_column_to_add`}{isotype labelled as M, G3, etc. (added only when c_gene_anno_name is FALSE and the ighc_count_assay_name Assay is used to calculate CSR potential.}
 }
 }
@@ -45,8 +48,9 @@ Seurat object with these following columns added to the meta.data slot:
 `getCSRpotential` scores each cell by their status in temrs of class switch recombination (CSR), by considering the mapped sterile and productive IgH transcripts..
 }
 \details{
-`getCSRpotential` calculates a "CSR potential" score which ranks the cells in the given Seurat Obj by their status in the CSR process.
-This is given by the Euclidean norm of (furthest_p, total_s) (i.e.\eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} } ), where
+`getCSRpotential` calculates a "CSR potential" score which ranks the cells in the given Seurat Obj by their status in the CSR process. The default is to calculate this by estimating the contribution (weight) of a 'naive' isotype signature for each cell, given its sterile/productive expression profile.
+The CSR potential will be 1 - (Naive signature weight). This method is available for either human or mouse for which isotype signatures were trained on reference B cell atlas data. Alternatively, CSR potential can also be calculated empirically (by setting `reference_based = NULL`),
+given by the Euclidean norm of (furthest_p, total_s) (i.e.\eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} } ), where
 \itemize{
   \item{representative_p}{: the productive isotype for each cell (in human this will be 0 = IgM, 1 = IgG3 ... ), and}
   \item{total_s}{: amount of sterile IgH molecules for each cell.}

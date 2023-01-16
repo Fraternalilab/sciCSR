@@ -4,7 +4,7 @@
 \alias{splitAnnData}
 \title{Split AnnData object by levels in a specified meta data trait}
 \usage{
-splitAnnData(anndata_file, split.by, levels, conda_env)
+splitAnnData(anndata_file, split.by, levels, conda_env = "scicsr")
 }
 \arguments{
 \item{anndata_file}{filename pointing to the AnnData file.}
@@ -15,7 +15,7 @@ indicating distinct levels to split the AnnData.}
 \item{levels}{vector of values which can be found in the column given by `split.by`. Subsets of the Anndata by each value of `levels` will be made and written out into .h5ad files.}
 
 \item{conda_env}{character, if not NULL this named conda environment is used to perform the merge.
-(Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
+(Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
 }
 \value{
 a vector of output .h5ad filenames with the indicated subset of the data (given in the filenames, see examples.)

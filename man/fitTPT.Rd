@@ -11,7 +11,9 @@ fitTPT(
   group.cells.by,
   source_state,
   target_state,
-  random_n = 100
+  random_n = 100,
+  do_pca = TRUE,
+  do_neighbors = TRUE
 )
 }
 \arguments{
@@ -29,6 +31,10 @@ fitTPT(
 \item{target_state}{character, a value in the `group.cells.by` column which is taken as the target state for fitting transition path theory. All cells belonging to this group are considered as the target.}
 
 \item{random_n}{number of times to reshuffle transition matrix columns to derive randomised models (default: 100).}
+
+\item{do_pca}{Should principal component analysis (PCA) be re-computed on the data? (Default: TRUE)}
+
+\item{do_neighbors}{Should k-nearest neighbour (kNN) graph be re-computed on the data? (Default: TRUE)}
 }
 \value{
 a list with these entries:
@@ -38,6 +44,7 @@ a list with these entries:
   \item{significance}{a n-by-n matrix (where n is the total number of states), where the observed gross flux is greater than the flux estimated in the randomised models. }
   \item{total_gross_flux}{element-wise sum of the gross_flux matrix. }
   \item{total_gross_flux_reshuffled}{element-wise sum of the gross_flux matrix, calculated over each randomised (randomly reshuffled transition matrix coluns) models.}
+  \item{gross_flux_randomised}{gross_flux matrix but from the randomised (randomly reshuffled transition matrix coluns) TPT models.}
   \item{mfpt}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory. }
   \item{mfpt_reshuffled}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory, calculated over each randomised (randomly reshuffled transition matrix coluns) models. }
   \item{stationary_distribution}{Equilibrium probability of each state as estimated by Transition Path Theory. }

@@ -7,7 +7,7 @@
 run_scVelo(
   anndata_file,
   anndata_out_filename,
-  conda_env = NULL,
+  conda_env = "scicsr",
   scvelo_mode = "dynamical",
   reduction = "UMAP",
   min_shared_counts = 20,
@@ -20,7 +20,7 @@ run_scVelo(
 \item{anndata_out_filename}{output filename of the merged AnnData object to be written the fitted RNA velocity estimates calculated using scvelo.}
 
 \item{conda_env}{character, if not NULL this named conda environment is used to perform the merge.
-(Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
+(Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
 
 \item{scvelo_mode}{the 'mode' parameter in the python scvelo function `scv.tl.velocity`. (Default: "dynamical")}
 

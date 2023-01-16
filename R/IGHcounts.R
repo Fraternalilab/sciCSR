@@ -66,7 +66,7 @@ scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
   }
   bam_entries <- try( GenomicAlignments::readGAlignments(file = bam, index = paste0(bam, '.bai'),
                                                          param = params), silent = TRUE )
-  if( class( bam_entries ) == 'try-error' ){
+  if( inherits( bam_entries, 'try-error' ) ){
     # try edit the seqlevel style (i.e. '1' --> 'chr1')
     GenomeInfoDb::seqlevelsStyle( gRange ) <- 'UCSC'
     params <- Rsamtools::ScanBamParam(which = gRange,
@@ -76,7 +76,7 @@ scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
                                       flag = flags)
     bam_entries <- try( GenomicAlignments::readGAlignments(file = bam, index = paste0(bam, '.bai'),
                                                            param = params), silent = TRUE )
-    if( class( bam_entries ) == 'try-error'){
+    if( inherits( bam_entries, 'try-error') ){
       stop("Failed to fetch any alignment in the given genomic region. Are you sure you have indicated the correct BAM file and/or genomic region?")
     }
   }
@@ -341,7 +341,7 @@ getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
     }
     IGHC_flank <- do.call("c", IGHC_flank)
     names(IGHC_flank) <- names(IGHC_granges)
-  } else if( class(flank) == "GRanges" ) {
+  } else if( inherits(flank, "GRanges") ) {
     if( ! all(names(flank) == names(IGHC_granges)) ){
       stop("'flank' and 'IGHC_granges' appear to have different order of C genes. Please fix them to have same order.")
     }

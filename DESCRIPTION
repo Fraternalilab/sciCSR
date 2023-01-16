@@ -1,7 +1,7 @@
 Package: sciCSR
 Type: Package
 Title: Single-cell Cluster-based Inference of Class Switch Recombination
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c( person( given = "Joseph", family = "Ng",
                       email = "joseph.chifung.ng@gmail.com", role = c( "aut", "cre" ) ) )
 Author: Joseph Ng [aut, cre]
@@ -19,15 +19,16 @@ Imports: GenomeInfoDb,
          markovchain,
          scales,
          stringr,
-         stringi,
          Seurat (>= 4.0),
          SeuratDisk (>= 0.0.0.9020),
          cowplot,
          fs,
          igraph,
+         nnls,
          philentropy,
          velocyto.R,
          plyr,
+         png,
          reshape2,
          methods,
          stats,

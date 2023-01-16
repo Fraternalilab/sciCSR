@@ -8,7 +8,7 @@ mergeVelocytoWithGEX(
   anndata_file,
   loom_file,
   anndata_out_filename,
-  conda_env = NULL
+  conda_env = "scicsr"
 )
 }
 \arguments{
@@ -19,7 +19,7 @@ mergeVelocytoWithGEX(
 \item{anndata_out_filename}{output filename of the merged AnnData object to be written containing both the velocyto data and the gene expression data.}
 
 \item{conda_env}{character, if not NULL this named conda environment is used to perform the merge.
-(Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
+(Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
 }
 \value{
 a output message indicating success of writing out the merged AnnData object into the file given by `anndata_out_filename`.
