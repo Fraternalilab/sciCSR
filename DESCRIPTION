@@ -34,8 +34,6 @@ Imports: GenomeInfoDb,
          stats,
          Rsamtools, 
          ggplot2,
-         ggnetwork,
-         ggnewscale,
          hdf5r
 Encoding: UTF-8
 LazyData: true

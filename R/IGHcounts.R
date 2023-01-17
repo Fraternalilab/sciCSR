@@ -226,7 +226,7 @@ getIGHreadType <- function(tb)
 #' over molecules per cell barcode and cast this count into a matrix of cell barcodes by IGH molecule type.
 #'
 #' @param tb A data.frame, output from `getIGHreadType`.
-#' @param IGHC_granges `GenomicRanges` object detailing the positions of IgH C genes in the genome.
+#' @param definitions A list of `GenomicRanges::GRanges` object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.
 #'
 #' @return An array of cell barcode by IGH gene type (i.e. S/P/C per C gene)
 #'
@@ -234,8 +234,11 @@ getIGHreadType <- function(tb)
 #' @importFrom plyr ddply
 #'
 #' @export summariseIGHreads
-summariseIGHreads <- function(tb, IGHC_granges)
+summariseIGHreads <- function(tb, definitions)
 {
+  if( !("C" %in% names(definitions)) )
+    stop("'definitions' must be a list with one of the elements named 'C'. Make sure you are supplying the correct genomic coordinate definitions!")
+  IGHC_granges <- definitions[["C"]]
   tb$anno <- factor(tb$anno,
                     levels = c(unlist(lapply(names(IGHC_granges),
                                            function(x) paste(x, c("S", "P", "C"), sep = "_")))))
@@ -266,12 +269,11 @@ summariseIGHreads <- function(tb, IGHC_granges)
 #' each IGHC gene, classified as sterile/productive/C-only.
 #'
 #' @param bam filepath to the BAM file to read
-#' @param IGHC_granges `GenomicRanges::GRanges` object specifying the genomic range of the IGH C gene **coding regions**.
-#' @param IGHVDJ_granges `GenomicRanges::GRanges` object specifying the genomic range of the IGH VDJ genes.
+#' @param definitions A list of `GenomicRanges::GRanges` object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.
 #' @param cellBarcodeTag Name of tag holding information about cell barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "CB")
 #' @param umiTag Name of tag holding information about molecule barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "UB")
 #' @param paired Are the sequencing reads paired-end? (Default: FALSE)
-#' @param flank either (1) an integer (indicating 5' distance from the CH exons) or (2) a `GRanges` object (indicating exact genomic positions) for defining sterile IgH transcripts. (See Examples)
+#' @param flank either (1) an integer (indicating 5' distance from the CH exons) or (2) a `GRanges` object (indicating exact genomic positions) for defining sterile IgH transcripts. Ignored if the positions of sterile transcripts are already included in `definitions`.
 #'
 #' @return A list with two items:
 #' \describe{
@@ -286,10 +288,20 @@ summariseIGHreads <- function(tb, IGHC_granges)
 #' @importFrom stats as.formula
 #'
 #' @export getIGHmapping
-getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
+getIGHmapping <- function(bam, definitions,
                           cellBarcodeTag = "CB", umiTag = "UB",
                           paired = FALSE, flank = 5000)
 {
+  if( !("VDJ" %in% names(definitions)) )
+    stop("'definitions' must be a list with one of the elements named 'VDJ'. Make sure you are supplying the correct genomic coordinate definitions!")
+  if( !("C" %in% names(definitions)) )
+    stop("'definitions' must be a list with one of the elements named 'C'. Make sure you are supplying the correct genomic coordinate definitions!")
+  if( !inherits(definitions[["VDJ"]], "GRanges") )
+    stop("Each element in 'definitions' must be a GenomicRanges GRanges object.")
+  if( !inherits(definitions[["C"]], "GRanges") )
+    stop("Each element in 'definitions' must be a GenomicRanges GRanges object.")
+  IGHC_granges <- definitions[["C"]]
+  IGHVDJ_granges <- definitions[["VDJ"]]
   # first sort the coordinates of the two GRanges objs
   IGHC_granges <- GenomicRanges::sort(IGHC_granges, decreasing = TRUE)
   IGHVDJ_granges <- GenomicRanges::sort(IGHVDJ_granges, decreasing = TRUE)
@@ -309,7 +321,7 @@ getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
   # pad the ranges with `flank` at the 5' end
   # in case if the padding crosses into the previous C gene, overwrite the start site
   # so it starts straight after
-  if( is.numeric(flank) ){
+  if( is.numeric(flank) && !("sterile" %in% names(definitions)) ){
     IGHC_flank <- c()
     # for the first gene, consider the 3' end of the last VDJ gene
     flanked <- GenomicRanges::flank(IGHC_granges[1], flank,
@@ -341,6 +353,11 @@ getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
     }
     IGHC_flank <- do.call("c", IGHC_flank)
     names(IGHC_flank) <- names(IGHC_granges)
+  } else if( "sterile" %in% names(definitions) ){
+    IGHC_flank <- definitions[["sterile"]]
+    if( ! all(names(IGHC_flank) == names(IGHC_granges)) ){
+      stop("'flank' and 'IGHC_granges' appear to have different order of C genes. Please fix them to have same order.")
+    }
   } else if( inherits(flank, "GRanges") ) {
     if( ! all(names(flank) == names(IGHC_granges)) ){
       stop("'flank' and 'IGHC_granges' appear to have different order of C genes. Please fix them to have same order.")
@@ -349,7 +366,6 @@ getIGHmapping <- function(bam, IGHC_granges, IGHVDJ_granges,
   } else {
     stop("'flank' must either be an integer (indicating 5' distance from the CH exons) or a GRanges object (indicating exact genomic positions) for defining sterile IgH transcripts.")
   }
-
 
   intronic <- do.call("rbind", lapply(names(IGHC_granges), function(isotype){
     out <- scanBam(bam, IGHC_flank[isotype],

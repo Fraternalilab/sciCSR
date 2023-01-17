@@ -92,54 +92,90 @@ collapseBCR <- function(tb, format = '10X', full.table = FALSE)
   }
 }
 
-#' Repairing cell barcodes in VDJ data frames to match the Seurat object
+#' Repairing cell barcodes in a list of data frames/matrices to match the Seurat object
 #'
 #' @description
-#' `repairBarcode` map samples to their specific barcode suffixes in the Seurat object and alters the cell barcode given in the VDJ data frame to match the Seurat object. This facilitates merging the repertoire data into the Seurat object as additional metadata columns.
+#' `repairBarcode` considers cell barcodes in the Seurat object and alters the cell barcode given in a list of data frames/matrices to match the Seurat object. This facilitates merging the data frames into the Seurat object as additional metadata columns.
+#' This function can be used either in merging
 #'
 #' @details
-#' The function first establishes a mapping table between samples (given in `seurat_sample_column` in the Seurat object) and their sample-specific cell barcode suffix, and then repairs the barcodes given in the VDJ data frame to match the Seurat object.
+#' This function would work either for a list of data frames where the cell barcodes are given in a column (either named 'barcode' or 'CB'), or a list of matrices where the cell barcodes are assumed to be row names of each matrix.
+#' The function first establishes a mapping table between samples (given in `seurat_sample_column` in the Seurat object) and their sample-specific cell barcode prefix/suffix, and then repairs the barcodes given in the VDJ data frame to match the Seurat object.
 #'
-#' @param vdj_list a list of data.frame, each holding VDJ data of 1 library
+#' @param data_list a list, each element either of class `data.frame` or `matrix`. Each element holds data from 1 library ('sample')
 #' @param SeuratObj Seurat object.
 #' @param sample_names a vector of sample names in the data. 'Sample' here refers to sequencing library.
 #' @param seurat_sample_column Column name in `SeuratObj` metadata where the sample name/ID information is stored.
 #'
-#' @return A list of vdj data.frames with the cell barcodes in the column 'barcode' repaired to match barcodes in the Seurat object.
+#' @return A list of data.frames/matrices with the cell barcodes repaired to match barcodes in the Seurat object.
 #' @export repairBarcode
 
-repairBarcode <- function(vdj_list, SeuratObj, sample_names,
+repairBarcode <- function(data_list, SeuratObj, sample_names,
                           seurat_sample_column = 'sample_id')
 {
   # Here establish a mapping table from the Seurat object and then
-  # overwrite the barcodes in the VDJ data frames
+  # overwrite the barcodes in the data frames
 
-  # strip the -[0-9] suffix in the VDJ data frame barcode column
-  for (i in seq_along(vdj_list)) {
-    vdj_list[[i]]$barcode <- sapply(vdj_list[[i]]$barcode, function(x){
-      unlist(strsplit(x, split = "-"))[1]
+  # first establish whether 'barcode' or 'CB' exists as columns of the dfs
+  runmode <- NA
+  for(i in seq_along(data_list)){
+    if( ! 'barcode' %in% colnames(data_list[[i]]) & ! 'CB' %in% colnames(data_list[[i]])){
+      if(inherits(data_list[[i]], "matrix")){
+        runmode <- "rownames"
+      } else{
+        stop("Can't find cell barcodes in input data frames/matrices. Check whether all data frames in data_list have a column named either 'barcode' or 'CB'. If they are matrices, cell barcodes should be row names of the matrix")
+      }
+    }
+  }
+  if( length(data_list) != length(sample_names) )
+    stop("'data_list' and 'sample_names' should be two vectors of the same length, and assumbed to be in the same order.")
+
+  # strip prefix/suffix from the data frame barcode column
+  barcodes_df <- list()
+  message("Assuming the order in sample_names correspond to the order in data_list. If this is not the case please rerun this function ensuring the order of these vectors match up.")
+  for (i in seq_along(sample_names)) {
+    if( is.na(runmode) ){
+      cell_barcode <- colnames(data_list[[i]])
+      cell_barcode <- sort(cell_barcode[which(cell_barcode %in% c("barcode", "CB"))])[1]
+      barcodes_df[[i]] <- sapply(colnames(data_list[[i]][, cell_barcode]), guessBarcodes)
+    } else if( runmode == "rownames" ){
+      barcodes_df[[i]] <- sapply(rownames(data_list[[i]]), guessBarcodes)
+    }
+  }
+  names( barcodes_df ) <- sample_names
+  barcodes_SeuratObj <- list()
+  for (i in seq_along(sample_names)) {
+    md <- slot(SeuratObj, "meta.data")
+    md <- md[which(md[, seurat_sample_column] == sample_names[i]), ]
+    barcodes_SeuratObj[[i]] <- sapply(rownames(md), guessBarcodes)
+  }
+  names( barcodes_SeuratObj ) <- sample_names
+  for(i in seq_along(sample_names)){
+    sample_name <- sample_names[i]
+    prefix_Seurat <- unique(barcodes_SeuratObj[[sample_name]][1, ])
+    if( length(prefix_Seurat) > 1 ){
+      stop(paste0("Sample '", sample_name, "' has more than one prefix in the cell names in SeuratObj. Please fix this."))
+    } else if( is.na(prefix_Seurat) ){
+      prefix_Seurat <- NULL
+    }
+    suffix_Seurat <- unique(barcodes_SeuratObj[[sample_name]][3, ])
+    if( length(suffix_Seurat) > 1 ){
+      stop(paste0("Sample '", sample_name, "' has more than one suffix in the cell names in SeuratObj. Please fix this."))
+    } else if( is.na(suffix_Seurat) ){
+      suffix_Seurat <- NULL
+    }
+    barcodes_df[[sample_name]] <- apply(barcodes_df[[sample_name]], MARGIN = 2, function(x){
+      paste0(prefix_Seurat, x[2], suffix_Seurat)
     })
+    if( is.na(runmode) ){
+      data_list[[i]][, cell_barcode] <- barcodes_df[[sample_name]]
+      data_list[[i]]$sample_name <- sample_id
+    } else if( runmode == "rownames" ){
+      rownames(data_list[[i]]) <- barcodes_df[[sample_name]]
+    }
   }
 
-  # mapping from suffix to sample names/IDs
-  sample_map <- SeuratObj@meta.data[, c(seurat_sample_column, "orig.ident")]
-  sample_map$suffix <- sapply(rownames(sample_map), function(x){
-    unlist(strsplit(x, split = "-"))[2]
-  })
-  sample_map <- unique(sample_map[, c(seurat_sample_column, "suffix")])
-  rownames(sample_map) <- sample_map[, seurat_sample_column]
-  sample_map <- sample_map[sample_names, ]
-  sample_map <- sample_map$suffix
-  names( sample_map ) <- sample_names
-  # overwrite cell barcodes by replacing suffixes
-  for (i in seq_along(vdj_list)) {
-    sample_id <- names(vdj_list)[i]
-    vdj_list[[i]]$barcode <- paste0(vdj_list[[i]]$barcode,
-                                    "-", sample_map[sample_id])
-    vdj_list[[i]]$sample_name <- sample_id
-  }
-
-  vdj_list
+  data_list
 }
 
 #' Add annotations from VDJ data frame into the Seurat object
@@ -234,6 +270,7 @@ AddCellMetaToVDJ <- function(vdj, SeuratObj, metadata_col,
     o <- merge(vdj, metadata, by.x = "barcode", by.y = barcode_col,
                all.x = TRUE, all.y = FALSE, sort = FALSE)
   } else {
+    metadata <- metadata[, metadata_col]
     o <- merge(vdj, metadata, by.x = "barcode", by.y = "row.names",
                all.x = TRUE, all.y = FALSE, sort = FALSE)
   }

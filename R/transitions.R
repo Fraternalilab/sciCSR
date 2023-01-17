@@ -574,6 +574,8 @@ splitAnnData <- function(anndata_file, split.by, levels, conda_env = 'scicsr')
   # Write out separate .h5ad file of the subsetted AnnData object
   use_condaenv(conda_env)
   py_run_string("import scanpy as sc")
+  py_run_string("import warnings")
+  py_run_string("warnings.filterwarnings('ignore')")
   py_run_string(paste0("adata = sc.read_h5ad('", anndata_file, "')"))
   out_fn <- c()
   for(lvl in levels){
@@ -660,11 +662,11 @@ fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotim
 #'
 #' @param anndata_file filename pointing to the AnnData file.
 #' @param CellrankObj the `cellrank_obj` entry of the output list of `fitTransitionModel`.
-#' @param conda_env character, if not NULL this named conda environment is used to perform the merge.
-#' (Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy`, `scvelo` and `cellrank` are installed in the local python)
 #' @param group.cells.by character, column in the metadata to group cells
 #' @param source_state character, a value in the `group.cells.by` column which is taken as the source state for fitting transition path theory. All cells belonging to this group are considered as the source.
 #' @param target_state character, a value in the `group.cells.by` column which is taken as the target state for fitting transition path theory. All cells belonging to this group are considered as the target.
+#' @param conda_env character, if not NULL this named conda environment is used to perform the merge.
+#' (Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy`, `scvelo` and `cellrank` are installed in the local python)
 #' @param random_n number of times to reshuffle transition matrix columns to derive randomised models (default: 100).
 #' @param do_pca Should principal component analysis (PCA) be re-computed on the data? (Default: TRUE)
 #' @param do_neighbors Should k-nearest neighbour (kNN) graph be re-computed on the data? (Default: TRUE)
@@ -685,8 +687,9 @@ fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotim
 #'
 #' @import reticulate
 #' @export fitTPT
-fitTPT <- function(anndata_file, CellrankObj, conda_env,
-                   group.cells.by, source_state, target_state, random_n = 100,
+fitTPT <- function(anndata_file, CellrankObj,
+                   group.cells.by, source_state, target_state,
+                   conda_env = NULL,random_n = 100,
                    do_pca = TRUE, do_neighbors = TRUE)
 {
   fit_coarse_grain_tpt <- NULL
@@ -734,167 +737,6 @@ fitTPT <- function(anndata_file, CellrankObj, conda_env,
                "gross_flux_randomised", "mfpt", "stationary_distribution",
                "mfpt_reshuffled", "stationary_distribution_reshuffled",
                "stationary_distribution_bootstrapping")])
-}
-
-#' Find the centroid of each cell cluster in the dimensionality-reduced space.
-#'
-#' @description
-#' `FindClusterCentroid` calculates for each cell cluster, the centroid coordinates in a specified dimensionality reduction space.
-#'
-#' @details
-#' `FindClusterCentroid` calculates the mean coordinate of the 2 axes of the dimensionality reduction space
-#' specified by `dim_reduce`, for each cluster specified by `group.by`.
-#'
-#' @param SeuratObj Seurat object
-#' @param group.by column in Seurat object meta.data to group the cells (Default: 'seurat_clusters')
-#' @param dim_reduce name of the dimensionality reduction to calculate centroid coordinates (Default: "UMAP")
-#'
-#' @return a data.frame of the coordinates (in the 2 axes of the dimenesionality reduced space) for each cell cluster.
-#'
-#' @importFrom stringr str_to_upper str_to_lower
-#' @importFrom plyr ddply
-#' @importFrom Seurat Reductions
-#' @export FindClusterCentroid
-FindClusterCentroid <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP")
-{
-  dim_reduce <- stringr::str_to_upper(dim_reduce)
-  if( ! stringr::str_to_lower(dim_reduce) %in% Seurat::Reductions(SeuratObj) )
-    stop(paste0("'", dim_reduce, "' is not found in the list of dimensionality reductions available for the given Seurat object."))
-  # calculate cluster centroid (i.e. mean UMAP_1, UMAP_2)
-  d <- Seurat::FetchData(SeuratObj, vars = c(paste0(dim_reduce, "_1"), paste0(dim_reduce, "_2"), group.by))
-  o <- plyr::ddply(d, .variables = group.by, function(x){
-    oo <- c( mean(x[, paste0(dim_reduce, "_1")]),
-             mean(x[, paste0(dim_reduce, "_2")]) )
-    names(oo) <- c(paste0(dim_reduce, "_1"), paste0(dim_reduce, "_2"))
-    return(oo)
-  })
-  oo <- as.matrix(o[, c(paste0(dim_reduce, "_1"), paste0(dim_reduce, "_2"))])
-  rownames(oo) <- o[, group.by]
-  return(oo)
-}
-
-#' Visualise fluxes between clusters with a network plot
-#'
-#' @description
-#' `plotFlux` plots fluxes between cell clusters in the form of a network plot.
-#'
-#' @details
-#' `plotFlux` represents fluxes between cell clusters in a graph, where the thickness of the edges signifies the
-#' amount of fluxes between the given pair of clusters. The placement of clusters respect their placements in the
-#' default dimensionality-reduced projection of the gene expression data stored in the Seurat Object (e.g. the UMAP
-#' projection calculated using Seurat). It can either be a stand-alone plot, or be added on top of UMAP projections (see example).
-#'
-#' @param TPTObj List of TPT results, output from the `fitTPT` function.
-#' @param SeuratObj Seurat object
-#' @param significance_threshold The minimum p-value in the `TPTObj$significance` matrix for a flux to be shown in the
-#' resulting plot (all fluxes with significance above this value will be removed from the visualisation). (Default: 0.1)
-#' @param mask_lower_tri Should fluxes which are considered 'reversed' (i.e. in the lower triangle of the flux matrix)
-#' be masked? (Default: FALSE, i.e. all fluxes in the gross_flux matrix is shown)
-#' @param mask_threshold the minimum percentage (max 100) of total flux to be shown in the resulting plot. (Default: 1, i.e.
-#' gross fluxes below 1 will be removed from the visualisation)
-#' @param new_plot Should a stand-alone plot be returned. If FALSE, ggplot2 geoms are returned for adding on top of e.g. Seurat::DimPlot. (Default: FALSE)
-#'
-#' @return If `new_plot` is TRUE, a network plot where the nodes are placed respecting the positioning of cell clusters in the dimensionality-reduction
-#' projection of the data, and the thickness of edges connecting the nodes signify the flux between pairs of clusters. If `new_plot` is FALSE,
-#' the `ggplot2` geom objects are returned to enable plotting the network graph on top of dimensionality projections (see example, where the UMAP
-#' projection is plotted using the function `dim_plot` implemented in this package).
-#'
-#' @import ggplot2
-#' @import ggnetwork
-#' @importFrom ggnewscale new_scale
-#' @importFrom stringr str_to_upper
-#' @importFrom plyr ddply
-#' @importFrom Seurat Reductions
-#' @export plotFlux
-plotFlux <- function(TPTObj, SeuratObj,
-                     significance_threshold = 0.1,
-                     mask_lower_tri = FALSE, mask_threshold = 1,
-                     new_plot = TRUE)
-{
-  flux_matrix <- TPTObj$gross_flux
-  significance_matrix <- TPTObj$significance
-  stationary_distribution <- TPTObj$stationary_distribution
-  # source("/media/josephn/Seagate4TB/GLT_datasets/ggplot2_multiple_scales.R")
-  flux_matrix[significance_matrix > significance_threshold] <- 0
-  if(mask_lower_tri){
-    flux_matrix[lower.tri(flux_matrix)] <- 0
-  } else if( is.numeric(mask_threshold) ) {
-    flux_matrix[flux_matrix <= mask_threshold] <- 0
-  }
-  graph <- igraph::graph_from_adjacency_matrix(flux_matrix,
-                                               weighted = TRUE, mode = "directed")
-  graph <- igraph::set_vertex_attr(graph, "nodeweight", value = stationary_distribution)
-  # initialise ggnetcombineLoomFileswork
-  cluster_pos <- FindClusterCentroid(SeuratObj)
-  graph <- ggnetwork(graph, layout = cluster_pos[rownames(flux_matrix), ])
-  graph[, "pointsize"] <- graph[, "nodeweight"] * 2
-  if( new_plot ){
-    ggplot(graph,
-           aes_string(x = "x", y = "y", xend = "xend", yend = "yend")) +
-      geom_edges(color = "grey50",
-                 arrow = arrow(length = unit(6, "pt"), type = "closed"),
-                 curvature = 0.2, aes_string(size = "weight")) +
-      scale_size_continuous(range = c(0.5, 2)) +
-      ggnewscale::new_scale("size") +
-      geom_point(aes_string(size = "pointsize"), color = 'orange') +
-      geom_nodetext(aes_string(label = "name", size = "nodeweight")) +
-      scale_size_continuous(range = c(3, 8)) +
-      theme_blank() + theme(legend.position = "none")
-  } else {
-    # rescale x, y, xend, yend
-    graph[, "x"] <- graph[, "x"] * abs(diff(range(cluster_pos[, "UMAP_1"]))) + min(cluster_pos[, "UMAP_1"])
-    graph[, "xend"] <- graph[, "xend"] * abs(diff(range(cluster_pos[, "UMAP_1"]))) + min(cluster_pos[, "UMAP_1"])
-    graph[, "y"] <- graph[, "y"] * abs(diff(range(cluster_pos[, "UMAP_2"]))) + min(cluster_pos[, "UMAP_2"])
-    graph[, "yend"] <- graph[, "yend"] * abs(diff(range(cluster_pos[, "UMAP_2"]))) + min(cluster_pos[, "UMAP_2"])
-    list(
-      geom_edges(color = "grey50",
-                 arrow = arrow(length = unit(6, "pt"), type = "closed"),
-                 curvature = 0.2, data = graph,
-                 aes_string(x = "x", y = "y", xend = "xend", yend = "yend", size = "weight")),
-      scale_size_continuous(range = c(0.5, 2), guide = "none"),
-      ggnewscale::new_scale("size"),
-      geom_point(data = graph, aes_string(x = "x", y = "y", size = "pointsize"),
-                 color = 'orange'),
-      geom_nodetext(data = graph, aes_string(x = "x", y = "y", label = "name")),
-      scale_size_continuous(range = c(0.1, 2), guide = "none")
-
-    )
-  }
-}
-
-#' Plot dimensionality-reduced projection of single-cell data
-#'
-#' @description
-#' `dim_plot` plots the dimensionality-reduced projection stored in the Seurat object.
-#'
-#' @details
-#' `dim_plot` effectively emulates the `DimPlot` function in Seurat, but here returns a native `ggplot2` object
-#' whch enables additional geoms (e.g. the flux network plot from `plotFlux`) to be drawn on top of the dimensionality-reduced
-#' projection.
-#'
-#' @param SeuratObj Seurat object
-#' @param group.by column in Seurat object meta.data to group the cells (Default: 'seurat_clusters')
-#' @param dim_reduce name of the dimensionality reduction to calculate centroid coordinates (Default: "UMAP")
-#'
-#' @return ggplot2 object of the dimensionality-reduced projection of the single-cell data, on the first 2 axes
-#' of the projection given in `dim_reduce`
-#'
-#' @import ggplot2
-#' @importFrom stringr str_to_upper
-#' @export dim_plot
-dim_plot <- function(SeuratObj, group.by = "seurat_clusters", dim_reduce = "UMAP")
-{
-  # emulate Seurat::DimPlot
-  dim_reduce <- stringr::str_to_upper(dim_reduce)
-  d <- Seurat::FetchData(SeuratObj, c(paste0(dim_reduce, "_1"), paste0(dim_reduce, "_2"), group.by))
-  n_clusters <- length(levels(d[, group.by]))
-  ggplot(d, aes_string(x = paste0(dim_reduce, "_1"), y = paste0(dim_reduce, "_2"))) +
-    geom_point(aes_string(colour = group.by)) +
-    scale_color_manual(values = scales::hue_pal()(n_clusters),
-                       name = group.by) +
-    cowplot::theme_cowplot() +
-    theme(axis.line = element_blank(), axis.ticks = element_blank(),
-          axis.text = element_blank(), axis.title = element_blank())
 }
 
 #' Visualise flux matrix describing class-switch recombination (CSR) transitions in data
