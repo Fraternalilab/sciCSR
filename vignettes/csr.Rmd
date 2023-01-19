@@ -15,20 +15,21 @@ In this vignette we will demonstrate the basic functions in sciCSR to analyse CS
 
 Start by loading the sciCSR package. **Before you run any examples/analysis with sciCSR for the FIRST time**, run the `prepare_sciCSR()` function - this will install all python dependencies for sciCSR to function.
 
-```{r}
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 library(sciCSR, quietly = TRUE)
 # We also need the Seurat package as sciCSR interfaces 
 # with Seurat data objects to manipulate scRNA-seq data
 library(Seurat)
 
-# NOT RUN unless this is the first time you set up sciCSR on your machine
+# Run this if this is the first time you set up sciCSR on 
+# your machine; this set up the dependencies in python
 prepare_sciCSR()
 
 ```
 
 # Load the dataset
 
-A subset of data from [Hong et al.]() is used as an example; in this dataset, knockout of the p19 component of Il23 reduces class-switching to the IgG2b isotype in mice. We shall use sciCSR to reproduce this finding. We have included in sciCSR a susbet of this data consisting of only 500 cells and ~ 2000 genes. 
+A subset of data from [Hong et al.](https://doi.org/10.4049/jimmunol.2000280) is used as an example; in this dataset, knockout of the p19 component of Il23 reduces class-switching to the IgG2b isotype in mice. We shall use sciCSR to reproduce this finding. We have included in sciCSR a susbet of this data consisting of only 4000 cells and ~ 200 genes. 
 
 ```{r}
 hong_sampled <- system.file("extdata/hong_sampled.rds", package = "sciCSR")
@@ -40,7 +41,7 @@ hong_sampled
 
 scBCR-seq (that is, single-cell BCR repertoire) data of the same set of cells are also available from the publication. We should integrate this data into the Seurat object so that we can benefit from the scBCR-seq data to calculate SHM levels of cells. sciCSR can also benefit from the isotype calls from scBCR-seq to group the cells by their isotypes (whilst this can in theory be also identified using scRNA-seq reads only [see below], since scBCR-seq libraries are enriched with BCR transcripts the isotype calls are typically more reliable). In the publication, Hong and colleagues also make use of the scBCR-seq data to remove non-B-cells from their analysis.
 
-sciCSR provides a series of functions to process the repertoire data tables, either in the form of `cellranger vdj` "filtered contig" CSV files or standard [AIRR format]() files (or indeed any tabular format as long as the cell barcodes are available in the tables). We can then add selected features from the repertoire annotations as metadata in the Seurat data object. In this case we have the filtered contig annotation files from `cellranger vdj`, but these annotations do not contain information regarding SHM (e.g. the sequence identity when compared to the assigned germline alleles). We have ran [IMGT/HighV-Quest]() on the filtered contig sequences and obtained an AIRR format table as output. Here we read in the cellranger contig annotations, merge this with the IgBLAST AIRR output, and then proceed to extract features from this merged table for adding them to the Seurat data object. **If you wish to use SHM information for sciCSR, make sure you re-analyse the scBCR-seq contigs with another tool** (e.g. IgBLAST, [pRESTO](), [IgBLAST]() etc., or any custom in-house scripts) **before merging the data!**
+sciCSR provides a series of functions to process the repertoire data tables, either in the form of `cellranger vdj` "filtered contig" CSV files or standard [AIRR format](https://docs.airr-community.org/en/v1.3.0/datarep/format.html) files (or indeed any tabular format as long as the cell barcodes are available in the tables). We can then add selected features from the repertoire annotations as metadata in the Seurat data object. In this case we have the filtered contig annotation files from `cellranger vdj`, but these annotations do not contain information regarding SHM (e.g. the sequence identity when compared to the assigned germline alleles). We have ran [IMGT/HighV-Quest](https://www.imgt.org/HighV-QUEST/home.action) on the filtered contig sequences and obtained an AIRR format table as output. Here we read in the cellranger contig annotations, merge this with the IgBLAST AIRR output, and then proceed to extract features from this merged table for adding them to the Seurat data object. **If you wish to use SHM information for sciCSR, make sure you re-analyse the scBCR-seq contigs with another tool** (e.g. IMGT/HighV-Quest, [pRESTO](https://presto.readthedocs.io/en/stable/), [IgBLAST](https://www.ncbi.nlm.nih.gov/igblast/) etc., or any custom in-house scripts) **before merging the data!**
 
 ```{r, fig.width=5, fig.height = 3.5}
 # this is the filtered_contig_annotations.csv file from cellranger vdj
@@ -247,7 +248,7 @@ hong_b <- getSHM(hong_b, v_identity_anno_name = "IGH_v_identity")
 
 ```
 
-Now we have the necessary data to perform any inference of transitions. In sciCSR, we rely on the python package [CellRank]() and a few other packages for the underlying calculations. First convert the Seurat object into AnnData (.h5ad) files.
+Now we have the necessary data to perform any inference of transitions. In sciCSR, we rely on the python package [CellRank](https://cellrank.readthedocs.io/en/stable/) and a few other packages for the underlying calculations. First convert the Seurat object into AnnData (.h5ad) files.
 
 ```{r}
 convertSeuratToH5ad(hong_b, assays = c("RNA"), "hong_sampled_bcells.h5ad")
@@ -293,7 +294,7 @@ g_ko_shm <- fitTransitionModel(
 
 ```
 
-sciCSR uses a series of python packages (scanpy, CellRank) to load these data and infer transitions - but python is called at the backend and you perform all your analysis in R thanks to the sciCSR package!
+sciCSR uses a series of python packages ([scanpy](https://scanpy.readthedocs.io/en/stable/), [CellRank](https://cellrank.readthedocs.io/en/stable/), [deeptime](https://deeptime-ml.github.io/latest/index.html) etc.) to load these data and infer transitions - but python is called at the backend and you perform all your analysis in R thanks to the sciCSR package!
 
 We would ideally like some form of visualisation to demonstrate any difference in the inferred transitions. In our case, we would ideally expect a visualisation which indicates that the knockout condition has fewer switches involving IgG2b given this is what the other experiments have demonstrated in the Hong et al. manuscript. We can attempt to plot arrows similar to conventional RNA velocity projection on UMAP plots. However, this doesn't always work for analysing class-switching, since quite often cells of different isotypes do not necessarily occupy distinct spaces in the UMAP projection - there are many other transcripts driving the variations in the data that dictates where they sit on the dimensionality projection. As such, projecting arrows directly on top of the UMAP may not be very informative.
 
@@ -309,30 +310,27 @@ TPT and these related randomisation routines are implemented under the function 
 # matrices inferred using fitTransitionModel
 
 # TPT on the CSR-based matrices
-# In the data, there are no cells which are IgE/IgA
-# so we choose source = 'M' and target = 'G2c' (the 
-# furthest isotype along the Igh locus)
 tpt_ko_csr <- fitTPT(
   anndata_file = "hong_sampled_bcells_assay-RNA_IL23--.h5ad",
   CellrankObj = g_ko_csr, group.cells.by = "isotype",
-  source_state = 'M', target_state = 'G2c'
+  source_state = 'M', target_state = 'A'
 )
 tpt_wt_csr <- fitTPT(
   anndata_file = "hong_sampled_bcells_assay-RNA_WT.h5ad",
   CellrankObj = g_wt_csr, group.cells.by = "isotype",
-  source_state = 'M', target_state = 'G2c'
+  source_state = 'M', target_state = 'A'
 )
 
 # TPT on the SHM-based matrices
 tpt_ko_shm <- fitTPT(
   anndata_file = "hong_sampled_bcells_assay-RNA_IL23--.h5ad",
   CellrankObj = g_ko_shm, group.cells.by = "isotype",
-  source_state = 'M', target_state = 'G2c'
+  source_state = 'M', target_state = 'A'
 )
 tpt_wt_shm <- fitTPT(
   anndata_file = "hong_sampled_bcells_assay-RNA_WT.h5ad",
   CellrankObj = g_wt_shm, group.cells.by = "isotype",
-  source_state = 'M', target_state = 'G2c'
+  source_state = 'M', target_state = 'A'
 )
 ```
 
@@ -430,6 +428,8 @@ ggplot(fluxes[which(!is.na(fluxes$flux_diff)), ],
 
 ```
 
+We can reproduce the main finding from the Hong et al. paper that the Il23 knockout conditions would deplete switching to IgG2b. In this example we performed the analysis on sampled data (we cannot put datasets which are too large in the package!) so whilst other fluxes on the plot might be different had we use the entire dataset, it is encouraging that the major result involving IgG2b still comes up prominent in this visualisation.
+
 Finally, we can generate the same visualisation with the SHM-based inference. As in the code above, we performed the inference of transition matrix using SHM information, but for TPT we still group the cells by their isotypes and infer fluxes between isotypes. Since in theory CSR and SHM are both B cell maturation processes, we would expect inference from the two differnet sources of information to capture similar transitions.
 
 ```{r}
@@ -486,3 +486,5 @@ ggplot(fluxes_shm[which(!is.na(fluxes_shm$flux_diff)), ],
   scale_y_discrete(drop = FALSE) 
 
 ```
+
+Congratulations, you have now gone through the major functionalities of sciCSR. sciCSR offers further capabilities to compare inference results based on CSR, SHM and RNA velocity. If you are interested, please check out [this vignette]() for a worked-out example on how sciCSR can help in this type of analysis.

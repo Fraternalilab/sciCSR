@@ -27,5 +27,5 @@ prepare_sciCSR <- function()
     conda_install(envname = 'scicsr', packages = 'cellrank',
                   channel = c('conda-forge', 'bioconda'), pip = TRUE)
   }
-  return(NULL)
+  return("All dependencies have been installed. Have fun with running sciCSR!")
 }
