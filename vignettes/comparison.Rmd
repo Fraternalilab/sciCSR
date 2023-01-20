@@ -1,8 +1,7 @@
 ---
 title: "Comparing state transitions inferred using CSR, SHM and RNA velocity"
-author: "Joseph Ng"
-date: '2023-01-17'
-output: html_document
+resource_files:
+  - images/sample_msm.png
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +14,7 @@ In this vignette we will show you how to compare the transitions inferred using 
 
 Start by loading the sciCSR package. **Before you run any examples/analysis with sciCSR for the FIRST time**, run the `prepare_sciCSR()` function - this will install all python dependencies for sciCSR to function.
 
-```{r, message=FALSE, warning=FALSE, include=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(sciCSR, quietly = TRUE)
 # We also need the Seurat package as sciCSR interfaces 
 # with Seurat data objects to manipulate scRNA-seq data
@@ -129,9 +128,9 @@ combineLoomFiles(
 )
 ```
 
-We are next ready to merge these unspliced and spliced counts to the annotated data object. Since we are going to rely on the python pacakge scVelo for RNA velocity analysis, here we convert the Seurat object into an AnnData file, and then merge the velocyto data into this AnnData object - again we provide two separate functions, `convertSeuratToH5ad()` and `mergeVelocytoWithGEX`.
+We are next ready to merge these unspliced and spliced counts to the annotated data object. Since we are going to rely on the python pacakge scVelo for RNA velocity analysis, here we convert the Seurat object into an AnnData file, and then merge the velocyto data into this AnnData object - we provide two separate functions, `convertSeuratToH5ad()` and `mergeVelocytoWithGEX()`.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 # convert the Seurat object into AnnData
 convertSeuratToH5ad(
   SeuratObj = king, assays = "RNA",
@@ -192,7 +191,9 @@ plot_arrows(
            "#00C08B", "#00BFC4", "#00B4F0", "#619CFF", "#C77CFF",
            "#F564E3", "#FF64B0"),
   # indicate 'grid' if you want to plot arrows onto a grid of fixed points
-  style = "grid"
+  style = "grid",
+  # (Optional) you can give the plot a customised title as well
+  title = "King et al. Donor BCP4 RNA velocity on a grid"
 )
 ```
 
@@ -241,7 +242,6 @@ The visualisations above clearly show some similarities (for example, the transi
 Here we show you another way to answer the question of 'How different are the transitions inferred using CSR/SHM to those based on RNA velocity'. In sciCSR we uses CSR/SHM information to fit models of state transitions using Markov State Models (MSM). One powerful properties of MSM is, they specify the transition likelihoods between every state in the data, such that we can 'generate'/'simulate' new transitions as if we have data from a new cell and follow how it moves across the landscape of states. Similar MSMs would produce similar pathways of transitions across this landscape; we can take a note at the frequencies each state is visited in these simulated pathways, and then derive a numerical metric to quantify the similarity in terms of the frequencies of visiting each states in these MSM-simulated paths (Illustration below).
 
 <img src="images/sample_msm.png" alt="Illustration of sampling paths using MSM", width="300">
-
 
 In sciCSR, the way we can perform this analysis is, first fit transition models and obtain separate R objects which store these models. We can then use the function `compareTransitionMatrices()` to quantify the similarities of these transition models:
 

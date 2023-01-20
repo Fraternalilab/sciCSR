@@ -1,8 +1,5 @@
 ---
 title: "Analysing Class-Switch Recombination in B cell scRNA-seq data using sciCSR"
-author: "Joseph Ng"
-date: '2023-01-17'
-output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +12,7 @@ In this vignette we will demonstrate the basic functions in sciCSR to analyse CS
 
 Start by loading the sciCSR package. **Before you run any examples/analysis with sciCSR for the FIRST time**, run the `prepare_sciCSR()` function - this will install all python dependencies for sciCSR to function.
 
-```{r, message=FALSE, warning=FALSE, include=FALSE}
+```{r message=FALSE, warning=FALSE}
 library(sciCSR, quietly = TRUE)
 # We also need the Seurat package as sciCSR interfaces 
 # with Seurat data objects to manipulate scRNA-seq data
@@ -250,7 +247,7 @@ hong_b <- getSHM(hong_b, v_identity_anno_name = "IGH_v_identity")
 
 Now we have the necessary data to perform any inference of transitions. In sciCSR, we rely on the python package [CellRank](https://cellrank.readthedocs.io/en/stable/) and a few other packages for the underlying calculations. First convert the Seurat object into AnnData (.h5ad) files.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 convertSeuratToH5ad(hong_b, assays = c("RNA"), "hong_sampled_bcells.h5ad")
 ```
 
@@ -385,7 +382,7 @@ ggplot(stationary_distribution,
 
 Another way to visualise the inference is to visualise the inferred flux matrix itself, i.e. to compare the amount of transitions involving each pair of isotypes. The function `plotFluxMatrix` provides this visualisation:
 
-```{r, fig.width=7, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 # Once again we use the plot_grid() function in the cowplot package
 # to arrange the two plots side by side
 plot_grid(
@@ -430,9 +427,9 @@ ggplot(fluxes[which(!is.na(fluxes$flux_diff)), ],
 
 We can reproduce the main finding from the Hong et al. paper that the Il23 knockout conditions would deplete switching to IgG2b. In this example we performed the analysis on sampled data (we cannot put datasets which are too large in the package!) so whilst other fluxes on the plot might be different had we use the entire dataset, it is encouraging that the major result involving IgG2b still comes up prominent in this visualisation.
 
-Finally, we can generate the same visualisation with the SHM-based inference. As in the code above, we performed the inference of transition matrix using SHM information, but for TPT we still group the cells by their isotypes and infer fluxes between isotypes. Since in theory CSR and SHM are both B cell maturation processes, we would expect inference from the two differnet sources of information to capture similar transitions.
+Finally, we can generate the same visualisation with the SHM-based inference. As in the code above, we performed the inference of transition matrix using SHM information, but for TPT we still group the cells by their isotypes and infer fluxes between isotypes. Since in theory CSR and SHM are both B cell maturation processes, we would expect inference from the two different sources of information to capture similar transitions.
 
-```{r}
+```{r, fig.width=5, fig.height=4}
 stationary_distribution_shm <- list(
   "WT" = plotStationaryDistribution(tpt_wt_shm, SeuratObj = hong_b,
                                     return_plot = FALSE),
@@ -487,4 +484,4 @@ ggplot(fluxes_shm[which(!is.na(fluxes_shm$flux_diff)), ],
 
 ```
 
-Congratulations, you have now gone through the major functionalities of sciCSR. sciCSR offers further capabilities to compare inference results based on CSR, SHM and RNA velocity. If you are interested, please check out [this vignette]() for a worked-out example on how sciCSR can help in this type of analysis.
+Congratulations, you have now gone through the major functionalities of sciCSR. sciCSR offers further capabilities to compare inference results based on CSR, SHM and RNA velocity. If you are interested, please check out [this vignette](articles/comparison.html) for a worked-out example on how sciCSR can help in this type of analysis.

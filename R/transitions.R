@@ -248,6 +248,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
 #'
 #' @return A vector of .h5ad filenames which are outputted. Each file correspond to one Seurat assay, as indicated in the suffix inside the filename (see examples).
 #'
+#' @import reticulate
 #' @importFrom Seurat Assays
 #' @importFrom SeuratDisk SaveH5Seurat Convert
 #' @export convertSeuratToH5ad
@@ -1030,7 +1031,7 @@ plot_arrows <- function(anndata_file, img_path = NULL, based_on = 'velocity',
     arguments <- paste0(arguments, " --palette '", cols, "'")
   }
   if( !is.null( title ) ){
-    arguments <- paste0(arguments, " --title ", title)
+    arguments <- paste0(arguments, " --title '", title, "'")
   }
   system2(command = py_config()[["python"]], args = arguments)
   img <- readPNG(img_path)

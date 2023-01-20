@@ -1,0 +1,6 @@
+url: https://http://josephng-bio.org/sciCSR
+template:
+  bootstrap: 5
+  bootswatch: cerulean
+figures:
+   dev: grDevices::png
