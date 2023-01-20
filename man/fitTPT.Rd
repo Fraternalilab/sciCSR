@@ -7,10 +7,10 @@
 fitTPT(
   anndata_file,
   CellrankObj,
-  conda_env,
   group.cells.by,
   source_state,
   target_state,
+  conda_env = NULL,
   random_n = 100,
   do_pca = TRUE,
   do_neighbors = TRUE
@@ -21,14 +21,14 @@ fitTPT(
 
 \item{CellrankObj}{the `cellrank_obj` entry of the output list of `fitTransitionModel`.}
 
-\item{conda_env}{character, if not NULL this named conda environment is used to perform the merge.
-(Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy`, `scvelo` and `cellrank` are installed in the local python)}
-
 \item{group.cells.by}{character, column in the metadata to group cells}
 
 \item{source_state}{character, a value in the `group.cells.by` column which is taken as the source state for fitting transition path theory. All cells belonging to this group are considered as the source.}
 
 \item{target_state}{character, a value in the `group.cells.by` column which is taken as the target state for fitting transition path theory. All cells belonging to this group are considered as the target.}
+
+\item{conda_env}{character, if not NULL this named conda environment is used to perform TPT analysis.
+(Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy`, `scvelo` and `cellrank` are installed in the local python)}
 
 \item{random_n}{number of times to reshuffle transition matrix columns to derive randomised models (default: 100).}
 

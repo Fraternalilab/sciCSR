@@ -14,7 +14,7 @@ indicating distinct levels to split the AnnData.}
 
 \item{levels}{vector of values which can be found in the column given by `split.by`. Subsets of the Anndata by each value of `levels` will be made and written out into .h5ad files.}
 
-\item{conda_env}{character, if not NULL this named conda environment is used to perform the merge.
+\item{conda_env}{character, if not NULL this named conda environment is used to perform the split.
 (Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
 }
 \value{

@@ -4,7 +4,7 @@
 \alias{convertSeuratToH5ad}
 \title{wrapper function to convert Seurat Object to a AnnData .h5ad file}
 \usage{
-convertSeuratToH5ad(SeuratObj, assays, h5ad_filename)
+convertSeuratToH5ad(SeuratObj, assays, h5ad_filename, conda_env = "scicsr")
 }
 \arguments{
 \item{SeuratObj}{Seurat Object}
@@ -12,6 +12,9 @@ convertSeuratToH5ad(SeuratObj, assays, h5ad_filename)
 \item{assays}{A vector of assay names from SeuratObj to be exported}
 
 \item{h5ad_filename}{Filename of the output .h5ad file. Note that the final output filenames will have the assay names appended to this (see examples).}
+
+\item{conda_env}{character, if not NULL this named conda environment is used.
+(Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
 }
 \value{
 A vector of .h5ad filenames which are outputted. Each file correspond to one Seurat assay, as indicated in the suffix inside the filename (see examples).

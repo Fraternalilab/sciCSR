@@ -4,12 +4,12 @@
 \alias{summariseIGHreads}
 \title{cast data frame IGH counts into a matrix}
 \usage{
-summariseIGHreads(tb, IGHC_granges)
+summariseIGHreads(tb, definitions)
 }
 \arguments{
 \item{tb}{A data.frame, output from `getIGHreadType`.}
 
-\item{IGHC_granges}{`GenomicRanges` object detailing the positions of IgH C genes in the genome.}
+\item{definitions}{A list of `GenomicRanges::GRanges` object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.}
 }
 \value{
 An array of cell barcode by IGH gene type (i.e. S/P/C per C gene)

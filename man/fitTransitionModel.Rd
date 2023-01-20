@@ -16,7 +16,7 @@ fitTransitionModel(
 \arguments{
 \item{anndata_file}{filename pointing to the AnnData file.}
 
-\item{conda_env}{character, if not NULL this named conda environment is used to perform the merge.
+\item{conda_env}{character, if not NULL this named conda environment is used to run CellRank.
 (Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy`, `scvelo` and `cellrank` are installed in the local python)}
 
 \item{mode}{character, either 'pseudotime' (uses the cellrank 'PseudotimeKernel') or 'velocity' (cellrank 'VelocityKernel'). (Default: 'pseudotime')}

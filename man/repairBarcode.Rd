@@ -2,17 +2,17 @@
 % Please edit documentation in R/merge_repertoire.R
 \name{repairBarcode}
 \alias{repairBarcode}
-\title{Repairing cell barcodes in VDJ data frames to match the Seurat object}
+\title{Repairing cell barcodes in a list of data frames/matrices to match the Seurat object}
 \usage{
 repairBarcode(
-  vdj_list,
+  data_list,
   SeuratObj,
   sample_names,
   seurat_sample_column = "sample_id"
 )
 }
 \arguments{
-\item{vdj_list}{a list of data.frame, each holding VDJ data of 1 library}
+\item{data_list}{a list, each element either of class `data.frame` or `matrix`. Each element holds data from 1 library ('sample')}
 
 \item{SeuratObj}{Seurat object.}
 
@@ -21,11 +21,13 @@ repairBarcode(
 \item{seurat_sample_column}{Column name in `SeuratObj` metadata where the sample name/ID information is stored.}
 }
 \value{
-A list of vdj data.frames with the cell barcodes in the column 'barcode' repaired to match barcodes in the Seurat object.
+A list of data.frames/matrices with the cell barcodes repaired to match barcodes in the Seurat object.
 }
 \description{
-`repairBarcode` map samples to their specific barcode suffixes in the Seurat object and alters the cell barcode given in the VDJ data frame to match the Seurat object. This facilitates merging the repertoire data into the Seurat object as additional metadata columns.
+`repairBarcode` considers cell barcodes in the Seurat object and alters the cell barcode given in a list of data frames/matrices to match the Seurat object. This facilitates merging the data frames into the Seurat object as additional metadata columns.
+This function can be used either in merging
 }
 \details{
-The function first establishes a mapping table between samples (given in `seurat_sample_column` in the Seurat object) and their sample-specific cell barcode suffix, and then repairs the barcodes given in the VDJ data frame to match the Seurat object.
+This function would work either for a list of data frames where the cell barcodes are given in a column (either named 'barcode' or 'CB'), or a list of matrices where the cell barcodes are assumed to be row names of each matrix.
+The function first establishes a mapping table between samples (given in `seurat_sample_column` in the Seurat object) and their sample-specific cell barcode prefix/suffix, and then repairs the barcodes given in the VDJ data frame to match the Seurat object.
 }

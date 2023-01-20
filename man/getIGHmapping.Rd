@@ -6,8 +6,7 @@
 \usage{
 getIGHmapping(
   bam,
-  IGHC_granges,
-  IGHVDJ_granges,
+  definitions,
   cellBarcodeTag = "CB",
   umiTag = "UB",
   paired = FALSE,
@@ -17,9 +16,7 @@ getIGHmapping(
 \arguments{
 \item{bam}{filepath to the BAM file to read}
 
-\item{IGHC_granges}{`GenomicRanges::GRanges` object specifying the genomic range of the IGH C gene **coding regions**.}
-
-\item{IGHVDJ_granges}{`GenomicRanges::GRanges` object specifying the genomic range of the IGH VDJ genes.}
+\item{definitions}{A list of `GenomicRanges::GRanges` object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.}
 
 \item{cellBarcodeTag}{Name of tag holding information about cell barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "CB")}
 
@@ -27,7 +24,7 @@ getIGHmapping(
 
 \item{paired}{Are the sequencing reads paired-end? (Default: FALSE)}
 
-\item{flank}{either (1) an integer (indicating 5' distance from the CH exons) or (2) a `GRanges` object (indicating exact genomic positions) for defining sterile IgH transcripts. (See Examples)}
+\item{flank}{either (1) an integer (indicating 5' distance from the CH exons) or (2) a `GRanges` object (indicating exact genomic positions) for defining sterile IgH transcripts. Ignored if the positions of sterile transcripts are already included in `definitions`.}
 }
 \value{
 A list with two items:

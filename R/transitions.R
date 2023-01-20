@@ -1,3 +1,36 @@
+#' read loom matrices
+#'
+#' @description
+#' reproduce read.loom.matrices from velocyto.R to avoid problems in installing dependencies
+#'
+#' @importFrom hdf5r H5File list.datasets
+read_loom_matrices <- function (file, engine = "hdf5r")
+{
+  if (engine == "hdf5r") {
+    # cat("reading loom file via hdf5r...\n")
+    f <- hdf5r::H5File$new(file, mode = "r")
+    cells <- f[["col_attrs/CellID"]][]
+    genes <- f[["row_attrs/Gene"]][]
+    dl <- c(spliced = "layers/spliced", unspliced = "layers/unspliced",
+            ambiguous = "layers/ambiguous")
+    if ("layers/spanning" %in% hdf5r::list.datasets(f)) {
+      dl <- c(dl, c(spanning = "layers/spanning"))
+    }
+    dlist <- lapply(dl, function(path) {
+      m <- as(t(f[[path]][, ]), "dgCMatrix")
+      rownames(m) <- genes
+      colnames(m) <- cells
+      return(m)
+    })
+    f$close_all()
+    return(dlist)
+  }
+  else {
+    warning("Unknown engine. Use hdf5r to import loom file.")
+    return(list())
+  }
+}
+
 #' get somatic hypermutation level
 #'
 #' @description
@@ -353,7 +386,6 @@ guessBarcodes <- function(cell_name, min_barcode_length = 6)
 #'
 #' @return a output message indicating success of writing out the merged loom matrices into the file given by `new_loom_file`.
 #'
-#' @importFrom velocyto.R read.loom.matrices
 #' @import hdf5r
 #' @export combineLoomFiles
 combineLoomFiles <- function(loom_files, new_loom_filename,
@@ -367,7 +399,7 @@ combineLoomFiles <- function(loom_files, new_loom_filename,
 
   if( length(loom_files) != length(sample_names) )
     stop("'loom_files' and 'sample_names' should be two vectors of the same length, and assumbed to be in the same order.")
-  loom_objs <- lapply(loom_files, velocyto.R::read.loom.matrices)
+  loom_objs <- lapply(loom_files, read_loom_matrices)
   # strip the -[0-9] suffix in the VDJ data frame barcode column
   barcodes_loom <- list()
   message("Assuming the order in sample_names correspond to the order in loom_files. If this is not the case please rerun this function ensuring the order of these vectors match up.")
