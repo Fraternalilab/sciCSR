@@ -3,7 +3,12 @@
 #' @description
 #' reproduce read.loom.matrices from velocyto.R to avoid problems in installing dependencies
 #'
+#' @param file input loom file
+#' @param engine package to read h5 file type (only 'hdf5r' supported now)
+#'
 #' @importFrom hdf5r H5File list.datasets
+#' @importFrom methods as
+#' @export read_loom_matrices
 read_loom_matrices <- function (file, engine = "hdf5r")
 {
   if (engine == "hdf5r") {

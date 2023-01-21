@@ -1,5 +1,10 @@
 ---
 title: "Analysing Class-Switch Recombination in B cell scRNA-seq data using sciCSR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteIndexEntry{Basic sciCSR usage to analyse CSR in B cell scRNA-seq}
+  %\usepackage[UTF-8]{inputenc}
 ---
 
 ```{r setup, include=FALSE}

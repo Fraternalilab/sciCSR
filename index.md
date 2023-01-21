@@ -15,10 +15,11 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
 }
 remotes::install_github("mojaveazure/seurat-disk")
 
-# install sciCSR (requires 'devtools')
+# install dependencies and sciCSR itself (requires 'devtools')
 if (!require('devtools')){
   install.packages('devtools')
 }
+devtools::install_github("velocyto-team/velocyto.R")
 devtools::install_github('Fraternalilab/sciCSR')
 ```
 

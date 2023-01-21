@@ -27,6 +27,7 @@ prepare_sciCSR <- function()
     conda_install(envname = 'scicsr', packages = 'cellrank',
                   channel = c('conda-forge', 'bioconda'))
     conda_install(envname = 'scicsr', packages = 'networkx==2.8.2')
+    conda_install(envname = 'scicsr', packages = 'multiprocess')
   }
   return("All dependencies have been installed. Have fun with running sciCSR!")
 }

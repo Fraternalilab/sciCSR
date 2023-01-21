@@ -1,5 +1,10 @@
 ---
 title: "Comparing state transitions inferred using CSR, SHM and RNA velocity"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteIndexEntry{Comparing inference based on CSR, SHM and RNA velocity}
+  %\usepackage[UTF-8]{inputenc}
 resource_files:
   - images/sample_msm.png
 ---
@@ -101,10 +106,10 @@ print(head(Cells(king)[which(king$Sample == "BCP4_Total")]))
 We have prefixes `BCP4_MBC_` and `BCP4_Total_` appended to the cell barcodes. If we inspect the two `.loom` files separately, this isn't the case:
 
 ```{r}
-# the function 'read.loom.matrices' in the velocyto.R package can
-# read each loom matrix separately
+# the function 'read.loom.matrices' simplified fron the one in the 
+# velocyto.R package can read each loom matrix separately
 # here read one just to see what's in there
-mbc_loom <- velocyto.R::read.loom.matrices(basename(loom_files[1]))
+mbc_loom <- read_loom_matrices(basename(loom_files[1]))
 print(summary(mbc_loom))
 
 # the loom file basically contain 3 matrices, one for spliced transcript 

@@ -1,6 +1,6 @@
 Package: sciCSR
 Type: Package
-Title: Single-cell Cluster-based Inference of Class Switch Recombination
+Title: Single-cell Inference of Class Switch Recombination
 Version: 0.1.1
 Authors@R: c( person( given = "Joseph", family = "Ng",
                       email = "joseph.chifung.ng@gmail.com", role = c( "aut", "cre" ) ) )
@@ -34,6 +34,7 @@ Imports: GenomeInfoDb,
          Rsamtools, 
          ggplot2,
          hdf5r
+Suggests: markdown, knitr         
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

@@ -6,6 +6,11 @@
 \usage{
 read_loom_matrices(file, engine = "hdf5r")
 }
+\arguments{
+\item{file}{input loom file}
+
+\item{engine}{package to read h5 file type (only 'hdf5r' supported now)}
+}
 \description{
 reproduce read.loom.matrices from velocyto.R to avoid problems in installing dependencies
 }

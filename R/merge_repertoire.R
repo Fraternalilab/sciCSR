@@ -169,7 +169,7 @@ repairBarcode <- function(data_list, SeuratObj, sample_names,
     })
     if( is.na(runmode) ){
       data_list[[i]][, cell_barcode] <- barcodes_df[[sample_name]]
-      data_list[[i]]$sample_name <- sample_id
+      data_list[[i]]$sample_name <- sample_name
     } else if( runmode == "rownames" ){
       rownames(data_list[[i]]) <- barcodes_df[[sample_name]]
     }

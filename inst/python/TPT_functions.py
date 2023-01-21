@@ -1,5 +1,5 @@
 # customs functions to override committor (fwd/bwd) calculation in deeptime
-import multiprocessing
+import multiprocess
 from functools import partial
 import deeptime.markov.tools.analysis as msmana
 from deeptime.markov.msm import MarkovStateModel
@@ -275,6 +275,29 @@ def fit_tpt(transition_matrix, source_states, target_states, verbose = True):
                         stationary_distribution=stationary_distribution,
                         qminus=qminus, qplus=qplus, gross_flux=grossflux)
 
+def getReshuffledFlux_(i, tm, cluster_ident, source, target):
+    random.seed(i + 1)
+    # random reshuffle columns
+    indices = np.arange(tm.shape[1])
+    random.shuffle(indices)
+    # tm = tm[:, indices]
+    cluster_ident_random = dict()
+    j = 0
+    for key, item in cluster_ident.items():
+        cluster_ident_random[key] = indices[j:(j + len(item))]
+        j += len(item)
+    flux = fit_tpt(tm, cluster_ident_random[source], cluster_ident_random[target], verbose=False)
+    (tpt_sets, tpt_coarse) = flux.coarse_grain([np.array(item) for c, item in cluster_ident_random.items()])
+    # flux = fit_tpt(tm, cluster_ident[source], cluster_ident[target], verbose=False)
+    # (tpt_sets, tpt_coarse) = flux.coarse_grain([np.array(item) for c, item in cluster_ident.items()])
+    # get the gross_flux matrix
+    gross_flux = tpt_coarse.gross_flux
+    gross_flux = gross_flux * 100 / gross_flux.sum()
+    # get the net_flux matrix
+    net_flux = tpt_coarse.net_flux
+    net_flux = net_flux * 100 / net_flux.sum()
+    return {"tpt": tpt_coarse, "gross_flux": gross_flux, "net_flux": net_flux}
+
 def getReshuffledFlux(transition_matrix, cluster_ident, source, target, n = 100, show_progress_bar = True):
     """
     reshuffle transition matrix columns to get 'randomised' flux
@@ -302,34 +325,13 @@ def getReshuffledFlux(transition_matrix, cluster_ident, source, target, n = 100,
         
     out = []
     n_cpus = os.cpu_count()
-    
-    with multiprocessing.Pool(int(n_cpus / 2)) as p:
-        out = list(tqdm(p.imap(partial(getReshuffledFlux_, tm = transition_matrix, cluster_ident = cluster_ident, source = source, target = target), range(int(n))), total=int(n)))
+    if n_cpus == 1:
+        out = [getReshuffledFlux_(i, tm = transition_matrix, cluster_ident = cluster_ident, source = source, target = target) for i in range(int(n))]
+    else:
+        with multiprocess.Pool(int(n_cpus / 2)) as p:
+            out = list(tqdm(p.imap(partial(getReshuffledFlux_, tm = transition_matrix, cluster_ident = cluster_ident, source = source, target = target), range(int(n))), total=int(n)))
 
     return out
-
-def getReshuffledFlux_(i, tm, cluster_ident, source, target):
-    random.seed(i + 1)
-    # random reshuffle columns
-    indices = np.arange(tm.shape[1])
-    random.shuffle(indices)
-    # tm = tm[:, indices]
-    cluster_ident_random = dict()
-    j = 0
-    for key, item in cluster_ident.items():
-        cluster_ident_random[key] = indices[j:(j + len(item))]
-        j += len(item)
-    flux = fit_tpt(tm, cluster_ident_random[source], cluster_ident_random[target], verbose=False)
-    (tpt_sets, tpt_coarse) = flux.coarse_grain([np.array(item) for c, item in cluster_ident_random.items()])
-    # flux = fit_tpt(tm, cluster_ident[source], cluster_ident[target], verbose=False)
-    # (tpt_sets, tpt_coarse) = flux.coarse_grain([np.array(item) for c, item in cluster_ident.items()])
-    # get the gross_flux matrix
-    gross_flux = tpt_coarse.gross_flux
-    gross_flux = gross_flux * 100 / gross_flux.sum()
-    # get the net_flux matrix
-    net_flux = tpt_coarse.net_flux
-    net_flux = net_flux * 100 / net_flux.sum()
-    return {"tpt": tpt_coarse, "gross_flux": gross_flux, "net_flux": net_flux}
 
 def getStationaryDistribution(stationary_microstates, cluster_ident, seed):
     """
