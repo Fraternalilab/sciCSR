@@ -9,13 +9,13 @@ annotatePairing(tb_list, c_gene_column = "c_gene")
 \arguments{
 \item{tb_list}{list of data.frame holding VDJ data. Each element corresponds to subset of sequences bearing one specific cell barcode}
 
-\item{c_gene_column}{Column name indicating where the isotype/light chain type information is stored in the data.frames in `tb_list`.}
+\item{c_gene_column}{Column name indicating where the isotype/light chain type information is stored in the data.frames in \code{tb_list}.}
 }
 \value{
 Any one of 'singlet', 'BCR_doublet', 'multi_LC_same_class', 'multi_LC_diff_class' or 'multi_HC', according to the rules stated in the 'Details' section.
 }
 \description{
-`annotatePairing` checks the repertoire table to annotate heavy-light chain pairing. This function classifies for a given cell (i.e. a given cell barcode)
+\code{annotatePairing} checks the repertoire table to annotate heavy-light chain pairing. This function classifies for a given cell (i.e. a given cell barcode)
 whether it is a singlet/doublet etc. based on the number of heavy (H) and light (L) chain sequences observed in the data
 }
 \details{

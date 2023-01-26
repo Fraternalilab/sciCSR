@@ -1,7 +1,7 @@
 #' Annotate heavy-light chain pairing
 #'
 #' @description
-#' `annotatePairing` checks the repertoire table to annotate heavy-light chain pairing. This function classifies for a given cell (i.e. a given cell barcode)
+#' \code{annotatePairing} checks the repertoire table to annotate heavy-light chain pairing. This function classifies for a given cell (i.e. a given cell barcode)
 #' whether it is a singlet/doublet etc. based on the number of heavy (H) and light (L) chain sequences observed in the data
 #'
 #' @details
@@ -16,7 +16,7 @@
 #' }
 #'
 #' @param tb_list list of data.frame holding VDJ data. Each element corresponds to subset of sequences bearing one specific cell barcode
-#' @param c_gene_column Column name indicating where the isotype/light chain type information is stored in the data.frames in `tb_list`.
+#' @param c_gene_column Column name indicating where the isotype/light chain type information is stored in the data.frames in \code{tb_list}.
 #'
 #' @return Any one of 'singlet', 'BCR_doublet', 'multi_LC_same_class', 'multi_LC_diff_class' or 'multi_HC', according to the rules stated in the 'Details' section.
 #' @export annotatePairing
@@ -39,7 +39,7 @@ annotatePairing <- function(tb_list, c_gene_column = 'c_gene')
 #' Collapse the VDJ repertoire data frames by cell barcode
 #'
 #' @description
-#' `collapseBCR` considers an input data frame of scBCR-seq contig annotations and collapses this data frame such that for each cell at most 1 heavy chain and 1 ligh chain are retained as representative, in order to merge these data into the Seurat object holding scRNA-seq data where data are organised at a per-cell level.
+#' \code{collapseBCR} considers an input data frame of scBCR-seq contig annotations and collapses this data frame such that for each cell at most 1 heavy chain and 1 ligh chain are retained as representative, in order to merge these data into the Seurat object holding scRNA-seq data where data are organised at a per-cell level.
 #'
 #' @details
 #' The function cleans the barcode table such that potential doublets and/or cells with more than 1 heavy/light chain sequences are dealt with prior to merging with scRNA-seq data in the form of Seurat objects to avoid problems in merging owing to one-to-many mapping between cell barcode and sequences.
@@ -49,8 +49,8 @@ annotatePairing <- function(tb_list, c_gene_column = 'c_gene')
 #' @param format data format. Default = '10X'. For the moment only '10X' is supported.
 #' @param full.table if TRUE, will return a list with two elements (1) the collapsed data with max 1H and 1L per cell, and (2) the full table (Default: FALSE)
 #'
-#' @return If `full.table` is FALSE, an input data frame where for each cell at most 1 heavy chain and 1 light chain will be retained as representative. Otherwise, it will be a list of 2 data frames, one the collapsed version and one the full version.
-#' An additional column 'bcr_type' will be added to the data frame indicating whether each cell barcode is a singlet/doublet etc. based on the number of observed heavy/light chains. (see `?annotatePairing()`)
+#' @return If \code{full.table} is FALSE, an input data frame where for each cell at most 1 heavy chain and 1 light chain will be retained as representative. Otherwise, it will be a list of 2 data frames, one the collapsed version and one the full version.
+#' An additional column 'bcr_type' will be added to the data frame indicating whether each cell barcode is a singlet/doublet etc. based on the number of observed heavy/light chains. (see \code{?annotatePairing()})
 #' @export collapseBCR
 
 collapseBCR <- function(tb, format = '10X', full.table = FALSE)
@@ -95,17 +95,16 @@ collapseBCR <- function(tb, format = '10X', full.table = FALSE)
 #' Repairing cell barcodes in a list of data frames/matrices to match the Seurat object
 #'
 #' @description
-#' `repairBarcode` considers cell barcodes in the Seurat object and alters the cell barcode given in a list of data frames/matrices to match the Seurat object. This facilitates merging the data frames into the Seurat object as additional metadata columns.
-#' This function can be used either in merging
+#' \code{repairBarcode} considers cell barcodes in the Seurat object and alters the cell barcode given in a list of data frames/matrices to match the Seurat object. This facilitates merging the data frames into the Seurat object as additional metadata columns.
 #'
 #' @details
 #' This function would work either for a list of data frames where the cell barcodes are given in a column (either named 'barcode' or 'CB'), or a list of matrices where the cell barcodes are assumed to be row names of each matrix.
-#' The function first establishes a mapping table between samples (given in `seurat_sample_column` in the Seurat object) and their sample-specific cell barcode prefix/suffix, and then repairs the barcodes given in the VDJ data frame to match the Seurat object.
+#' The function first establishes a mapping table between samples (given in \code{seurat_sample_column} in the Seurat object) and their sample-specific cell barcode prefix/suffix, and then repairs the barcodes given in the VDJ data frame to match the Seurat object.
 #'
-#' @param data_list a list, each element either of class `data.frame` or `matrix`. Each element holds data from 1 library ('sample')
+#' @param data_list a list, each element either of class \code{data.frame} or \code{matrix}. Each element holds data from 1 library ('sample')
 #' @param SeuratObj Seurat object.
 #' @param sample_names a vector of sample names in the data. 'Sample' here refers to sequencing library.
-#' @param seurat_sample_column Column name in `SeuratObj` metadata where the sample name/ID information is stored.
+#' @param seurat_sample_column Column name in \code{SeuratObj} metadata where the sample name/ID information is stored.
 #'
 #' @return A list of data.frames/matrices with the cell barcodes repaired to match barcodes in the Seurat object.
 #' @export repairBarcode
@@ -181,18 +180,18 @@ repairBarcode <- function(data_list, SeuratObj, sample_names,
 #' Add annotations from VDJ data frame into the Seurat object
 #'
 #' @description
-#' `combineBCR` merges annotations from data frames holding repertoire data as metadata of a Seurat object.
+#' \code{combineBCR} merges annotations from data frames holding repertoire data as metadata of a Seurat object.
 #'
 #' @details
 #' The function first reorganises the VDJ data frame such that one line represent 1 cell.
 #' It then selects columns from this data frame and add them as metadata in the given Seurat object.
 #'
-#' @param vdj a data.frame of VDJ data after running `collapseBCR`.
+#' @param vdj a data.frame of VDJ data after running \code{\link{collapseBCR}}.
 #' @param SeuratObj Seurat object.
-#' @param keep_columns a vector of column names in `vdj` to be kept and added to the metadata slot of the Seurat object.
+#' @param keep_columns a vector of column names in \code{vdj} to be kept and added to the metadata slot of the Seurat object.
 #' By default the following informations are included: VDJ gene usage, isotype, CDR3 sequence, as well as binary indications of full-length/productive.
-#' @param seurat_sample_column (Optional) Column name in `SeuratObj` metadata where the sample name/ID information is stored. Used when the barcode column from vdj data frame does not match cell names from the Seurat object given by `Cells(SeuratObj)`.
-#' @param seurat_cell_name_column (Optional) Column name in `SeuratObj` metadata where the cell barcodes are stored. Used when the barcode column from vdj data frame does not match cell names from the Seurat object given by `Cells(SeuratObj)`.
+#' @param seurat_sample_column (Optional) Column name in \code{SeuratObj} metadata where the sample name/ID information is stored. Used when the barcode column from vdj data frame does not match cell names from the Seurat object given by \code{\link[Seurat]{Cells}(SeuratObj)}.
+#' @param seurat_cell_name_column (Optional) Column name in \code{SeuratObj} metadata where the cell barcodes are stored. Used when the barcode column from vdj data frame does not match cell names from the Seurat object given by \code{\link[Seurat]{Cells}(SeuratObj)}.
 #'
 #' @return Seurat object with VDJ annotations added to the metadata slot.
 #' @importFrom Seurat AddMetaData Cells
@@ -244,12 +243,12 @@ combineBCR <- function(vdj, SeuratObj,
 #' Add cell metadata from Seurat object into VDJ data frame
 #'
 #' @description
-#' `AddCellMetaToVDJ` merges annotations from Seurat object (e.g. cluster annotations) into VDJ repertoire data frame.
+#' \code{AddCellMetaToVDJ} merges annotations from Seurat object (e.g. cluster annotations) into VDJ repertoire data frame.
 #'
 #' @details
 #' The function accepts any columns found in the metadata slot of the Seurat object. You need to indicate for each column whether the data
 #'
-#' @param vdj a data.frame of VDJ data after running `collapseBCR`.
+#' @param vdj a data.frame of VDJ data after running \code{\link{collapseBCR}}.
 #' @param SeuratObj Seurat object.
 #' @param metadata_col vector of column names from SeuratObj denoting the desired metadata to be extracted and added to vdj
 #' @param barcode_col column name in SeuratObj metadata which holds cell barcodes. (Default: 'row.names' i.e. use row names of SeruatObj metadata as cell barcodes)

@@ -7,7 +7,7 @@
 getJunctionReads(read_info)
 }
 \arguments{
-\item{read_info}{output from `scanBam` containing details of the aligned reads for VDJ, C and intronic regions.}
+\item{read_info}{output from \code{\link{scanBam}} containing details of the aligned reads for VDJ, C and intronic regions.}
 }
 \value{
 A data.frame containing details of reads which cover splice junctions:
@@ -19,10 +19,10 @@ A data.frame containing details of reads which cover splice junctions:
 }
 }
 \description{
-`getJunctionReads` extract reads from `scanBam` that cover splice junctions.
+\code{getJunctionReads} extract reads from \code{\link{scanBam}} that cover splice junctions.
 }
 \details{
-`getJunctionReads` extract reads from `scanBam` that cover splice junctions.
+\code{getJunctionReads} extract reads from \code{\link{scanBam}} that cover splice junctions.
 This considers only those which cover BOTH VDJ and C exons/introns, and
 strange cases which cover multiple different IGHC genes.
 }

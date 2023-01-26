@@ -7,15 +7,15 @@
 summariseIGHreads(tb, definitions)
 }
 \arguments{
-\item{tb}{A data.frame, output from `getIGHreadType`.}
+\item{tb}{A data.frame, output from \code{getIGHreadType}.}
 
-\item{definitions}{A list of `GenomicRanges::GRanges` object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.}
+\item{definitions}{A list of \code{GenomicRanges::GRanges} object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.}
 }
 \value{
 An array of cell barcode by IGH gene type (i.e. S/P/C per C gene)
 }
 \description{
-`summariseIGHreads` converts the data.frame of sterile/productive IGH molecules into a count matrix.
+\code{summariseIGHreads} converts the data.frame of sterile/productive IGH molecules into a count matrix.
 }
 \details{
 The function does a count of molecules classified to be Sterile (S), Productive (P) or C-only (C) for each isotype,

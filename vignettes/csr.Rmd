@@ -228,7 +228,9 @@ In sciCSR we argue that the quantification of sterile and productive transcripts
 
 sciCSR calculates a "CSR potential" which ranks cells from a naive state to a memory/plasma cell state, based on their expression pattern of the sterile and productive IgH transcripts. We ensure that these CSR potential scores can be compared across conditions and datasets, by making use of reference B cell atlases and training isotype "signatures" (i.e. the expression pattern of all isotypes' sterile and productive transcripts altogether) from these references to be applied to any user-supplied datasets. We then use the CSR potentials as "pseudotime" ordering of the cells; this is provided as inputs to the CellRank method to infer transitions. As such, instead of RNA velocity which is typically used as input to CellRank, here we derive a CSR-based pseudotime ordering to infer the transitions of B cell states.
 
-Alternatively, sciCSR can also build transition models, but using SHM level as input. The function `getSHM()` will calculate SHM level using the formula $SHM = 1 - \text{sequence identity to germline V gene (%)}$.
+Alternatively, sciCSR can also build transition models, but using SHM level as input. The function `getSHM()` will calculate SHM level using this formula: 
+
+$$SHM = 1 - \text{sequence identity to germline V gene (%)}$$
 
 ```{r}
 # calculate CSR potential
@@ -489,4 +491,4 @@ ggplot(fluxes_shm[which(!is.na(fluxes_shm$flux_diff)), ],
 
 ```
 
-Congratulations, you have now gone through the major functionalities of sciCSR. sciCSR offers further capabilities to compare inference results based on CSR, SHM and RNA velocity. If you are interested, please check out [this vignette](articles/comparison.html) for a worked-out example on how sciCSR can help in this type of analysis.
+Congratulations, you have now gone through the major functionalities of sciCSR. sciCSR offers further capabilities to compare inference results based on CSR, SHM and RNA velocity. If you are interested, please check out [this vignette](comparison.html) for a worked-out example on how sciCSR can help in this type of analysis.

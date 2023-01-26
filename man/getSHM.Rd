@@ -16,15 +16,15 @@ which holds the SHM frequency calculated in this function}
 }
 \value{
 The same Seurat object as given by SeuratObj, except that a new column with
-name given by `shm_column_to_add` is appended to the SeuratObj meta.data slot to reflects
+name given by \code{shm_column_to_add} is appended to the SeuratObj meta.data slot to reflects
 the calculated SHM frequency.
 }
 \description{
-`getSHM` calculates somatic hypermutation (i.e. 1 - (percentage identity to germline VH gene)).
+\code{getSHM} calculates somatic hypermutation (i.e. 1 - (percentage identity to germline VH gene)).
 }
 \details{
-`getSHM` considers the `v_identity` (i.e. % identity to germline V gene) for the VH sequence
-mapped to each cell, and calculate 1 - `v_identity` as the somatic hypermutation (SHM)
+\code{getSHM} considers the \code{v_identity} (i.e. % identity to germline V gene) for the VH sequence
+mapped to each cell, and calculate 1 - \code{v_identity} as the somatic hypermutation (SHM)
 level for the cell. It finds the v_identity information from the meta.data slot of the Seurat object.
 For cells without a mapped V sequence, it will impute SHM as 0.
 }

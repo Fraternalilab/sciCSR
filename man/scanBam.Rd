@@ -9,7 +9,7 @@ scanBam(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB", paired = FALSE)
 \arguments{
 \item{bam}{filepath to the BAM file to read}
 
-\item{gRange}{`GenomicRanges::GRanges` object specifying the genomic range to scan. See Examples.}
+\item{gRange}{\code{GenomicRanges::GRanges} object specifying the genomic range to scan. See Examples.}
 
 \item{cellBarcodeTag}{Name of tag holding information about cell barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "CB")}
 
@@ -25,22 +25,22 @@ A data.frame:
   \item{pos}{genomic position}
   \item{cigar}{CIGAR string indicating the result of aligning the sequencing read to the nominated position in the genome. See the SAM format specification document linked above in the Description for details}
   \item{flag}{the FLAG field in the SAM file. Indication of the nature of the alignment. See the SAM specification linked above in the Description for more details.}
-  \item{`cellBarcodeTag` (Default: "CB")}{cell barcode}
-  \item{`umiTag` (Default: "UB")}{Unique molecule identifier (UMI)}
+  \item{\code{cellBarcodeTag} (Default: "CB")}{cell barcode}
+  \item{\code{umiTag} (Default: "UB")}{Unique molecule identifier (UMI)}
 }
 The scanning of the BAM file by default removes secondary alignments, duplicates and reverse complement alignments.
 }
 \description{
-`scanBam` looks for reads in a BAM file which are mapped to a genomic
-range given by the parameter `gRange`.
+\code{scanBam} looks for reads in a BAM file which are mapped to a genomic
+range given by the parameter \code{gRange}.
 }
 \details{
 The function looks for BAM alignments which are mapped to the genomic
-range given by the parameter `gRange`. All alignments which *span across*
-`gRange` but do not have bases which reside within the range will be ignored
+range given by the parameter \code{gRange}. All alignments which *span across*
+\code{gRange} but do not have bases which reside within the range will be ignored
 (e.g. a spliced read spans across a given range but will not have any bases which
 map to the spliced range). The function expects [standard BAM/SAM format specification](https://samtools.github.io/hts-specs/SAMv1.pdf)
 plus additional tags indicating the associated cell and molecule barcodes.
-Set `cellBarcodeTag` and/or `umiTag` as NULL or NA if these tags are absent from
+Set \code{cellBarcodeTag} and/or \code{umiTag} as NULL or NA if these tags are absent from
 the given BAM file.
 }

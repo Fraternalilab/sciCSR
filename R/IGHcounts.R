@@ -1,21 +1,21 @@
 #' Scan reads mapped to a given genomic range
 #'
 #' @description
-#' `scanBam` looks for reads in a BAM file which are mapped to a genomic
-#' range given by the parameter `gRange`.
+#' \code{scanBam} looks for reads in a BAM file which are mapped to a genomic
+#' range given by the parameter \code{gRange}.
 #'
 #' @details
 #' The function looks for BAM alignments which are mapped to the genomic
-#' range given by the parameter `gRange`. All alignments which *span across*
-#' `gRange` but do not have bases which reside within the range will be ignored
+#' range given by the parameter \code{gRange}. All alignments which *span across*
+#' \code{gRange} but do not have bases which reside within the range will be ignored
 #' (e.g. a spliced read spans across a given range but will not have any bases which
 #' map to the spliced range). The function expects [standard BAM/SAM format specification](https://samtools.github.io/hts-specs/SAMv1.pdf)
 #' plus additional tags indicating the associated cell and molecule barcodes.
-#' Set `cellBarcodeTag` and/or `umiTag` as NULL or NA if these tags are absent from
+#' Set \code{cellBarcodeTag} and/or \code{umiTag} as NULL or NA if these tags are absent from
 #' the given BAM file.
 #'
 #' @param bam filepath to the BAM file to read
-#' @param gRange `GenomicRanges::GRanges` object specifying the genomic range to scan. See Examples.
+#' @param gRange \code{GenomicRanges::GRanges} object specifying the genomic range to scan. See Examples.
 #' @param cellBarcodeTag Name of tag holding information about cell barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "CB")
 #' @param umiTag Name of tag holding information about molecule barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "UB")
 #' @param paired Are the sequencing reads paired-end? (Default: FALSE)
@@ -27,8 +27,8 @@
 #'   \item{pos}{genomic position}
 #'   \item{cigar}{CIGAR string indicating the result of aligning the sequencing read to the nominated position in the genome. See the SAM format specification document linked above in the Description for details}
 #'   \item{flag}{the FLAG field in the SAM file. Indication of the nature of the alignment. See the SAM specification linked above in the Description for more details.}
-#'   \item{`cellBarcodeTag` (Default: "CB")}{cell barcode}
-#'   \item{`umiTag` (Default: "UB")}{Unique molecule identifier (UMI)}
+#'   \item{\code{cellBarcodeTag} (Default: "CB")}{cell barcode}
+#'   \item{\code{umiTag} (Default: "UB")}{Unique molecule identifier (UMI)}
 #' }
 #' The scanning of the BAM file by default removes secondary alignments, duplicates and reverse complement alignments.
 #'
@@ -97,7 +97,7 @@ scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
 #' Deduce type of IGH reads
 #'
 #' @description
-#' `getIGHreadType` deduces, for each molecule in each cell identified via `scanBam`,
+#' \code{getIGHreadType} deduces, for each molecule in each cell identified via \code{\link{scanBam}},
 #' whether it corresponds to a productive (labelled "-P") or a sterile ("-S") IGH
 #' molecule. A third category ("-C") is assigned if insufficient information is present
 #' to distinguish "-P" and "-S".
@@ -118,7 +118,7 @@ scanBam <- function(bam, gRange, cellBarcodeTag = "CB", umiTag = "UB",
 #' A third category (-C) is assigned if insufficient information is available to classify
 #' the molecule in to the '-P' or the '-S' groups.
 #'
-#' @param tb A data.frame, output from `scanBam`.
+#' @param tb A data.frame, output from \code{scanBam}.
 #'
 #' @importFrom stringr str_extract_all
 #' @export getIGHreadType
@@ -219,14 +219,14 @@ getIGHreadType <- function(tb)
 #' cast data frame IGH counts into a matrix
 #'
 #' @description
-#' `summariseIGHreads` converts the data.frame of sterile/productive IGH molecules into a count matrix.
+#' \code{summariseIGHreads} converts the data.frame of sterile/productive IGH molecules into a count matrix.
 #'
 #' @details
 #' The function does a count of molecules classified to be Sterile (S), Productive (P) or C-only (C) for each isotype,
 #' over molecules per cell barcode and cast this count into a matrix of cell barcodes by IGH molecule type.
 #'
-#' @param tb A data.frame, output from `getIGHreadType`.
-#' @param definitions A list of `GenomicRanges::GRanges` object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.
+#' @param tb A data.frame, output from \code{getIGHreadType}.
+#' @param definitions A list of \code{GenomicRanges::GRanges} object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.
 #'
 #' @return An array of cell barcode by IGH gene type (i.e. S/P/C per C gene)
 #'
@@ -249,31 +249,31 @@ summariseIGHreads <- function(tb, definitions)
 #' wrapper function to scan sterile/productive IGH molecules from BAM file
 #'
 #' @description
-#' `getIGHmapping` is the wrapper function intended for users to supply a BAM file,
+#' \code{getIGHmapping} is the wrapper function intended for users to supply a BAM file,
 #' and scan for sterile and productive IGH transcripts over each C gene as defined in the parameter
-#' `IGHC_granges`.
+#' \code{IGHC_granges}.
 #'
 #' @details
-#' The function reads in two `GenomicRanges::GRanges` objects, one defining the genomic
+#' The function reads in two \code{GenomicRanges::GRanges} objects, one defining the genomic
 #' coordinates of the IGHC genes and another for the VDJ genes. It scans the BAM file
 #' for reads covering these regions, extracting their mapped cell barcodes and Unique
 #' Molecule identifier (UMI). Sterile reads are defined as those covering the intronic region
 #' upstream of the 5' end of the C gene coding region - the default is to consider the region
-#' (min(`previous_C_CDS_end`, `-flank`), 0), where `previous_C_CDS_end` refers to the
-#' 3' end of the coding region of the previous C gene, and `flank` is an integr, given by the
+#' (min(\code{previous_C_CDS_end}, \code{-flank}), 0), where \code{previous_C_CDS_end} refers to the
+#' 3' end of the coding region of the previous C gene, and \code{flank} is an integr, given by the
 #' user, which indicates 'how far' the function should looks 5' of the coding region for
 #' sterile reads.
 #' If you have information on where the sterile transcripts begin, these coordinatees can be
-#' passed as a `GRanges` object to the parameter `flank` (see examples).
+#' passed as a \code{GRanges} object to the parameter \code{flank} (see examples).
 #' Outputs data frame of cell barcodes and molecules mapped to
 #' each IGHC gene, classified as sterile/productive/C-only.
 #'
 #' @param bam filepath to the BAM file to read
-#' @param definitions A list of `GenomicRanges::GRanges` object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.
+#' @param definitions A list of \code{GenomicRanges::GRanges} object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.
 #' @param cellBarcodeTag Name of tag holding information about cell barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "CB")
 #' @param umiTag Name of tag holding information about molecule barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "UB")
 #' @param paired Are the sequencing reads paired-end? (Default: FALSE)
-#' @param flank either (1) an integer (indicating 5' distance from the CH exons) or (2) a `GRanges` object (indicating exact genomic positions) for defining sterile IgH transcripts. Ignored if the positions of sterile transcripts are already included in `definitions`.
+#' @param flank either (1) an integer (indicating 5' distance from the CH exons) or (2) a \code{GRanges} object (indicating exact genomic positions) for defining sterile IgH transcripts. Ignored if the positions of sterile transcripts are already included in \code{definitions}.
 #'
 #' @return A list with two items:
 #' \describe{
@@ -410,14 +410,14 @@ getIGHmapping <- function(bam, definitions,
 #' extract reads covering splice junctions
 #'
 #' @description
-#' `getJunctionReads` extract reads from `scanBam` that cover splice junctions.
+#' \code{getJunctionReads} extract reads from \code{\link{scanBam}} that cover splice junctions.
 #'
 #' @details
-#' `getJunctionReads` extract reads from `scanBam` that cover splice junctions.
+#' \code{getJunctionReads} extract reads from \code{\link{scanBam}} that cover splice junctions.
 #' This considers only those which cover BOTH VDJ and C exons/introns, and
 #' strange cases which cover multiple different IGHC genes.
 #'
-#' @param read_info output from `scanBam` containing details of the aligned reads for VDJ, C and intronic regions.
+#' @param read_info output from \code{\link{scanBam}} containing details of the aligned reads for VDJ, C and intronic regions.
 #'
 #' @return A data.frame containing details of reads which cover splice junctions:
 #' \describe{

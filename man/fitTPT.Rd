@@ -19,16 +19,16 @@ fitTPT(
 \arguments{
 \item{anndata_file}{filename pointing to the AnnData file.}
 
-\item{CellrankObj}{the `cellrank_obj` entry of the output list of `fitTransitionModel`.}
+\item{CellrankObj}{the \code{cellrank_obj} entry of the output list of \code{\link{fitTransitionModel}()}.}
 
 \item{group.cells.by}{character, column in the metadata to group cells}
 
-\item{source_state}{character, a value in the `group.cells.by` column which is taken as the source state for fitting transition path theory. All cells belonging to this group are considered as the source.}
+\item{source_state}{character, a value in the \code{group.cells.by} column which is taken as the source state for fitting transition path theory. All cells belonging to this group are considered as the source.}
 
-\item{target_state}{character, a value in the `group.cells.by` column which is taken as the target state for fitting transition path theory. All cells belonging to this group are considered as the target.}
+\item{target_state}{character, a value in the \code{group.cells.by} column which is taken as the target state for fitting transition path theory. All cells belonging to this group are considered as the target.}
 
-\item{conda_env}{character, if not NULL this named conda environment is used to perform TPT analysis.
-(Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy`, `scvelo` and `cellrank` are installed in the local python)}
+\item{conda_env}{character, if not \code{NULL} this named conda environment is used to perform TPT analysis.
+(Default: \code{NULL}, i.e. no conda environment will be used, the program assumes the python packages \code{scanpy}, \code{scvelo} and \code{cellrank} are installed in the local python)}
 
 \item{random_n}{number of times to reshuffle transition matrix columns to derive randomised models (default: 100).}
 
@@ -40,28 +40,28 @@ fitTPT(
 a list with these entries:
 \describe{
   \item{gross_flux}{a n-by-n matrix (where n is the total number of states), of total fluxes estimated between from a state (row) to another state (column). }
-  \item{pathways}{a data.frame indicating the possible paths to take from `source_state` to `target_state`, and the likelihood (max: 100) to travel through each stated path.}
+  \item{pathways}{a data.frame indicating the possible paths to take from \code{source_state} to \code{target_state}, and the likelihood (max: 100) to travel through each stated path.}
   \item{significance}{a n-by-n matrix (where n is the total number of states), where the observed gross flux is greater than the flux estimated in the randomised models. }
   \item{total_gross_flux}{element-wise sum of the gross_flux matrix. }
   \item{total_gross_flux_reshuffled}{element-wise sum of the gross_flux matrix, calculated over each randomised (randomly reshuffled transition matrix coluns) models.}
   \item{gross_flux_randomised}{gross_flux matrix but from the randomised (randomly reshuffled transition matrix coluns) TPT models.}
-  \item{mfpt}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory. }
-  \item{mfpt_reshuffled}{Mean First Passage Time required to travel from `source_state` to `target_state` as estimated by Transition Path Theory, calculated over each randomised (randomly reshuffled transition matrix coluns) models. }
+  \item{mfpt}{Mean First Passage Time required to travel from \code{source_state} to \code{target_state} as estimated by Transition Path Theory. }
+  \item{mfpt_reshuffled}{Mean First Passage Time required to travel from \code{source_state} to \code{target_state} as estimated by Transition Path Theory, calculated over each randomised (randomly reshuffled transition matrix coluns) models. }
   \item{stationary_distribution}{Equilibrium probability of each state as estimated by Transition Path Theory. }
   \item{stationary_distribution_reshuffled}{Equilibrium probability of each state as estimated by Transition Path Theory, calculated over each randomised (randomly reshuffled transition matrix coluns) models. }
 }
 }
 \description{
-`fitTPT` fits Transition Path Theory on the transition model defined using `fitTransitionModel`, at
+\code{fitTPT} fits Transition Path Theory on the transition model defined using \code{\link{fitTransitionModel}()}, at
 a 'coarse-grained' level where transitions are considered between *groups* of cells with grouping indicated by the user.
 }
 \details{
-`fitTPT` interfaces with (and reimplements some routines to improve efficincy) the Python `deeptime` package to fit transition path theory (TPT) onto the markov state model defined by running
-the `fitTransitionModel` function that uses cellrank under the hood. With the parameter `group.cells.by`, the user specifies
+\code{fitTPT} interfaces with (and reimplements some routines to improve efficincy) the Python \code{deeptime} package to fit transition path theory (TPT) onto the markov state model defined by running
+the \code{\link{fitTransitionModel}} function that uses cellrank under the hood. With the parameter \code{group.cells.by}, the user specifies
 a scheme to group individual row/columns of the transition matrix (for example, by cell type or by isotype). The function
 then fits TPT on to this grouped/'coarse-grained' transition matrix, upon user indicating a likely 'source' and 'target' state.
 The output are estimated information flows ('flux') between different states in order to flow from the source to the target,
 and the probabilities of sampling each state at equilibrium ('stationary distribution').
-A random 'null background' model was fitted by randomly reshuffling columns of the transition matrix by `random_n` (default: 100) times.
-These random fluxes help determine the significance of an observed flux, by calculating one-sided empirical probabilitys of the observed flux larger than the that observed in the randomised models.
+A random 'null background' model was fitted by randomly reshuffling columns of the transition matrix by \code{random_n} (default: 100) times.
+These random fluxes help determine the significance of an observed flux, by calculating one-sided empirical probabilities of the observed flux larger than the that observed in the randomised models.
 }

@@ -1,0 +1,16 @@
+citHeader("To cite sciCSR in publications, please use:")
+
+citEntry(entry = "article",
+  author = personList(as.person("Joseph CF Ng"),
+                      as.person("Guillem Montamat Garcia"),
+                      as.person("Alexander T Stewart"),
+                      as.person("Paul Blair"),
+                      as.person("Deborah K Dunn-Walters"),
+                      as.person("Claudia Mauri"),
+                      as.person("Franca Fraternali")),
+  title = "sciCSR infers B cell state transition and predicts class-switch recombination dynamics using single-cell transcriptomic data",
+  year = 2023,
+  journal = "Manuscript in preparation",
+  textVersion = "Ng et al. sciCSR infers B cell state transition and predicts class-switch recombination dynamics using single-cell transcriptomic data. Manuscript in preparation (2023)"
+)
+

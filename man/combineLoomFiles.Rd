@@ -19,21 +19,21 @@ combineLoomFiles(
 
 \item{SeuratObj}{corresponding Seurat Object}
 
-\item{sample_names}{vector of sample names to be looked for in the `seurat_sample_column` column of the Seurat metadata.
-Assumed this is in the same order as the order given in `loom_files`.}
+\item{sample_names}{vector of sample names to be looked for in the \code{seurat_sample_column} column of the Seurat metadata.
+Assumed this is in the same order as the order given in \code{loom_files}.}
 
-\item{seurat_sample_column}{column name in the Seurat metadata where the different values given in `sample_names` can be found}
+\item{seurat_sample_column}{column name in the Seurat metadata where the different values given in \code{sample_names} can be found}
 }
 \value{
-a output message indicating success of writing out the merged loom matrices into the file given by `new_loom_file`.
+a output message indicating success of writing out the merged loom matrices into the file given by \code{new_loom_file}.
 }
 \description{
-`combineLoomFiles` combines .loom files generated using velocyto, on multiple BAM files,
+\code{combineLoomFiles} combines .loom files generated using velocyto, on multiple BAM files,
 into one loom file with the cell barcodes fixed to reflect the cell names in the given Seurat object.
 }
 \details{
-`combineLoomFiles` take a vector of `sample_names` (which is assumed to be of the same length and
-in the same order as `loom_files`), parse the prefix and suffix added to the cell barcodes belonging to the
+\code{combineLoomFiles} take a vector of \code{sample_names} (which is assumed to be of the same length and
+in the same order as \code{loom_files}), parse the prefix and suffix added to the cell barcodes belonging to the
 given sample, and modify the column names of the matrices in the loom files accordingly. This allows for
 combining the matrices coming from different samples without ambiguity of cell barcodes.
 It then checks the matrices for overlap of genes with the given Seurat Object, and remove duplicated genes,

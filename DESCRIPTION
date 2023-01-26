@@ -8,6 +8,7 @@ Author: Joseph Ng [aut, cre]
 Maintainer: Joseph Ng <joseph.chifung.ng@gmail.com>
 Description: Package for inferring the dynamics of B cell state transitions using B-cell native processes (class-switch recombination, somatic hypermutation) from single-cell RNA sequencing data.
 License: GPL-3 + file LICENSE
+VignetteBuilder: utils
 Depends: R (>= 4.0),
          Matrix,
          S4Vectors,
@@ -34,7 +35,7 @@ Imports: GenomeInfoDb,
          Rsamtools, 
          ggplot2,
          hdf5r
-Suggests: markdown, knitr         
+Suggests: markdown, knitr, utils
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

@@ -12,20 +12,20 @@ plotStationaryDistribution(
 )
 }
 \arguments{
-\item{TPTObj}{List of TPT results, output from the `fitTPT` function.}
+\item{TPTObj}{List of TPT results, output from the \code{\link{fitTPT}()} function.}
 
 \item{SeuratObj}{Seurat object}
 
 \item{ighc_count_assay_name}{name of assay in SeuratObj which holds the IgH productive/sterile transcript counts. (Default: "IGHC")}
 
-\item{return_plot}{Should the CSR transition plot be returned? If FALSE, a named list of `stationary_distribution` and `flux` will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)}
+\item{return_plot}{Should the CSR transition plot be returned? If FALSE, a named list of \code{stationary_distribution} and \code{flux} will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)}
 }
 \value{
 A ggplot2 object of the bar-plot of stationary distribution with 95% bootstrapped confidence intervals.
 }
 \description{
-`plotStationaryDistribution` parse data from `fitTPT` to plot a bar-plot of isotypes in the given data. The stationary distribution represents the equilibrium distribution of cells harbouring each isotype, taking the underlying isotype-switching dynamics into consideration.
+\code{plotStationaryDistribution} parse data from \code{\link{fitTPT}()} to plot a bar-plot of isotypes in the given data. The stationary distribution represents the equilibrium distribution of cells harbouring each isotype, taking the underlying isotype-switching dynamics into consideration.
 }
 \details{
-`plotStationaryDistribution` parses data from the `fitTPT` function for visualising the stationary distribution of isotypes. The resulting plot is a bar plot of stationary distribution, with error-bars obtained from bootstrapping (i.e. sampling with replacement) cells harbouring each isotype. The error-bar shown are 95% confidence intervals resulting from the bootstrap sampling.
+\code{plotStationaryDistribution} parses data from the \code{\link{fitTPT}()} function for visualising the stationary distribution of isotypes. The resulting plot is a bar plot of stationary distribution, with error-bars obtained from bootstrapping (i.e. sampling with replacement) cells harbouring each isotype. The error-bar shown are 95% confidence intervals resulting from the bootstrap sampling.
 }

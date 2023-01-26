@@ -7,10 +7,10 @@
 getIGHreadType(tb)
 }
 \arguments{
-\item{tb}{A data.frame, output from `scanBam`.}
+\item{tb}{A data.frame, output from \code{scanBam}.}
 }
 \description{
-`getIGHreadType` deduces, for each molecule in each cell identified via `scanBam`,
+\code{getIGHreadType} deduces, for each molecule in each cell identified via \code{\link{scanBam}},
 whether it corresponds to a productive (labelled "-P") or a sterile ("-S") IGH
 molecule. A third category ("-C") is assigned if insufficient information is present
 to distinguish "-P" and "-S".

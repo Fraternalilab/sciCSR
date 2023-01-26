@@ -14,22 +14,22 @@ combineBCR(
 )
 }
 \arguments{
-\item{vdj}{a data.frame of VDJ data after running `collapseBCR`.}
+\item{vdj}{a data.frame of VDJ data after running \code{\link{collapseBCR}}.}
 
 \item{SeuratObj}{Seurat object.}
 
-\item{keep_columns}{a vector of column names in `vdj` to be kept and added to the metadata slot of the Seurat object.
+\item{keep_columns}{a vector of column names in \code{vdj} to be kept and added to the metadata slot of the Seurat object.
 By default the following informations are included: VDJ gene usage, isotype, CDR3 sequence, as well as binary indications of full-length/productive.}
 
-\item{seurat_sample_column}{(Optional) Column name in `SeuratObj` metadata where the sample name/ID information is stored. Used when the barcode column from vdj data frame does not match cell names from the Seurat object given by `Cells(SeuratObj)`.}
+\item{seurat_sample_column}{(Optional) Column name in \code{SeuratObj} metadata where the sample name/ID information is stored. Used when the barcode column from vdj data frame does not match cell names from the Seurat object given by \code{\link[Seurat]{Cells}(SeuratObj)}.}
 
-\item{seurat_cell_name_column}{(Optional) Column name in `SeuratObj` metadata where the cell barcodes are stored. Used when the barcode column from vdj data frame does not match cell names from the Seurat object given by `Cells(SeuratObj)`.}
+\item{seurat_cell_name_column}{(Optional) Column name in \code{SeuratObj} metadata where the cell barcodes are stored. Used when the barcode column from vdj data frame does not match cell names from the Seurat object given by \code{\link[Seurat]{Cells}(SeuratObj)}.}
 }
 \value{
 Seurat object with VDJ annotations added to the metadata slot.
 }
 \description{
-`combineBCR` merges annotations from data frames holding repertoire data as metadata of a Seurat object.
+\code{combineBCR} merges annotations from data frames holding repertoire data as metadata of a Seurat object.
 }
 \details{
 The function first reorganises the VDJ data frame such that one line represent 1 cell.

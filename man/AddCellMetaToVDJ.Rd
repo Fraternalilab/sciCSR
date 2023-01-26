@@ -7,7 +7,7 @@
 AddCellMetaToVDJ(vdj, SeuratObj, metadata_col, barcode_col = "row.names")
 }
 \arguments{
-\item{vdj}{a data.frame of VDJ data after running `collapseBCR`.}
+\item{vdj}{a data.frame of VDJ data after running \code{\link{collapseBCR}}.}
 
 \item{SeuratObj}{Seurat object.}
 
@@ -19,7 +19,7 @@ AddCellMetaToVDJ(vdj, SeuratObj, metadata_col, barcode_col = "row.names")
 VDJ data frame with additional columns taken from the Seurat object metadata slot.
 }
 \description{
-`AddCellMetaToVDJ` merges annotations from Seurat object (e.g. cluster annotations) into VDJ repertoire data frame.
+\code{AddCellMetaToVDJ} merges annotations from Seurat object (e.g. cluster annotations) into VDJ repertoire data frame.
 }
 \details{
 The function accepts any columns found in the metadata slot of the Seurat object. You need to indicate for each column whether the data

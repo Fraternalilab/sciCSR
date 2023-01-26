@@ -19,10 +19,10 @@ run_scVelo(
 
 \item{anndata_out_filename}{output filename of the merged AnnData object to be written the fitted RNA velocity estimates calculated using scvelo.}
 
-\item{conda_env}{character, if not NULL this named conda environment is used to run scVelo.
-(Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
+\item{conda_env}{character, if not \code{NULL} this named conda environment is used to run scVelo.
+(Default: 'scicsr'). If \code{NULL}, no conda environment will be used, the program assumes the python packages \code{scanpy} and \code{scvelo} are installed in the local python)}
 
-\item{scvelo_mode}{the 'mode' parameter in the python scvelo function `scv.tl.velocity`. (Default: "dynamical")}
+\item{scvelo_mode}{the 'mode' parameter in the python scvelo function \code{scv.tl.velocity}. (Default: "dynamical")}
 
 \item{reduction}{the dimensionality reduction to project RNA velocity estimates onto (Default: "UMAP")}
 
@@ -31,13 +31,13 @@ run_scVelo(
 \item{n_top_genes}{include only this many genes with the largest dispersion in the dataset (Default: 2000)}
 }
 \value{
-a output message indicating success of writing out the AnnData object with merged scVelo results into the file given by `anndata_out_filename`.
+a output message indicating success of writing out the AnnData object with merged scVelo results into the file given by \code{anndata_out_filename}.
 }
 \description{
-`run_scVelo` calculates RNA velocity using the python scvelo package and the velocity models it implements.
+\code{run_scVelo} calculates RNA velocity using the python scvelo package and the velocity models it implements.
 }
 \details{
-`run_scVelo` uses the R reticulate package to run python commands which run scvelo RNA velocity calculations.
+\code{run_scVelo} uses the R reticulate package to run python commands which run scvelo RNA velocity calculations.
 It follows the ["RNA Velocity Basics"](https://scvelo.readthedocs.io/VelocityBasics/) tutorial in the scvelo
 documentation. Unfortunately due to conflicts of the plotting functionalities of R and python this function
 does **NOT** implement the visualisation of velocity stream onto the dimensionality-reduced projection.

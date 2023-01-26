@@ -17,7 +17,7 @@ compareTransitionMatrices(
 \arguments{
 \item{matrix_list}{list of transition matrices to be compared.}
 
-\item{SeuratObj}{Seurat object. Considered only if `csr_transitions` is NULL.}
+\item{SeuratObj}{Seurat object. Considered only if \code{csr_transitions} is \code{NULL}.}
 
 \item{cells}{vector of cell identifiers corresponding to the row/column order in the transition matrices. (Assumed that all supplied transition matrices have exactly the same row/column ordering.)}
 
@@ -32,17 +32,17 @@ compareTransitionMatrices(
 \value{
 A list of two entries:
 \describe{
-  \item{distance}{distance (`distance_metric`) between the trajectories sampled from each possible pair of transition matrix.}
+  \item{distance}{distance (\code{distance_metric}) between the trajectories sampled from each possible pair of transition matrix.}
   \item{sampled_transitions}{list of trajectories sampled from the transition matrices.}
 }
 }
 \description{
-`compareTransitionMatrices` computes distances between a list of transition matrices.
+\code{compareTransitionMatrices} computes distances between a list of transition matrices.
 }
 \details{
-`compareTransitionMatrices` takes the list of transition matrices given in `matrix_list`, and sample realisations from
+\code{compareTransitionMatrices} takes the list of transition matrices given in \code{matrix_list}, and sample realisations from
 the Markov chain defined using the transition matrix. It then compares the similarity of these sampled trajectories
-using either the Kullback-Leibler divergence (`distance_metric == "KL"`) or the Jensen-Shannon divergence (`distance_metric == "JSD"`).
+using either the Kullback-Leibler divergence (\code{distance_metric == "KL"}) or the Jensen-Shannon divergence (\code{distance_metric == "JSD"}).
 Both can be interpreted the same way (the larger this number, the more different two transition matrices and their
 realisations are), although the Jensen-Shannon divergence is scaled between 0 and 1.
 }

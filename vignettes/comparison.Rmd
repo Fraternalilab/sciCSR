@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-In this vignette we will show you how to compare the transitions inferred using CSR and SHM using sciCSR, against those based on RNA velocity. You are advised to follow the [Basic sciCSR usage vignette]() first to understand the basic functionalities of sciCSR. Here, we will use sciCSR to infer state transitions from B cell scRNA-seq data based on CSR and SHM information, utilise the same framework to extrapolate transitions based on RNA velocity, and compare these inferences visually.  
+In this vignette we will show you how to compare the transitions inferred using CSR and SHM using sciCSR, against those based on RNA velocity. You are advised to follow the [Basic sciCSR usage vignette](csr.html) first to understand the basic functionalities of sciCSR. Here, we will use sciCSR to infer state transitions from B cell scRNA-seq data based on CSR and SHM information, utilise the same framework to extrapolate transitions based on RNA velocity, and compare these inferences visually.  
 
 Start by loading the sciCSR package. **Before you run any examples/analysis with sciCSR for the FIRST time**, run the `prepare_sciCSR()` function - this will install all python dependencies for sciCSR to function.
 
@@ -33,7 +33,7 @@ prepare_sciCSR()
 
 # Load the dataset
 
-In this example we will utilise B cell scRNA-seq data from tonsil samples taken from [King et al.](). Part of this data (from the donor BCP4) is included in the sciCSR package:
+In this example we will utilise B cell scRNA-seq data from tonsil samples taken from [King et al.](https://doi.org/10.1126/sciimmunol.abe6291). Part of this data (from the donor BCP4) is included in the sciCSR package:
 
 ```{r, fig.width=6, fig.height=4}
 king <- system.file("extdata/King_Tonsils_BCP4.rds", package = "sciCSR")
@@ -43,7 +43,7 @@ print(king)
 DimPlot(king, label = TRUE)
 ```
 
-The dataset was downloaded from [ArrayExpress](https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-9005?accession=E-MTAB-9005); it came in the form of a Seurat data object where SHM information from scBCR-seq (i.e. single-cell BCR repertoire profiling) data was already added as cell metadata. For your convenience, we have used sciCSR to generate a count matrix for productive and sterile heavy-chain immunoglobulin transcripts, and attached it to the Seurat object. Check out the [basic sciCSR vignette]() if you need any help on this analysis on your own datasets. Here, since we are going to use CSR and SHM information to infer transitions, let's make sure we have these in place:
+The dataset was downloaded from [ArrayExpress](https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-9005?accession=E-MTAB-9005); it came in the form of a Seurat data object where SHM information from scBCR-seq (i.e. single-cell BCR repertoire profiling) data was already added as cell metadata. For your convenience, we have used sciCSR to generate a count matrix for productive and sterile heavy-chain immunoglobulin transcripts, and attached it to the Seurat object. Check out the [basic sciCSR vignette](csr.html) if you need any help on this analysis on your own datasets. Here, since we are going to use CSR and SHM information to infer transitions, let's make sure we have these in place:
 
 ```{r}
 # SHM is already included as a column in the metadata ('IGH_MU_FREQ')
@@ -242,11 +242,13 @@ plot_arrows(
 
 # More detailed comparisons
 
-The visualisations above clearly show some similarities (for example, the transitions from MBC pointing towards the direction of germinal center [GC]) and differences (e.g. strong transitions in the GC based on RNA velocity appears not backed up with CSR/SHM) between inferences based on RNA velocity versus CSR/SHM. sciCSR provides further functionalities to compare these different sets of inferred transitions. One way to gain further insights would be to apply Transition Path Theory (TPT) to estimate the amount of fluxes between states - we have covered TPT in the [basic sciCSR usage vignette](). You may want to take a look at the vignette and see how we can do that.
+The visualisations above clearly show some similarities (for example, the transitions from MBC pointing towards the direction of germinal center [GC]) and differences (e.g. strong transitions in the GC based on RNA velocity appears not backed up with CSR/SHM) between inferences based on RNA velocity versus CSR/SHM. sciCSR provides further functionalities to compare these different sets of inferred transitions. One way to gain further insights would be to apply Transition Path Theory (TPT) to estimate the amount of fluxes between states - we have covered TPT in the [basic sciCSR usage vignette](csr.html). You may want to take a look at the vignette and see how we can do that.
 
 Here we show you another way to answer the question of 'How different are the transitions inferred using CSR/SHM to those based on RNA velocity'. In sciCSR we uses CSR/SHM information to fit models of state transitions using Markov State Models (MSM). One powerful properties of MSM is, they specify the transition likelihoods between every state in the data, such that we can 'generate'/'simulate' new transitions as if we have data from a new cell and follow how it moves across the landscape of states. Similar MSMs would produce similar pathways of transitions across this landscape; we can take a note at the frequencies each state is visited in these simulated pathways, and then derive a numerical metric to quantify the similarity in terms of the frequencies of visiting each states in these MSM-simulated paths (Illustration below).
 
-<img src="images/sample_msm.png" alt="Illustration of sampling paths using MSM", width="300">
+```{r fig.alt="Illustration of sampling MSM and comparing inferences", fig.width=3, echo=FALSE}
+knitr::include_graphics("images/sample_msm.png", dpi = 600)
+```
 
 In sciCSR, the way we can perform this analysis is, first fit transition models and obtain separate R objects which store these models. We can then use the function `compareTransitionMatrices()` to quantify the similarities of these transition models:
 

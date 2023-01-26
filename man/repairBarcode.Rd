@@ -12,22 +12,21 @@ repairBarcode(
 )
 }
 \arguments{
-\item{data_list}{a list, each element either of class `data.frame` or `matrix`. Each element holds data from 1 library ('sample')}
+\item{data_list}{a list, each element either of class \code{data.frame} or \code{matrix}. Each element holds data from 1 library ('sample')}
 
 \item{SeuratObj}{Seurat object.}
 
 \item{sample_names}{a vector of sample names in the data. 'Sample' here refers to sequencing library.}
 
-\item{seurat_sample_column}{Column name in `SeuratObj` metadata where the sample name/ID information is stored.}
+\item{seurat_sample_column}{Column name in \code{SeuratObj} metadata where the sample name/ID information is stored.}
 }
 \value{
 A list of data.frames/matrices with the cell barcodes repaired to match barcodes in the Seurat object.
 }
 \description{
-`repairBarcode` considers cell barcodes in the Seurat object and alters the cell barcode given in a list of data frames/matrices to match the Seurat object. This facilitates merging the data frames into the Seurat object as additional metadata columns.
-This function can be used either in merging
+\code{repairBarcode} considers cell barcodes in the Seurat object and alters the cell barcode given in a list of data frames/matrices to match the Seurat object. This facilitates merging the data frames into the Seurat object as additional metadata columns.
 }
 \details{
 This function would work either for a list of data frames where the cell barcodes are given in a column (either named 'barcode' or 'CB'), or a list of matrices where the cell barcodes are assumed to be row names of each matrix.
-The function first establishes a mapping table between samples (given in `seurat_sample_column` in the Seurat object) and their sample-specific cell barcode prefix/suffix, and then repairs the barcodes given in the VDJ data frame to match the Seurat object.
+The function first establishes a mapping table between samples (given in \code{seurat_sample_column} in the Seurat object) and their sample-specific cell barcode prefix/suffix, and then repairs the barcodes given in the VDJ data frame to match the Seurat object.
 }

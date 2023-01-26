@@ -16,8 +16,8 @@ fitTransitionModel(
 \arguments{
 \item{anndata_file}{filename pointing to the AnnData file.}
 
-\item{conda_env}{character, if not NULL this named conda environment is used to run CellRank.
-(Default: NULL, i.e. no conda environment will be used, the program assumes the python packages `scanpy`, `scvelo` and `cellrank` are installed in the local python)}
+\item{conda_env}{character, if not \code{NULL} this named conda environment is used to run CellRank.
+(Default: \code{NULL}, i.e. no conda environment will be used, the program assumes the python packages \code{scanpy}, \code{scvelo} and \code{cellrank} are installed in the local python)}
 
 \item{mode}{character, either 'pseudotime' (uses the cellrank 'PseudotimeKernel') or 'velocity' (cellrank 'VelocityKernel'). (Default: 'pseudotime')}
 
@@ -30,17 +30,17 @@ fitTransitionModel(
 \value{
 a list with three entries:
 \describe{
-  \item{cellrank_obj}{Python `cellrank.tl.estimators.CFLARE` object containing details of the fitted transition model}
-  \item{transition_matrix}{The matrix holding cell-to-cell transition probability (i.e. `cellrank_obj.transition_matrix`), but converted into a dense matrix. This is the single-cell transition matrix for downstream uses.}
-  \item{CellID}{a vector of cell identifiers in the order of each row/column of `transition_matrix`.}
+  \item{cellrank_obj}{Python \code{cellrank.tl.estimators.CFLARE} object containing details of the fitted transition model}
+  \item{transition_matrix}{The matrix holding cell-to-cell transition probability (i.e. \code{cellrank_obj.transition_matrix}), but converted into a dense matrix. This is the single-cell transition matrix for downstream uses.}
+  \item{CellID}{a vector of cell identifiers in the order of each row/column of \code{transition_matrix}.}
 }
 }
 \description{
-`fitTransitionModel` fits transition models on the data using the python cellrank package.
+\code{fitTransitionModel} fits transition models on the data using the python cellrank package.
 }
 \details{
-`fitTransitionModel` currently implements either the velocity kernel in cellrank (i.e. uses RNA velocity
+\code{fitTransitionModel} currently implements either the velocity kernel in cellrank (i.e. uses RNA velocity
 information to fit transition probabilities) or the pseudotime kernel; a user-indicated column in the metadata
 will be used as pseudotime reference to fit transition probabiltiies.
-**NOTE:** In cases where the warning 'Biased KNN graph is disconnected' which will subsequently cause the `fitTPT` function in the pipeline to falied with error, in our experience it is likely to be caused by subsetting the data prior to computing transitions. Try setting `do_pca = FALSE` will preserve the original PCA and avoid this error.
+**NOTE:** In cases where the warning 'Biased KNN graph is disconnected' which will subsequently cause the \code{\link{fitTPT}()} function in the pipeline to falied with error, in our experience it is likely to be caused by subsetting the data prior to computing transitions. Try setting \code{do_pca = FALSE} will preserve the original PCA and avoid this error.
 }

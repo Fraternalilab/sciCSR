@@ -17,31 +17,31 @@ plot_arrows(
 )
 }
 \arguments{
-\item{anndata_file}{input anndata_file. If `type` is 'velocity', this file needs to be output from `run_scVelo`. If `type` is 'CSR' or 'SHM', the columns 'csr_pot' or 'shm' should be in the .obs slot of the AnnData object.}
+\item{anndata_file}{input anndata_file. If \code{based_on} is 'velocity', this file needs to be output from \code{\link{run_scVelo}}. If \code{based_on} is 'CSR' or 'SHM', the columns 'csr_pot' or 'shm' should be in the .obs slot of the AnnData object.}
 
-\item{img_path}{Optional, path to write out the arrow plot. If supplied, you can specify file format (PNG/SVG/PDF) by including the file extension. If PNG, an image of 600 dots per inch will be rendered. Default is NULL, i.e. it will write to a temporary file as a PNG.}
+\item{img_path}{Optional, path to write out the arrow plot. If supplied, you can specify file format (PNG/SVG/PDF) by including the file extension. If PNG, an image of 600 dots per inch will be rendered. Default is \code{NULL}, i.e. it will write to a temporary file as a PNG.}
 
-\item{based_on}{one of 'velocity', 'csr', 'shm'. The type of information to be used to project arrows. Each has requirements on the input `anndata_file` (see above).}
+\item{based_on}{one of 'velocity', 'csr', 'shm'. The type of information to be used to project arrows. Each has requirements on the input \code{anndata_file} (see above).}
 
 \item{style}{one of 'grid' (lay out arrows on a grid of fixed width/height on the UMAP plot) or 'stream' (draw arrows as streams), in the style of the scvelo 'pl.velocity_embedding_grid' or 'pl.velocity_embedding_stream' respectively.}
 
-\item{title}{plot title (Default: NULL, the title of the plot will be identical to 'based_on')}
+\item{title}{plot title (Default: \code{NULL}, the title of the plot will be identical to 'based_on')}
 
 \item{colour.by}{column in gene expression metadata to group and colour the cells by (Default: 'seurat_clusters')}
 
-\item{cols}{Optional, a vector of characters containing the HEX code of colours to be used. Has to be the same length as the number of levels found in the `colour.by` variable in the gene expression metadata.}
+\item{cols}{Optional, a vector of characters containing the HEX code of colours to be used. Has to be the same length as the number of levels found in the \code{colour.by} variable in the gene expression metadata.}
 
 \item{components}{component of dimensionality reduction to show in the plot. e.g. put \'1,3\' if desired UMAP plot displays the UMAP_1 and UMAP_3 axes.(Default: '1,2')}
 
-\item{conda_env}{character, if not NULL this named conda environment is used to generate the plot in scVelo.
-(Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
+\item{conda_env}{character, if not \code{NULL} this named conda environment is used to generate the plot in scVelo.
+(Default: 'scicsr'). If \code{NULL}, no conda environment will be used, the program assumes the python packages \code{scanpy} and \code{scvelo} are installed in the local python)}
 }
 \value{
-plot of UMAP dimensionality reduction with arrows projected on top depicting inferred transitions. The same plot is saved in the path given by `img_path`. If PNG, it is rendered at 600 dots-per-inch (dpi).
+plot of UMAP dimensionality reduction with arrows projected on top depicting inferred transitions. The same plot is saved in the path given by \code{img_path}. If PNG, it is rendered at 600 dots-per-inch (dpi).
 }
 \description{
-`plot_arrows` plots arrows on top of UMAP projection to show transitions in the style of conventional RNA velocity analysis. You can indicate whether to use RNA velocity (`type = 'velocity'`), CSR (`type = 'CSR'`) or SHM (`type = 'SHM'`) information to project the arrows.
+\code{plot_arrows} plots arrows on top of UMAP projection to show transitions in the style of conventional RNA velocity analysis. You can indicate whether to use RNA velocity (\code{based_on = 'velocity'}), CSR (\code{based_on = 'CSR'}) or SHM (\code{based_on = 'SHM'}) information to project the arrows.
 }
 \details{
-`plot_arrows` uses the plotting functionalities in scVelo in python to generate a plot of arrows indicating transitions, given the type of biological information (velocity/CSR/SHM). You can choose between projecting transitions as arrows laid out on a grid (`style = 'grid'`) or as streams of arrows (`style = 'stream'`). The plot is saved as a SVG/PDF/PNG (depending on file extension given in `img_path`, see below), and re-rendered in the 'plot' panel in R.
+\code{plot_arrows} uses the plotting functionalities in scVelo in python to generate a plot of arrows indicating transitions, given the type of biological information (velocity/CSR/SHM). You can choose between projecting transitions as arrows laid out on a grid (\code{style = 'grid'}) or as streams of arrows (\code{style = 'stream'}). The plot is saved as a SVG/PDF/PNG (depending on file extension given in \code{img_path}, see below), and re-rendered in the 'plot' panel in R.
 }

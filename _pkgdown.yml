@@ -1,6 +1,86 @@
 url: https://http://josephng-bio.org/sciCSR
 template:
   bootstrap: 5
-  bootswatch: cerulean
+  bootswatch: yeti
+  bslib:
+    pkgdown-nav-height: 100px
+    primary: "#0d0e0f"
+    code-bg: "#bfcadb"
 figures:
    dev: grDevices::png
+navbar:
+  structure:
+    left:  [intro, reference, articles, tutorials, news]
+    right: [mysite, search, github, twitter]
+  components:
+    mysite:
+      text: Joseph Ng's website
+      href: https://josephng-bio.org
+    twitter:
+      icon: fa-twitter
+      href: https://twitter.com/JosefNg1
+      aria-label: Twitter
+    github:
+      icon: fa-github
+      href: https://github.com/Fraternalilab/sciCSR/
+      aria-label: github
+articles:
+- title: Analysing Class-Switch Recombination in B cell scRNA-seq data using sciCSR
+  navbar: Basic sciCSR usage
+  contents:
+  - csr
+- title: Comparing state transitions inferred using CSR, SHM and RNA velocity
+  navbar: Comparing CSR/SHM/RNA velocity
+  contents:
+  - comparison
+reference:
+- title: "Setting up dependencies"
+  desc: "wrapper to set up python dependencies"
+  contents:
+  - prepare_sciCSR
+- title: "scRNA-seq data processing and wrangling"
+  desc: "Functions for basic scRNA-seq data processing wrangling. Some specific to B cells"
+  contents:
+  - guessBarcodes
+  - repairBarcode
+  - convertSeuratToH5ad
+  - splitAnnData
+  - read_loom_matrices
+  - combineLoomFiles
+- title: "Merging Repertoire and scRNA-seq read counts"
+  desc: "Functions for additing repertoire annotation features as metadata to gene expression count matrices"
+  contents:
+  - annotatePairing
+  - collapseBCR
+  - AddCellMetaToVDJ
+  - combineBCR
+- title: "CSR/SHM-based pseudotime"
+  desc: "Functions for extracting and calculating cell pseudotime ordering using CSR and SHM information"
+  contents:
+  - scanBam
+  - getIGHmapping
+  - getIGHreadType
+  - getJunctionReads
+  - summariseIGHreads
+  - getCSRpotential
+  - getSHM
+- title: "RNA velocity"
+  desc: "RNA velocity analysis in R by interfacing with python packages"
+  contents:
+  - mergeVelocytoWithGEX
+  - run_scVelo
+- title: "Inferring transitions"
+  desc: "Inferring transitions using CSR/SHM information or RNA velocity"
+  contents:
+  - fitTransitionModel
+  - fitTPT
+  - compareTransitionMatrices
+- title: "Data visualisation"
+  desc: "Visualising inferred transitions"
+  contents:
+  - starts_with("plot")
+- title: "Data objects"
+  desc: "data objects underlying sciCSR functionalities"
+  contents:
+  - starts_with("human")
+  - starts_with("mouse")

@@ -12,15 +12,15 @@ guessBarcodes(cell_name, min_barcode_length = 6)
 \item{min_barcode_length}{minimum length of the nucleotide barcode (Default: 6)}
 }
 \value{
-a vector with the input `cell_name` decomposed into these three entries:
+a vector with the input \code{cell_name} decomposed into these three entries:
 \describe{
-  \item{prefix}{prefix which exists in the input `cell_name` (NA if doesn't exist in `cell_name`)}
+  \item{prefix}{prefix which exists in the input \code{cell_name} (\code{NA} if doesn't exist in \code{cell_name})}
   \item{cell_name}{the actual nucleotide barcode}
-  \item{suffix}{suffix which exists in the input `cell_name` (NA if doesn't exist in `cell_name`)}
+  \item{suffix}{suffix which exists in the input \code{cell_name} (\code{NA} if doesn't exist in \code{cell_name})}
 }
 }
 \description{
-`guessBarcodes` parses given cell identifiers to identify the substring which correspond to the nucleotide barcode included in the experiment.
+\code{guessBarcodes} parses given cell identifiers to identify the substring which correspond to the nucleotide barcode included in the experiment.
 }
 \details{
 Numeric / string prefices/suffices were typically added to cell identifiers to avoid wrong mapping across samples; however often these create issues when trying

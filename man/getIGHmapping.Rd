@@ -16,7 +16,7 @@ getIGHmapping(
 \arguments{
 \item{bam}{filepath to the BAM file to read}
 
-\item{definitions}{A list of `GenomicRanges::GRanges` object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.}
+\item{definitions}{A list of \code{GenomicRanges::GRanges} object, each specifying the genomic coordinates of VDJ genes, C genes coding segments and sterile C transcripts. See the data objects 'human_definitions' and 'mouse_definitions' in the sciCSR package for formats.}
 
 \item{cellBarcodeTag}{Name of tag holding information about cell barcode. The code expects and extracts this tag from each line in the BAM alignments. Set as NULL or NA if no such information is available in the BAM file. (Default: "CB")}
 
@@ -24,7 +24,7 @@ getIGHmapping(
 
 \item{paired}{Are the sequencing reads paired-end? (Default: FALSE)}
 
-\item{flank}{either (1) an integer (indicating 5' distance from the CH exons) or (2) a `GRanges` object (indicating exact genomic positions) for defining sterile IgH transcripts. Ignored if the positions of sterile transcripts are already included in `definitions`.}
+\item{flank}{either (1) an integer (indicating 5' distance from the CH exons) or (2) a \code{GRanges} object (indicating exact genomic positions) for defining sterile IgH transcripts. Ignored if the positions of sterile transcripts are already included in \code{definitions}.}
 }
 \value{
 A list with two items:
@@ -34,22 +34,22 @@ A list with two items:
 }
 }
 \description{
-`getIGHmapping` is the wrapper function intended for users to supply a BAM file,
+\code{getIGHmapping} is the wrapper function intended for users to supply a BAM file,
 and scan for sterile and productive IGH transcripts over each C gene as defined in the parameter
-`IGHC_granges`.
+\code{IGHC_granges}.
 }
 \details{
-The function reads in two `GenomicRanges::GRanges` objects, one defining the genomic
+The function reads in two \code{GenomicRanges::GRanges} objects, one defining the genomic
 coordinates of the IGHC genes and another for the VDJ genes. It scans the BAM file
 for reads covering these regions, extracting their mapped cell barcodes and Unique
 Molecule identifier (UMI). Sterile reads are defined as those covering the intronic region
 upstream of the 5' end of the C gene coding region - the default is to consider the region
-(min(`previous_C_CDS_end`, `-flank`), 0), where `previous_C_CDS_end` refers to the
-3' end of the coding region of the previous C gene, and `flank` is an integr, given by the
+(min(\code{previous_C_CDS_end}, \code{-flank}), 0), where \code{previous_C_CDS_end} refers to the
+3' end of the coding region of the previous C gene, and \code{flank} is an integr, given by the
 user, which indicates 'how far' the function should looks 5' of the coding region for
 sterile reads.
 If you have information on where the sterile transcripts begin, these coordinatees can be
-passed as a `GRanges` object to the parameter `flank` (see examples).
+passed as a \code{GRanges} object to the parameter \code{flank} (see examples).
 Outputs data frame of cell barcodes and molecules mapped to
 each IGHC gene, classified as sterile/productive/C-only.
 }

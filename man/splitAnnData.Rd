@@ -9,21 +9,21 @@ splitAnnData(anndata_file, split.by, levels, conda_env = "scicsr")
 \arguments{
 \item{anndata_file}{filename pointing to the AnnData file.}
 
-\item{split.by}{column name in the metadata (i.e. in `SeuratObj@meta.data` considering the Seurat object, or `adata.obs` considering the AnnData object)
+\item{split.by}{column name in the metadata (i.e. in \code{SeuratObj@meta.data} considering the Seurat object, or \code{adata.obs} considering the AnnData object)
 indicating distinct levels to split the AnnData.}
 
-\item{levels}{vector of values which can be found in the column given by `split.by`. Subsets of the Anndata by each value of `levels` will be made and written out into .h5ad files.}
+\item{levels}{vector of values which can be found in the column given by \code{split.by}. Subsets of the Anndata by each value of \code{levels} will be made and written out into .h5ad files.}
 
-\item{conda_env}{character, if not NULL this named conda environment is used to perform the split.
-(Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
+\item{conda_env}{character, if not \code{NULL} this named conda environment is used to perform the split.
+(Default: 'scicsr'). If \code{NULL}, no conda environment will be used, the program assumes the python packages \code{scanpy} and \code{scvelo} are installed in the local python)}
 }
 \value{
 a vector of output .h5ad filenames with the indicated subset of the data (given in the filenames, see examples.)
 }
 \description{
-`splitAnnData` splits a AnnData object by a given metadata column and write out the splitted data subsets into separate .h5ad files.
+\code{splitAnnData} splits a AnnData object by a given metadata column and write out the splitted data subsets into separate .h5ad files.
 }
 \details{
-`splitAnnData` uses the R reticulate package to run python commands which subset the data by the metadata column
+\code{splitAnnData} uses the R reticulate package to run python commands which subset the data by the metadata column
 ( i.e. column in adata.obs) and write out each susbet as separate AnnData objects in .h5ad files.
 }

@@ -13,7 +13,7 @@ plotFluxMatrix(
 )
 }
 \arguments{
-\item{TPTObj}{List of TPT results, output from the `fitTPT` function.}
+\item{TPTObj}{List of TPT results, output from the \code{\link{fitTPT}} function.}
 
 \item{SeuratObj}{Seurat object}
 
@@ -21,17 +21,17 @@ plotFluxMatrix(
 
 \item{mask_improbable_csr}{Should isotype combinations which represents improbable Class-switch recombination events (i.e. switching back to an isotype 5' to the current one) be removed from visualisation? (Default: TRUE)}
 
-\item{return_plot}{Should the CSR transition plot be returned? If FALSE, a named list of `stationary_distribution` and `flux` will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)}
+\item{return_plot}{Should the CSR transition plot be returned? If FALSE, a named list of \code{stationary_distribution} and \code{flux} will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)}
 }
 \value{
 A ggplot2 object showing the flux matrix and the associated significance level in the form a bubble plot. See 'Description' for details.
 }
 \description{
-`plotFluxMatrix` parse data from `fitTPT` and visualises the estimated isotype-switching dynamics in the form of a flux matrix detailing amount of switches from and to each isotype.
+\code{plotFluxMatrix} parse data from \code{\link{fitTPT}()} and visualises the estimated isotype-switching dynamics in the form of a flux matrix detailing amount of switches from and to each isotype.
 }
 \details{
-`plotFluxMatrix` parses data from the `fitTPT` function and visualises the results from Transition Path Theory (TPT) in the form of a bubble plot representing the amount of flux from and to each isotype.
+\code{plotFluxMatrix} parses data from the \code{\link{fitTPT}()} function and visualises the results from Transition Path Theory (TPT) in the form of a bubble plot representing the amount of flux from and to each isotype.
 * The bubble size is scaled by significance, i.e. the likelihood that the observed flux is greater than randomised flux estimates obtained by reshuffling columns of the transition matrix.
 * The bubble colour is scaled by magnitude, i.e. the amount of flux estimated to flow from one isotype to another isotype.
-* Improbable CSR combinations (i.e. switching back to an isotype preceding the current isotype) are removed by default. This can be turned off by indicating `mask_improbable_csr = FALSE`.
+* Improbable CSR combinations (i.e. switching back to an isotype preceding the current isotype) are removed by default. This can be turned off by indicating \code{mask_improbable_csr = FALSE}.
 }

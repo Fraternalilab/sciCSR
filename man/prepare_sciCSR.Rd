@@ -7,9 +7,9 @@
 prepare_sciCSR()
 }
 \description{
-`prepare_sciCSR` prepares a conda environment with all the python packages required to run sciCSR. You only need to run this function once, before the first time you use the `sciCSR` package.
+\code{prepare_sciCSR} prepares a conda environment with all the python packages required to run sciCSR. You only need to run this function once, before the first time you use the \code{sciCSR} package.
 }
 \details{
-`prepare_sciCSR` will set up a conda environment. If Anaconda/Miniconda has not been set up yet in the system, the function will attempt to set up Miniconda using `reticulate::install_miniconda()`.
+\code{prepare_sciCSR} will set up a conda environment. If Anaconda/Miniconda has not been set up yet in the system, the function will attempt to set up Miniconda using \code{reticulate::install_miniconda()}.
 The function will automatically locate Anaconda/Miniconda in the system and create a conda environment containing all dependencies in python which sciCSR uses for its functionalities.
 }

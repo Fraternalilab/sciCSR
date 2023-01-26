@@ -13,16 +13,16 @@ convertSeuratToH5ad(SeuratObj, assays, h5ad_filename, conda_env = "scicsr")
 
 \item{h5ad_filename}{Filename of the output .h5ad file. Note that the final output filenames will have the assay names appended to this (see examples).}
 
-\item{conda_env}{character, if not NULL this named conda environment is used.
-(Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
+\item{conda_env}{character, if not \code{NULL} this named conda environment is used.
+(Default: 'scicsr'). If \code{NULL}, no conda environment will be used, the program assumes the python packages \code{scanpy} and \code{scvelo} are installed in the local python)}
 }
 \value{
 A vector of .h5ad filenames which are outputted. Each file correspond to one Seurat assay, as indicated in the suffix inside the filename (see examples).
 }
 \description{
-`convertSeuratToH5ad` is a wrapper function to convert a given Seurat Object into an AnnData object (for use in python with e.g. scanpy) and write out into a .h5ad file.
+\code{convertSeuratToH5ad} is a wrapper function to convert a given Seurat Object into an AnnData object (for use in python with e.g. scanpy) and write out into a .h5ad file.
 }
 \details{
-`convertSeuratToH5ad` simply wraps around the R `SeuratDisk` package to perform the stated conversion. Included her for ease of use for the user.
+\code{convertSeuratToH5ad} simply wraps around the R \code{SeuratDisk} package to perform the stated conversion. Included her for ease of use for the user.
 Each assay in the Seurat Object is written into separate .h5ad files.
 }

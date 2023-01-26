@@ -19,19 +19,19 @@ getCSRpotential(
 \arguments{
 \item{SeuratObj}{Seurat Object}
 
-\item{ighc_count_assay_name}{name of assay in `SeuratObj` which holds the IgH productive/sterile transcript count data. (Default: "IGHC")}
+\item{ighc_count_assay_name}{name of assay in \code{SeuratObj} which holds the IgH productive/sterile transcript count data. (Default: "IGHC")}
 
-\item{ighc_slot}{the slot in `slot(SeuratObj, "assays")[[ighc_count_assay_name]]` to be used to access productive/sterile transcript counts (Default: "scale_data")}
+\item{ighc_slot}{the slot in \code{slot(SeuratObj, "assays")[[ighc_count_assay_name]]} to be used to access productive/sterile transcript counts (Default: "scale_data")}
 
-\item{knn_graph}{should the k-nearest neighbour graph calculated on the gene expression assay be used to impute the annotation of productive transcripts for cells where no such transcripts are found across all isotypes? If TRUE, majority voting on the direct neighbours of the cell in the kNN graph will be used to impute. Otherwise, the cell will be assume to express IgM productive transcript. Expects TRUE or FALSE, or a `igraph` object containing kNN graph (in which case this graph will be used for majority voting imputation). (Default: TRUE)}
+\item{knn_graph}{should the k-nearest neighbour graph calculated on the gene expression assay be used to impute the annotation of productive transcripts for cells where no such transcripts are found across all isotypes? If TRUE, majority voting on the direct neighbours of the cell in the kNN graph will be used to impute. Otherwise, the cell will be assume to express IgM productive transcript. Expects \code{TRUE} or \code{FALSE}, or a \code{igraph} object containing kNN graph (in which case this graph will be used for majority voting imputation). (Default: TRUE)}
 
-\item{reference_based}{indicate the species. The function will use a naive isotype signature (sterile/productive gene counts) trained on reference B cell atlas for the given species. For now either 'human' or 'mouse' are accepted. If NULL, the function calculates CSR potential by taking the Euclidean norm of (furthest_p, total_s) (see above).}
+\item{reference_based}{indicate the species. The function will use a naive isotype signature (sterile/productive gene counts) trained on reference B cell atlas for the given species. For now either 'human' or 'mouse' are accepted. If \code{NULL}, the function calculates CSR potential by taking the Euclidean norm of (furthest_p, total_s) (see above).}
 
-\item{vars.to.regress}{list of variables to be regressed out in calculating the scale.data slot, if `ighc_slot` is given as `scale.data` but it has not been populated. (Default: "nCount_RNA", i.e. per-cell library size)}
+\item{vars.to.regress}{list of variables to be regressed out in calculating the scale.data slot, if \code{ighc_slot} is given as \code{scale.data} but it has not been populated. (Default: "nCount_RNA", i.e. per-cell library size)}
 
 \item{mode}{Interpretation of the isotype expressed by the cell. Either "furthest" (i.e. the isotype furthest along the IGH locus with non-zero expression of productive transcript will be taken as the isotype representative of the cell) or "highest" (the isotype with highest expression). (Default: "furthest")}
 
-\item{c_gene_anno_name}{If not NULL, this column from the Seurat Object meta.data will be used to indicate `furthest_p` in calculaing the CSR potential score, in lieu of the productive transcript counts in the IGHC assay (Default: NULL)}
+\item{c_gene_anno_name}{If not NULL, this column from the Seurat Object meta.data will be used to indicate \code{furthest_p} in calculaing the CSR potential score, in lieu of the productive transcript counts in the IGHC assay (Default: \code{NULL})}
 
 \item{isotype_column_to_add}{name of column to be added to the SeuratObj meta.data to indicate the isotype of the cell. Used for subsequent grouping of cells in calculating transitions.}
 }
@@ -39,22 +39,22 @@ getCSRpotential(
 Seurat object with these following columns added to the meta.data slot:
 \itemize{
   \item{representative_p}{an integer indicating the productive isotype for each cell (in human: 0 = IgM, 1 = IgG3 ... )}
-  \item{total_s}{amount of sterile IgH molecules for each cell, calculated from the given `ighc_slot` of the IGHC assay.}
-  \item{csr_pot}{CSR potential. Depending on the argument `reference_based` the method of calculation will be different (see above).}
-  \item{`isotype_column_to_add`}{isotype labelled as M, G3, etc. (added only when c_gene_anno_name is FALSE and the ighc_count_assay_name Assay is used to calculate CSR potential.}
+  \item{total_s}{amount of sterile IgH molecules for each cell, calculated from the given \code{ighc_slot} of the IGHC assay.}
+  \item{csr_pot}{CSR potential. Depending on the argument \code{reference_based} the method of calculation will be different (see above).}
+  \item{\code{isotype_column_to_add}}{isotype labelled as M, G3, etc. (added only when c_gene_anno_name is FALSE and the ighc_count_assay_name Assay is used to calculate CSR potential.}
 }
 }
 \description{
-`getCSRpotential` scores each cell by their status in temrs of class switch recombination (CSR), by considering the mapped sterile and productive IgH transcripts..
+\code{getCSRpotential} scores each cell by their status in temrs of class switch recombination (CSR), by considering the mapped sterile and productive IgH transcripts..
 }
 \details{
-`getCSRpotential` calculates a "CSR potential" score which ranks the cells in the given Seurat Obj by their status in the CSR process. The default is to calculate this by estimating the contribution (weight) of a 'naive' isotype signature for each cell, given its sterile/productive expression profile.
-The CSR potential will be 1 - (Naive signature weight). This method is available for either human or mouse for which isotype signatures were trained on reference B cell atlas data. Alternatively, CSR potential can also be calculated empirically (by setting `reference_based = NULL`),
+\code{getCSRpotential} calculates a "CSR potential" score which ranks the cells in the given Seurat Obj by their status in the CSR process. The default is to calculate this by estimating the contribution (weight) of a 'naive' isotype signature for each cell, given its sterile/productive expression profile.
+The CSR potential will be 1 - (Naive signature weight). This method is available for either human or mouse for which isotype signatures were trained on reference B cell atlas data. Alternatively, CSR potential can also be calculated empirically (by setting \code{reference_based = NULL}),
 given by the Euclidean norm of (furthest_p, total_s) (i.e.\eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} } ), where
 \itemize{
-  \item{representative_p}{: the productive isotype for each cell (in human this will be 0 = IgM, 1 = IgG3 ... ), and}
-  \item{total_s}{: amount of sterile IgH molecules for each cell.}
+  \item{\code{representative_p}}{: the productive isotype for each cell (in human this will be 0 = IgM, 1 = IgG3 ... ), and}
+  \item{\code{total_s}}{: amount of sterile IgH molecules for each cell.}
 }
-For `total_s`, the default is to use the scale.data slot which already normalises the IGHC counts by library size. If this doesn't exist the function will calculate this while regressing out the library size.
-For `representative_p`, users can either use a specified column in the Seurat object meta.data which indicates the isotype of the cell, or, if not provided, used the productive reads counted using the productive/sterile quantification workflow implemented in this package.
+For \code{total_s}, the default is to use the scale.data slot which already normalises the IGHC counts by library size. If this doesn't exist the function will calculate this while regressing out the library size.
+For \code{representative_p}, users can either use a specified column in the Seurat object meta.data which indicates the isotype of the cell, or, if not provided, used the productive reads counted using the productive/sterile quantification workflow implemented in this package.
 }

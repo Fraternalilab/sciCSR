@@ -18,17 +18,17 @@ mergeVelocytoWithGEX(
 
 \item{anndata_out_filename}{output filename of the merged AnnData object to be written containing both the velocyto data and the gene expression data.}
 
-\item{conda_env}{character, if not NULL this named conda environment is used to perform the merge.
-(Default: 'scicsr'). If NULL, no conda environment will be used, the program assumes the python packages `scanpy` and `scvelo` are installed in the local python)}
+\item{conda_env}{character, if not \code{NULL} this named conda environment is used to perform the merge.
+(Default: 'scicsr'). If \code{NULL}, no conda environment will be used, the program assumes the python packages \code{scanpy} and \code{scvelo} are installed in the local python)}
 }
 \value{
-a output message indicating success of writing out the merged AnnData object into the file given by `anndata_out_filename`.
+a output message indicating success of writing out the merged AnnData object into the file given by \code{anndata_out_filename}.
 }
 \description{
-`mergeVelocytoWithGEX` merges the velocyto spliced/unspliced gene counts with the AnnData object holding single-cell gene expression data.
+\code{mergeVelocytoWithGEX} merges the velocyto spliced/unspliced gene counts with the AnnData object holding single-cell gene expression data.
 This is the preprocessing function before calculating RNA velocity using the python scVelo package and workflow.
 }
 \details{
-`mergeVelocytoWithGEX` uses the R reticulate package to run python commands which merge the velocyto counts with the anndata object.
-It is assumed that the cell barcodes in the velocyto loom and the anndata object matches up. Please consult `guessBarcodes` and `combineLoomFiles` first to ensure these barcodes do match up.
+\code{mergeVelocytoWithGEX} uses the R reticulate package to run python commands which merge the velocyto counts with the anndata object.
+It is assumed that the cell barcodes in the velocyto loom and the anndata object matches up. Please consult \code{\link{guessBarcodes}} and \code{\link{combineLoomFiles}} first to ensure these barcodes do match up.
 }
