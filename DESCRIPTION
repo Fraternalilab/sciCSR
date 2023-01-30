@@ -1,7 +1,7 @@
 Package: sciCSR
 Type: Package
 Title: Single-cell Inference of Class Switch Recombination
-Version: 0.1.1
+Version: 0.2.0
 Authors@R: c( person( given = "Joseph", family = "Ng",
                       email = "joseph.chifung.ng@gmail.com", role = c( "aut", "cre" ) ) )
 Author: Joseph Ng [aut, cre]

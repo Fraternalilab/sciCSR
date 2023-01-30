@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sciCSR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -158,7 +158,7 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw">for</span><span class="op">(</span><span class="va">file</span> <span class="kw">in</span> <span class="va">loom_files</span><span class="op">)</span><span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">file</span>, destfile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html" class="external-link">basename</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">file</span>, destfile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html" class="external-link">basename</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span>, mode <span class="op">=</span> <span class="st">'wb'</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>Here, sequencing reads from cells from the BCP004 samples come from two sequencing libraries, one specifically from the memory B cells (MBC) and another from total B cells. The <code>.loom</code> files contain counts of unspliced and spliced transcripts from each cell represented in the two libraries. Our goal is first to merge these two count matrices with the standard gene expression counts stored in the Seurat data object, and then pass this merged data to scVelo to calculate RNA velocity.</p>
 <p>sciCSR offers functions to merge these <code>.loom</code> files into one and subsequently to the Seurat object, and then export this for scVelo’s use by means of a python <a href="https://anndata.readthedocs.io/en/latest/" class="external-link">AnnData</a> object. But first, let’s have a deeper look into what exactly are the outstanding issues that sciCSR is trying to solve in this task.</p>

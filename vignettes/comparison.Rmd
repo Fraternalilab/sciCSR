@@ -79,7 +79,7 @@ loom_files <- c(
 )
 
 for(file in loom_files){
-  download.file(file, destfile = basename(file))
+  download.file(file, destfile = basename(file), mode = 'wb')
 }
 ```
 
