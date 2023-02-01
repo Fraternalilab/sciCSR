@@ -10,7 +10,7 @@ In theory CSR and SHM information can be used as alternatives to the popular [RN
 
 ## Installation
 
-**Note:** *the installation and use of the sciCSR package has been tested in Linux and MacOS machines. Stay tuned for updates for usage in Windows systems.*
+**Note:** *the installation and use of the sciCSR package has been tested in Linux, MacOS and Windows machines. That said, there may still be uncatched issues in installation and/or usage - please log an issue in the [github](https://github.com/Fraternalilab/sciCSR/) and we will look into them.*
 
 ```
 # install dependencies and sciCSR itself (requires 'devtools')
