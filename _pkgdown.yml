@@ -8,6 +8,8 @@ template:
     code-bg: "#bfcadb"
 figures:
    dev: grDevices::png
+pkgdown:
+  as_is: true
 navbar:
   structure:
     left:  [intro, reference, articles, tutorials, news]
@@ -35,12 +37,14 @@ articles:
   - comparison
 reference:
 - title: "Setting up dependencies"
-  desc: "wrapper to set up python dependencies"
+  desc: "Wrapper to set up python dependencies."
   contents:
   - prepare_sciCSR
 - title: "scRNA-seq data processing and wrangling"
-  desc: "Functions for basic scRNA-seq data processing wrangling. Some specific to B cells"
+  desc: "Functions for basic scRNA-seq data processing wrangling, including B-cell-specific functionalities."
   contents:
+  - collapseIntoMetagenes
+  - normalise_dimreduce
   - guessBarcodes
   - repairBarcode
   - convertSeuratToH5ad
@@ -48,14 +52,14 @@ reference:
   - read_loom_matrices
   - combineLoomFiles
 - title: "Merging Repertoire and scRNA-seq read counts"
-  desc: "Functions for additing repertoire annotation features as metadata to gene expression count matrices"
+  desc: "Functions for additing repertoire annotation features as metadata to gene expression count matrices."
   contents:
   - annotatePairing
   - collapseBCR
   - AddCellMetaToVDJ
   - combineBCR
 - title: "CSR/SHM-based pseudotime"
-  desc: "Functions for extracting and calculating cell pseudotime ordering using CSR and SHM information"
+  desc: "Functions for extracting and calculating cell pseudotime ordering using CSR and SHM information."
   contents:
   - scanBam
   - getIGHmapping
@@ -80,7 +84,7 @@ reference:
   contents:
   - starts_with("plot")
 - title: "Data objects"
-  desc: "data objects underlying sciCSR functionalities"
+  desc: "Data objects underlying sciCSR functionalities"
   contents:
   - starts_with("human")
   - starts_with("mouse")

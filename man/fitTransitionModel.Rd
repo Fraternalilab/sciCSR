@@ -6,7 +6,7 @@
 \usage{
 fitTransitionModel(
   anndata_file,
-  conda_env = NULL,
+  conda_env = "scicsr",
   mode = "pseudotime",
   pseudotime_key = "csr_pot",
   do_pca = TRUE,

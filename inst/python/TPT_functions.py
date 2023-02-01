@@ -103,6 +103,8 @@ def committor(T, A, B, forward=True, mu=None):
         
 def _set_up_linear_system(K, A, B):
     """Assemble left-hand side W for linear system"""
+    import scipy.sparse as sparse
+    import numpy as np
     """Equation (I)"""
     W = 1.0 * K
     """Equation (II)"""
@@ -148,6 +150,11 @@ def forward_committor(T, A, B):
                       u_{i}=1    for i \in B        (III)
     with generator matrix L=(P-I).
     """
+    import numpy as np
+    from scipy.linalg import solve
+    from scipy.sparse.linalg import spsolve
+    import scipy.sparse as sparse
+
     A = set(A)
     B = set(B)
     AB = A.intersection(B)
@@ -195,6 +202,12 @@ def backward_committor(T, A, B, mu=None):
                                   u_{i}=0    for i \in B        (III)
     with adjoint of the generator matrix K=(D_pi(P-I))'.
     """
+    import deeptime.markov.tools.analysis as msmana
+    import numpy as np
+    from scipy.linalg import solve
+    from scipy.sparse.linalg import spsolve
+    import scipy.sparse as sparse
+
     A = set(A)
     B = set(B)
     AB = A.intersection(B)
@@ -227,6 +240,17 @@ def fit_tpt(transition_matrix, source_states, target_states, verbose = True):
     slimming down memory usage of some linear algebra steps
 
     """
+    import deeptime.markov.tools.analysis as msmana
+    from deeptime.markov.msm import MarkovStateModel
+    from deeptime.markov.tools.analysis._api import is_reversible
+    import deeptime.markov.tools.flux as tptapi
+    from deeptime.markov._reactive_flux import ReactiveFlux
+    from deeptime.util.types import ensure_array, ensure_number_array, ensure_integer_array, ensure_floating_array
+    import numpy as np
+    from scipy.linalg import solve
+    from scipy.sparse.linalg import spsolve
+    import scipy.sparse as sparse
+    from scipy.stats import norm
     source_states = ensure_array(source_states, dtype=int)
     target_states = ensure_array(target_states, dtype=int)
 
@@ -276,6 +300,8 @@ def fit_tpt(transition_matrix, source_states, target_states, verbose = True):
                         qminus=qminus, qplus=qplus, gross_flux=grossflux)
 
 def getReshuffledFlux_(i, tm, cluster_ident, source, target):
+    import random
+    import numpy as np
     random.seed(i + 1)
     # random reshuffle columns
     indices = np.arange(tm.shape[1])
@@ -297,6 +323,22 @@ def getReshuffledFlux_(i, tm, cluster_ident, source, target):
     net_flux = tpt_coarse.net_flux
     net_flux = net_flux * 100 / net_flux.sum()
     return {"tpt": tpt_coarse, "gross_flux": gross_flux, "net_flux": net_flux}
+
+def init_worker(sfit_tpt, s_set_up_linear_system, sforward_committor, sbackward_committor):
+    """
+    initializer individual worker in pool for getReshuffledFlux
+    ref https://superfastpython.com/multiprocessing-pool-shared-global-variables/
+    """
+    import random
+    import numpy as np
+    global fit_tpt
+    fit_tpt = sfit_tpt
+    global _set_up_linear_system
+    _set_up_linear_system = s_set_up_linear_system
+    global forward_committor
+    forward_committor = sforward_committor
+    global backward_committor
+    backward_committor = sbackward_committor
 
 def getReshuffledFlux(transition_matrix, cluster_ident, source, target, n = 100, show_progress_bar = True):
     """
@@ -328,7 +370,7 @@ def getReshuffledFlux(transition_matrix, cluster_ident, source, target, n = 100,
     if n_cpus == 1:
         out = [getReshuffledFlux_(i, tm = transition_matrix, cluster_ident = cluster_ident, source = source, target = target) for i in range(int(n))]
     else:
-        with multiprocess.Pool(int(n_cpus / 2)) as p:
+        with multiprocess.Pool(int(n_cpus / 2), initializer = init_worker, initargs = (fit_tpt, _set_up_linear_system, forward_committor, backward_committor,)) as p:
             out = list(tqdm(p.imap(partial(getReshuffledFlux_, tm = transition_matrix, cluster_ident = cluster_ident, source = source, target = target), range(int(n))), total=int(n)))
 
     return out

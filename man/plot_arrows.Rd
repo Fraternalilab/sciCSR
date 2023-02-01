@@ -21,7 +21,7 @@ plot_arrows(
 
 \item{img_path}{Optional, path to write out the arrow plot. If supplied, you can specify file format (PNG/SVG/PDF) by including the file extension. If PNG, an image of 600 dots per inch will be rendered. Default is \code{NULL}, i.e. it will write to a temporary file as a PNG.}
 
-\item{based_on}{one of 'velocity', 'csr', 'shm'. The type of information to be used to project arrows. Each has requirements on the input \code{anndata_file} (see above).}
+\item{based_on}{one of 'velocity', 'csr', 'shm'. The type of information to be used to project arrows. Each has requirements on the input \code{anndata_file} (see argument \code{anndata_file} of this function).}
 
 \item{style}{one of 'grid' (lay out arrows on a grid of fixed width/height on the UMAP plot) or 'stream' (draw arrows as streams), in the style of the scvelo 'pl.velocity_embedding_grid' or 'pl.velocity_embedding_stream' respectively.}
 

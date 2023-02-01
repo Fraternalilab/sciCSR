@@ -10,7 +10,7 @@ fitTPT(
   group.cells.by,
   source_state,
   target_state,
-  conda_env = NULL,
+  conda_env = "scicsr",
   random_n = 100,
   do_pca = TRUE,
   do_neighbors = TRUE

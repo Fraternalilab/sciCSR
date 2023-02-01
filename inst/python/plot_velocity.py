@@ -3,6 +3,8 @@ import scvelo as scv
 import argparse
 import sys
 from cellrank.tl.kernels import VelocityKernel, ConnectivityKernel, PseudotimeKernel
+scv.settings.figdir = ""
+scv.settings.plot_prefix = ""
 
 if __name__=="__main__":
         parser = argparse.ArgumentParser(description="plot a velocity plot using scvelo and save as png/svg/pdf")

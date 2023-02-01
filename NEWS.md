@@ -1,3 +1,7 @@
+# sciCSR 0.2.1 (Feb 1, 2023)
+* fixed issues re distributed computing in python across MacOS and Windows.
+* added functions for basic scRNA-seq data preprocessing (`normalise_dimreduce`) which includes customisable pruning of variably expressed genes, collapse VDJ (or other genes) into metagenes etc (`collapseIntoMetaGenes`).
+
 # sciCSR 0.2.0 (Jan 30, 2023)
 * removed velocyto.R dependency to avoid installation problems.
 * fixed minor issues for cross-platform (MacOS / Linux) installation and use.

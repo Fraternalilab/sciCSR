@@ -72,35 +72,35 @@ getSHM <- function(SeuratObj, v_identity_anno_name,
 #' score cells by their Class Switch Recombination (CSR) status
 #'
 #' @description
-#' \code{getCSRpotential} scores each cell by their status in temrs of class switch recombination (CSR), by considering the mapped sterile and productive IgH transcripts..
+#' \code{getCSRpotential} scores each cell by their status in temrs of class switch recombination (CSR), by considering the mapped sterile and productive IgH transcripts.
 #'
 #' @details
 #' \code{getCSRpotential} calculates a "CSR potential" score which ranks the cells in the given Seurat Obj by their status in the CSR process. The default is to calculate this by estimating the contribution (weight) of a 'naive' isotype signature for each cell, given its sterile/productive expression profile.
 #' The CSR potential will be 1 - (Naive signature weight). This method is available for either human or mouse for which isotype signatures were trained on reference B cell atlas data. Alternatively, CSR potential can also be calculated empirically (by setting \code{reference_based = NULL}),
-#' given by the Euclidean norm of (furthest_p, total_s) (i.e.\eqn{ \sqrt{ \text{representative\_p}^2 + \text{total\_s}^2} } ), where
+#' given by the Euclidean norm of (representative_p, total_s) (i.e.\eqn{ \sqrt{ \text{representative_p}^2 + \text{total_s}^2} } ), where
 #' \itemize{
 #'   \item{\code{representative_p}}{: the productive isotype for each cell (in human this will be 0 = IgM, 1 = IgG3 ... ), and}
 #'   \item{\code{total_s}}{: amount of sterile IgH molecules for each cell.}
 #' }
 #' For \code{total_s}, the default is to use the scale.data slot which already normalises the IGHC counts by library size. If this doesn't exist the function will calculate this while regressing out the library size.
-#' For \code{representative_p}, users can either use a specified column in the Seurat object meta.data which indicates the isotype of the cell, or, if not provided, used the productive reads counted using the productive/sterile quantification workflow implemented in this package.
+#' For \code{representative_p}, users can either use a specified column in the Seurat object meta.data which indicates the isotype of the cell, or, if not provided, used the productive reads counted using the productive/sterile quantification workflow implemented in this package (see the argument \code{mode} of this function).
 #'
 #' @param SeuratObj Seurat Object
 #' @param ighc_count_assay_name name of assay in \code{SeuratObj} which holds the IgH productive/sterile transcript count data. (Default: "IGHC")
 #' @param ighc_slot the slot in \code{slot(SeuratObj, "assays")[[ighc_count_assay_name]]} to be used to access productive/sterile transcript counts (Default: "scale_data")
 #' @param knn_graph should the k-nearest neighbour graph calculated on the gene expression assay be used to impute the annotation of productive transcripts for cells where no such transcripts are found across all isotypes? If TRUE, majority voting on the direct neighbours of the cell in the kNN graph will be used to impute. Otherwise, the cell will be assume to express IgM productive transcript. Expects \code{TRUE} or \code{FALSE}, or a \code{igraph} object containing kNN graph (in which case this graph will be used for majority voting imputation). (Default: TRUE)
-#' @param reference_based indicate the species. The function will use a naive isotype signature (sterile/productive gene counts) trained on reference B cell atlas for the given species. For now either 'human' or 'mouse' are accepted. If \code{NULL}, the function calculates CSR potential by taking the Euclidean norm of (furthest_p, total_s) (see above).
-#' @param vars.to.regress list of variables to be regressed out in calculating the scale.data slot, if \code{ighc_slot} is given as \code{scale.data} but it has not been populated. (Default: "nCount_RNA", i.e. per-cell library size)
-#' @param mode Interpretation of the isotype expressed by the cell. Either "furthest" (i.e. the isotype furthest along the IGH locus with non-zero expression of productive transcript will be taken as the isotype representative of the cell) or "highest" (the isotype with highest expression). (Default: "furthest")
-#' @param c_gene_anno_name If not NULL, this column from the Seurat Object meta.data will be used to indicate \code{furthest_p} in calculaing the CSR potential score, in lieu of the productive transcript counts in the IGHC assay (Default: \code{NULL})
+#' @param reference_based indicate the species. The function will use a naive isotype signature (sterile/productive gene counts) trained on reference B cell atlas for the given species. For now either 'human' or 'mouse' are accepted. If \code{NULL}, the function calculates CSR potential by taking the Euclidean norm of (representative_p, total_s) (see Details).
+#' @param vars.to.regress list of variables to be regressed out when scaling the sterile/productive count matrix, if \code{ighc_slot} is given as \code{scale.data} but it has not been populated. (Default: "nCount_RNA", i.e. per-cell library size)
+#' @param mode (Only applicable if c_gene_anno_type is NULL.) Interpretation of the isotype expressed by the cell. Either "furthest" (i.e. the isotype furthest along the IGH locus with non-zero expression of productive transcript will be taken as the isotype representative of the cell) or "highest" (the isotype with highest expression). (Default: "furthest")
+#' @param c_gene_anno_name If not NULL, this column from the Seurat Object meta.data will be used to indicate \code{representative_p} in calculaing the CSR potential score, in lieu of the productive transcript counts in the IGHC assay (Default: \code{NULL})
 #' @param isotype_column_to_add name of column to be added to the SeuratObj meta.data to indicate the isotype of the cell. Used for subsequent grouping of cells in calculating transitions.
 #'
 #' @return Seurat object with these following columns added to the meta.data slot:
 #' \itemize{
-#'   \item{representative_p}{an integer indicating the productive isotype for each cell (in human: 0 = IgM, 1 = IgG3 ... )}
-#'   \item{total_s}{amount of sterile IgH molecules for each cell, calculated from the given \code{ighc_slot} of the IGHC assay.}
-#'   \item{csr_pot}{CSR potential. Depending on the argument \code{reference_based} the method of calculation will be different (see above).}
-#'   \item{\code{isotype_column_to_add}}{isotype labelled as M, G3, etc. (added only when c_gene_anno_name is FALSE and the ighc_count_assay_name Assay is used to calculate CSR potential.}
+#'   \item{\code{representative_p}: }{an integer indicating the productive isotype for each cell (in human: 0 = IgM, 1 = IgG3 ... )}
+#'   \item{\code{total_s}: }{amount of sterile IgH molecules for each cell, calculated from the given \code{ighc_slot} of the IGHC assay.}
+#'   \item{\code{csr_pot}: }{CSR potential. Depending on the argument \code{reference_based} the method of calculation will be different (see Details).}
+#'   \item{\code{isotype_column_to_add}: }{isotype labelled as M, G3, etc. (added only when c_gene_anno_name is FALSE and the ighc_count_assay_name Assay is used to calculate CSR potential.}
 #' }
 #'
 #' @importFrom Seurat Assays ScaleData AddMetaData
@@ -313,7 +313,7 @@ convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename,
                         assay = assay, overwrite = TRUE)
     # see https://github.com/theislab/scvelo/issues/255
     # here read the adata in and perform the fix
-    use_condaenv(conda_env)
+    use_condaenv(conda_env, required = TRUE)
     py_run_string("import scanpy as sc")
     py_run_string(paste0("adata = sc.read_h5ad('", out_file, "')"))
     py_run_string("adata.__dict__['_raw'].__dict__['_var'] = adata.__dict__['_raw'].__dict__['_var'].rename(columns={'_index': 'features'})")
@@ -532,7 +532,7 @@ combineLoomFiles <- function(loom_files, new_loom_filename,
 mergeVelocytoWithGEX <- function(anndata_file, loom_file, anndata_out_filename,
                                  conda_env = 'scicsr')
 {
-  use_condaenv(conda_env)
+  use_condaenv(conda_env, required = TRUE)
   py_run_string("import scanpy as sc")
   py_run_string("import scvelo as scv")
   py_run_string(paste0("adata = sc.read_h5ad('", anndata_file, "')"))
@@ -569,30 +569,23 @@ mergeVelocytoWithGEX <- function(anndata_file, loom_file, anndata_out_filename,
 #' @return a output message indicating success of writing out the AnnData object with merged scVelo results into the file given by \code{anndata_out_filename}.
 #'
 #' @import reticulate
+#' @importFrom stringr str_to_lower
 #' @export run_scVelo
 run_scVelo <- function(anndata_file, anndata_out_filename, conda_env = 'scicsr',
                        scvelo_mode = "dynamical", reduction = "UMAP",
                        min_shared_counts = 20, n_top_genes = 2000)
 {
-  use_condaenv(conda_env)
-  py_run_string("import scanpy as sc")
-  py_run_string("import scvelo as scv")
-  py_run_string("scv.settings.verbosity = 3")
-  py_run_string(paste0("adata = sc.read_h5ad('", anndata_file, "')"))
-  # first calculate moments
-  message("running scVelo pipeline ...")
-  py_run_string(paste0("scv.pp.filter_and_normalize(adata, min_shared_counts=",
-                       min_shared_counts, ", n_top_genes=", n_top_genes, ")"))
-  py_run_string("scv.pp.neighbors(adata)")
-  py_run_string("scv.pp.moments(adata, n_pcs=None, n_neighbors=None)")
-  py_run_string("scv.tl.recover_dynamics(adata)")
-  py_run_string(paste0("scv.tl.velocity(adata, mode = '", scvelo_mode, "')"))
-  py_run_string("scv.tl.velocity_graph(adata)")
-  py_run_string(paste0("scv.tl.velocity_embedding(adata, basis='",
-                       stringr::str_to_lower(reduction), "', autoscale=False)"))
-  py_run_string(paste0("adata.write_h5ad('", anndata_out_filename, "')"))
-  return( paste0("AnnData object with scVelo results written to file '",
-                 anndata_out_filename, "'.") )
+  use_condaenv(conda_env, required = TRUE)  
+  arguments <- paste0(
+    paste0( system.file( package = "sciCSR" ), "/python/run_scvelo.py" ),
+    " --anndata_file ", anndata_file,
+    " --anndata_out_file ", anndata_out_filename,
+    " --mode ", scvelo_mode,
+    " --min_shared_counts ", min_shared_counts,
+    " --n_top_genes ", n_top_genes,
+    " --reduction ", stringr::str_to_lower(reduction)
+  )
+  system2(command = py_config()[["python"]], args = arguments)
 }
 
 #' Split AnnData object by levels in a specified meta data trait
@@ -620,7 +613,7 @@ splitAnnData <- function(anndata_file, split.by, levels, conda_env = 'scicsr')
   # split the AnnData object by a given column ('split.by') in Anndata.obs,
   # given the set of values ('levels') to subset for.
   # Write out separate .h5ad file of the subsetted AnnData object
-  use_condaenv(conda_env)
+  use_condaenv(conda_env, required = TRUE)
   py_run_string("import scanpy as sc")
   py_run_string("import warnings")
   py_run_string("warnings.filterwarnings('ignore')")
@@ -667,12 +660,25 @@ splitAnnData <- function(anndata_file, split.by, levels, conda_env = 'scicsr')
 #'
 #' @import reticulate
 #' @export fitTransitionModel
-fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotime',
+fitTransitionModel <- function(anndata_file, conda_env = 'scicsr', mode = 'pseudotime',
                                pseudotime_key = 'csr_pot', do_pca = TRUE, do_neighbors = TRUE)
 {
   if( ! mode %in% c("pseudotime", "velocity"))
     stop("Currently 'mode' must be either 'pseudotime' (cellrank PseudotimeKernel) or 'velocity' (cellrank VelocityKernel).")
-  use_condaenv(conda_env)
+  use_condaenv(conda_env, required = TRUE)
+  # update executable path in sys module if OS is windows
+  # see https://github.com/rstudio/reticulate/issues/517
+  if( .Platform$OS.type == "windows" ){
+    sys <- import("sys")
+    exe <- file.path(sys$exec_prefix, "pythonw.exe")
+    sys$executable <- exe
+    sys$`_base_executable` <- exe
+    
+    # update executable path in multiprocessing module
+    multiprocessing <- import("multiprocessing")
+    multiprocessing$set_executable(exe)
+  }
+  
   py_run_string("import scanpy as sc")
   py_run_string(paste0("adata = sc.read_h5ad('", anndata_file, "')"))
   if( do_pca ){
@@ -737,11 +743,11 @@ fitTransitionModel <- function(anndata_file, conda_env = NULL, mode = 'pseudotim
 #' @export fitTPT
 fitTPT <- function(anndata_file, CellrankObj,
                    group.cells.by, source_state, target_state,
-                   conda_env = NULL,random_n = 100,
+                   conda_env = 'scicsr',random_n = 100,
                    do_pca = TRUE, do_neighbors = TRUE)
 {
   fit_coarse_grain_tpt <- NULL
-  use_condaenv(conda_env)
+  use_condaenv(conda_env, required = TRUE)
   py_run_string("import scanpy as sc")
   source_python(paste0( system.file( package = "sciCSR" ), "/python/TPT_functions.py" ) )
   py_run_string(paste0("adata = sc.read_h5ad('", anndata_file, "')"))
@@ -752,7 +758,9 @@ fitTPT <- function(anndata_file, CellrankObj,
   tpt <- fit_coarse_grain_tpt(CellrankObj$cellrank_obj$transition_matrix,
                               py$cluster_ident,
                               source_state, target_state, random_n = random_n)
-  tpt[["pathways"]] <- reticulate::py_to_r(tpt[["pathways"]])
+  if( ! "data.frame" %in% class(tpt[["pathways"]]) ){
+    tpt[["pathways"]] <- reticulate::py_to_r(tpt[["pathways"]])
+  }
   tpt[["stationary_distribution_bootstrapping"]] <- lapply(tpt[["stationary_bootstrapping"]], unlist)
   tpt[["total_gross_flux"]] <- tpt[["total_gross_flux"]]
   tpt[["total_gross_flux_reshuffled"]] <- unlist(tpt[["total_gross_flux_randomised"]])
@@ -1029,7 +1037,7 @@ compareTransitionMatrices <- function(matrix_list, SeuratObj,
 #'
 #' @param anndata_file input anndata_file. If \code{based_on} is 'velocity', this file needs to be output from \code{\link{run_scVelo}}. If \code{based_on} is 'CSR' or 'SHM', the columns 'csr_pot' or 'shm' should be in the .obs slot of the AnnData object.
 #' @param img_path Optional, path to write out the arrow plot. If supplied, you can specify file format (PNG/SVG/PDF) by including the file extension. If PNG, an image of 600 dots per inch will be rendered. Default is \code{NULL}, i.e. it will write to a temporary file as a PNG.
-#' @param based_on one of 'velocity', 'csr', 'shm'. The type of information to be used to project arrows. Each has requirements on the input \code{anndata_file} (see above).
+#' @param based_on one of 'velocity', 'csr', 'shm'. The type of information to be used to project arrows. Each has requirements on the input \code{anndata_file} (see argument \code{anndata_file} of this function).
 #' @param style one of 'grid' (lay out arrows on a grid of fixed width/height on the UMAP plot) or 'stream' (draw arrows as streams), in the style of the scvelo 'pl.velocity_embedding_grid' or 'pl.velocity_embedding_stream' respectively.
 #' @param title plot title (Default: \code{NULL}, the title of the plot will be identical to 'based_on')
 #' @param colour.by column in gene expression metadata to group and colour the cells by (Default: 'seurat_clusters')
@@ -1050,7 +1058,7 @@ plot_arrows <- function(anndata_file, img_path = NULL, based_on = 'velocity',
                         cols = NULL, components = '1,2',
                         conda_env = 'scicsr')
 {
-  use_condaenv(conda_env)
+  use_condaenv(conda_env, required = TRUE)
   if( is.null( img_path) ){
     img_path <- paste0(tempfile(), ".png")
   }
@@ -1065,10 +1073,10 @@ plot_arrows <- function(anndata_file, img_path = NULL, based_on = 'velocity',
   )
   if( !is.null( cols ) ){
     cols <- paste(cols, collapse = ",")
-    arguments <- paste0(arguments, " --palette '", cols, "'")
+    arguments <- paste0(arguments, " --palette \"", cols, "\"")
   }
   if( !is.null( title ) ){
-    arguments <- paste0(arguments, " --title '", title, "'")
+    arguments <- paste0(arguments, " --title \"", title, "\"")
   }
   system2(command = py_config()[["python"]], args = arguments)
   img <- readPNG(img_path)

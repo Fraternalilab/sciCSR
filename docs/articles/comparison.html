@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sciCSR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -244,10 +244,8 @@
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto.h5ad"</span>,</span>
 <span>  anndata_out_filename <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## running scVelo pipeline ...</span></span></code></pre>
-<pre><code><span><span class="co">## [1] "AnnData object with scVelo results written to file 'King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad'."</span></span></code></pre>
 <p>We can project the RNA velocity results onto the UMAP using the plotting functionalities within scVelo. Once again, in sciCSR you can do this by calling a function in R without the need to code in python - sciCSR calls scVelo at the backend and return you the plot within R:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_arrows.html">plot_arrows</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span>, </span>
 <span>  <span class="co"># we are using RNA velocity information to project arrows</span></span>
@@ -264,7 +262,7 @@
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="comparison_files/figure-html/unnamed-chunk-10-1.png" width="576"></p>
 <p>We now have a RNA velocity plot based on code entirely in R (sciCSR does all the magic in python in the backend)! We can also plot RNA velocity as a grid of arrows rather than as arrow streams as above:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_arrows.html">plot_arrows</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span>, </span>
 <span>  <span class="co"># we are using RNA velocity information to project arrows</span></span>
@@ -290,7 +288,7 @@
 <p>Since sciCSR infers transitions using CSR and/or SHM information, we would ideally want to also visualise these, and compare these inferred transitions against those based on RNA velocity. We can do so by projecting the transitions onto UMAP similar to what is shown above for RNA velocity, thanks to functionalities support in the CellRank package. Before we show you these, however, some points of caution:</p>
 <p>Inferred transitions based on CSR and/or SHM can be substantially different from those based on RNA velocity. Specifically, it is fairly conceivable that depending on the dataset, even using CSR/SHM <em>we will not see much prominent transitional flows</em>. Part of it may be genuine (e.g. you are sampling mainly mature B cells at a steady state with little difference in CSR/SHM patterns) - in fact, it has been noticed that one <a href="https://doi.org/10.15252/msb.202110282" class="external-link">common problem with RNA velocity</a> is the prominence of flows (sometimes even pointing to a counterintuitive direction) in mature immune cell types where little dynamical behaviour is expected. Another potential reason for the lack of prominent flows in these sort of visualisation is, <em>cells are not necessarily organised by the states defined using CSR/SHM information on the UMAP</em>. For example, IgG1+ and IgA1+ B cells may occupy similar positions on a UMAP projection simply because they share transcriptomic similarities outside of the immunoglobulin loci. In this case, even it is conceivable that there can be a G1-to-A1 transition, projection of arrows onto the UMAP reduction isn’t particularly helpful as we may not have these states positioning on the UMAP in a way that we can highlight transitions between them using the arrows.</p>
 <p>Anyway, enough health warning - we can also use the <code><a href="../reference/plot_arrows.html">plot_arrows()</a></code> function to project CSR/SHM information onto the UMAP. Just indicate this in the <code>based_on</code> argument:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Let's say we want to first project CSR-inferred transitions </span></span>
 <span><span class="co"># onto the UMAP</span></span>
 <span></span>
@@ -306,7 +304,7 @@
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="comparison_files/figure-html/unnamed-chunk-12-1.png" width="576"></p>
 <p>And another plot using SHM information:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_arrows.html">plot_arrows</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span>, </span>
 <span>  based_on <span class="op">=</span> <span class="st">"shm"</span>,</span>
@@ -325,7 +323,7 @@
 <p>Here we show you another way to answer the question of ‘How different are the transitions inferred using CSR/SHM to those based on RNA velocity’. In sciCSR we uses CSR/SHM information to fit models of state transitions using Markov State Models (MSM). One powerful properties of MSM is, they specify the transition likelihoods between every state in the data, such that we can ‘generate’/‘simulate’ new transitions as if we have data from a new cell and follow how it moves across the landscape of states. Similar MSMs would produce similar pathways of transitions across this landscape; we can take a note at the frequencies each state is visited in these simulated pathways, and then derive a numerical metric to quantify the similarity in terms of the frequencies of visiting each states in these MSM-simulated paths (Illustration below).</p>
 <p><img src="images/sample_msm.png" title="Illustration of sampling MSM and comparing inferences" alt="Illustration of sampling MSM and comparing inferences" width="260"></p>
 <p>In sciCSR, the way we can perform this analysis is, first fit transition models and obtain separate R objects which store these models. We can then use the function <code><a href="../reference/compareTransitionMatrices.html">compareTransitionMatrices()</a></code> to quantify the similarities of these transition models:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Let's first fit transition models using velocity/CSR/SHM</span></span>
 <span><span class="co"># separately using fitTransitionModel()</span></span>
 <span></span>
@@ -367,7 +365,7 @@
 <pre><code><span><span class="co">## Comparing the list of transition models ...</span></span></code></pre>
 <pre><code><span><span class="co">## Metric: 'kullback-leibler' using unit: 'log2'; comparing: 3 vectors.</span></span></code></pre>
 <p>The output of this function is a list with two elements: the <code>sampled_transitions</code> are the frequencies each transition (i.e. in this case, moves from one cell type to another) is visited in the pathways sampled by considering the transition model fitted using velocity/CSR/SHM information. Another element of this list (name <code>distance</code>) is a matrix which shows the difference between each pair of transition matrix, ordered based on the one given in <code>matrix_list</code>. The values in this matrix is a divergence metric (in this case <a href="https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence" class="external-link">Kullback-Leibler divergence</a>) to quantify how different the transitions implicated in one distance matrix is different from another. The larger this value, the more different the implied transitions are.</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">distance_matrix</span> <span class="op">&lt;-</span> <span class="va">comparison</span><span class="op">$</span><span class="va">distance</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">distance_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Velocity"</span>, <span class="st">"CSR"</span>, <span class="st">"SHM"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">distance_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Velocity"</span>, <span class="st">"CSR"</span>, <span class="st">"SHM"</span><span class="op">)</span></span>
