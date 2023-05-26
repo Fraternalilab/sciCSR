@@ -64,12 +64,12 @@ normalise_dimreduce <- function(obj, var_explained_lim = 0.015,
     assay.use <- "RNA"
   }
   varfeat <- VariableFeatures(obj)
-  varfeat <- varfeat[!grepl("^IGH[MDE]|^IGHG[1-4]|^IGHA[1-2]|^IG[HKL][VDJ]|^IGKC|^IGLC[1-7]|^TR[ABGD][CV]|^AC233755.1|^IGLL|^JCHAIN", varfeat)]
+  varfeat <- varfeat[!grepl(paste(features_exclude, collapse = "|"), varfeat)]
   obj <- RunPCA(obj, features = varfeat, ...)
   if(run.harmony){
     obj <- harmony::RunHarmony(obj, assay.use = assay.use,
                                group.by.vars = harmony_vars,
-                               verbose = FALSE)
+                               verbose = TRUE)
   }
   var_explained <- (obj@reductions$pca@stdev)^2 / sum((obj@reductions$pca@stdev)^2 )
   dim <- max(which(var_explained > var_explained_lim))

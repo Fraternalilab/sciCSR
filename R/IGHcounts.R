@@ -449,3 +449,42 @@ getJunctionReads <- function(read_info)
   # disregard reads concerning CDS of
   reads
 }
+
+#' merge IgH productive/sterile transcript count into Seurat Object
+#'
+#' @description
+#' \code{mergeIgHCountsToSeurat} will generate a new Assay in the given Seurat Object which contains the count matrix for productive/sterile transcripts
+#'
+#' @details
+#' \code{mergeIgHCountsToSeurat} expects a count matrix with matching cell names/barcodes with the Seurat Object (i.e. output from the \code{\link{repairBarcode}} of \code{sciCSR}).
+#' It will create a new Assay that stores this count matrix.
+#'
+#' @param igh_counts count matrix of productive/sterile transcripts after ensuring cell names/barcodes match with the supplied Seurat Object (i.e. after running the \code{\link{repairBarcode}} function)
+#' @param SeuratObj Seurat object on to the productive/sterile count matrix will be attached
+#' @param assay_name name of the Seurat Assay holding the productive/sterile transcript count matrix. (Default: "IGHC")
+#'
+#' @return A Seurat object identical to \code{SeuratObj} with a new Assay with name given by \code{assay_name}, containing the productive/sterile transcript count matrix \code{igh_counts}.
+#'
+#' @importFrom Seurat Cells CreateAssayObject
+#' @export mergeIgHCountsToSeurat
+mergeIgHCountsToSeurat <- function(igh_counts, SeuratObj, assay_name = "IGHC")
+{
+  igh_counts <- rbind(
+    igh_counts,
+    # a zero matrix for those 'missing' cells
+    matrix(0,
+           # number of cells 'missing' in the productive/sterile count matrix
+           nrow = sum( ! Cells(SeuratObj) %in% rownames(igh_counts)),
+           # number of productive/sterile transcripts
+           ncol = ncol(igh_counts),
+           dimnames =  list(
+             # these are the cells without observed productive/sterile reads
+             Cells(SeuratObj)[which(!Cells(SeuratObj) %in% rownames(igh_counts))],
+             # productive/sterile transcript names
+             colnames(igh_counts)
+           ), byrow = TRUE)
+  )
+  igh_counts <- t( igh_counts )
+  SeuratObj[[assay_name]] <- CreateAssayObject( counts = igh_counts )
+  return( SeuratObj )
+}

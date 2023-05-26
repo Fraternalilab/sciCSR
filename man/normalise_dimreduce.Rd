@@ -12,8 +12,8 @@ normalise_dimreduce(
   SCT = FALSE,
   mt.pattern = "^MT-",
   mt.percent = 10,
-  features_exclude = c("^IGH[MDE]", "^IGHG[1-4]", "^IGHA[1-2]", "^IG[HKL][VDJ]",
-    "^IGKC", "^IGLC[1-7]", "^TR[ABGD][CV]", "^AC233755.1", "^IGLL", "^JCHAIN"),
+  features_exclude = c("^IGH[MDE]", "^IGHG[1-4]", "^IGHA[1-2]", "^IG[HKL][VDJ]", "^IGKC",
+    "^IGLC[1-7]", "^TR[ABGD][CV]", "^AC233755.1", "^IGLL", "^JCHAIN"),
   ...
 )
 }

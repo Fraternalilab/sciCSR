@@ -136,7 +136,7 @@ repairBarcode <- function(data_list, SeuratObj, sample_names,
     if( is.na(runmode) ){
       cell_barcode <- colnames(data_list[[i]])
       cell_barcode <- sort(cell_barcode[which(cell_barcode %in% c("barcode", "CB"))])[1]
-      barcodes_df[[i]] <- sapply(colnames(data_list[[i]][, cell_barcode]), guessBarcodes)
+      barcodes_df[[i]] <- sapply(data_list[[i]][, cell_barcode], guessBarcodes)
     } else if( runmode == "rownames" ){
       barcodes_df[[i]] <- sapply(rownames(data_list[[i]]), guessBarcodes)
     }
