@@ -1,5 +1,7 @@
 # sciCSR
 
+[![DOI](https://zenodo.org/badge/492787223.svg)](https://zenodo.org/badge/latestdoi/492787223)
+
 <img src="man/figures/sciCSR_logo.png" alt="logo" width="200" height="250">
 Single-cell inference of Class Switch Recombination
 
