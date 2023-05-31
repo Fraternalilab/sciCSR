@@ -4,12 +4,12 @@
 \alias{guessBarcodes}
 \title{parse the substring inside a given cell identifier which corresponds to the nucleotide barcode}
 \usage{
-guessBarcodes(cell_name, min_barcode_length = 6)
+guessBarcodes(cell_name, min_barcode_length = 6L)
 }
 \arguments{
 \item{cell_name}{character, a cell identifier, typicall with prefix and/or suffix (e.g. "ACTGATGCAT-1", "SampleA_ATGAACCTATGG")}
 
-\item{min_barcode_length}{minimum length of the nucleotide barcode (Default: 6)}
+\item{min_barcode_length}{integer, minimum length of the nucleotide barcode (Default: 6)}
 }
 \value{
 a vector with the input \code{cell_name} decomposed into these three entries:

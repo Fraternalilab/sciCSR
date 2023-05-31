@@ -36,7 +36,12 @@ Imports: GenomeInfoDb,
          Rsamtools, 
          ggplot2,
          hdf5r
-Suggests: markdown, knitr, utils
+Suggests: 
+    markdown,
+    knitr,
+    utils,
+    testthat (>= 3.0.0)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
+Config/testthat/edition: 3

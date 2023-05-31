@@ -181,6 +181,8 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
     if( ! reference_based %in% c("human", "mouse") )
       stop("'reference_based' must be either 'human' or 'mouse'. If your data come from another species, or you wish to calculate CSR potential empirically, set reference_based = NULL. ")
   }
+  if( is.null( knn_graph ) )
+    stop("'knn_graph' must either be TRUE or FALSE, or an igraph object of the k-nearest neighbour graph.")
   if( !is.logical( knn_graph ) ){
     if( inherits( knn_graph, 'igraph') ){
       stop("'knn_graph' must either be TRUE or FALSE, or an igraph object of the k-nearest neighbour graph.")
@@ -359,7 +361,7 @@ convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename,
 #' This function attempts to resolve such issues by extracting the nucleotide barcodes actually introduced in the experiment.
 #'
 #' @param cell_name character, a cell identifier, typicall with prefix and/or suffix (e.g. "ACTGATGCAT-1", "SampleA_ATGAACCTATGG")
-#' @param min_barcode_length minimum length of the nucleotide barcode (Default: 6)
+#' @param min_barcode_length integer, minimum length of the nucleotide barcode (Default: 6)
 #'
 #' @return a vector with the input \code{cell_name} decomposed into these three entries:
 #' \describe{
@@ -369,14 +371,17 @@ convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename,
 #' }
 #' @importFrom stringr str_detect str_locate str_sub
 #' @export guessBarcodes
-guessBarcodes <- function(cell_name, min_barcode_length = 6)
+guessBarcodes <- function(cell_name, min_barcode_length = 6L)
 {
   # guess the barcode contained in cell_name by looking for continuous
   # nucleotide-like strings in 'cell_name'
   # return a list of c(prefix, cell_name, suffix) (NA if none)
+  if( ! is.integer( min_barcode_length ) ){
+    stop("min_barcode_length should be an integer (make sure you have 'L' at the end of the number!).")
+  }
   if( ! stringr::str_detect(cell_name,
                             paste0("[ATCG]{", min_barcode_length, ",}")) ){
-    stop("the given cell_name doesn't appear to contain nucleotide barcode strings. Need a custom way to extract cell barcodes.")
+    stop("the given cell_name doesn't appear to contain nucleotide barcode strings with length of at least min_barcode_length. Need a custom way to extract cell barcodes.")
   }
   # it would only return the first instance
   barcode_pos <- stringr::str_locate(
