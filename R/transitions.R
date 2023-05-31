@@ -69,6 +69,59 @@ getSHM <- function(SeuratObj, v_identity_anno_name,
   Seurat::AddMetaData(SeuratObj, v_identity[, shm_column_to_add, drop = FALSE])
 }
 
+#' label isotypes based on productive/sterile transcript levels
+#'
+#' @description
+#' \code{getIsotype} considers, for each cell in \code{count_matrix}, the transcript count for given isotypes, and label the cells with one of the isotype. The labelling is controlled by a user-defined function (\code{summary_function}) which specifies how to nominate one isotype given a cell's transcript counts.
+#' For example, isotype with maximum sterile transcript count. Optionally, if a k-nearest neighbour graph is given, it assumes this graph encodes cell similarity and the function will impute isotypes for a cell without any isotype information, based on majority voting of its immediate neighbours in the graph.
+#'
+#' @details
+#' If a k-nearest neighbour graph is given, it assumes this graph encodes cell similarity and the function will impute isotypes for a cell without any isotype information, based on majority voting of its immediate neighbours in the graph.
+#'
+#' @param count_matrix a matrix of transcript counts of different isotypes (row) across cells (columns). You may subset productive/sterile transcripts prior to running this function
+#' @param summary_function a function which takes in an integer vector of transcript counts and return an index (from 0 to n - 1 where n is the total number of isotypes) denoting the chosen isotype. This function is applied only if \code{knn_graph} is TRUE; it is applied on each direct neighbour surrounding the given cell as defined in the kNN graph. Default is a function which return the isotype with maximum transcript counts in the input vector
+#' @param knn_graph a k-nearest neighbour graph (\code{igraph} object) of cell similarity. If supplied, it will be used to impute the annotation of isotype for cells where no such transcripts are found across all isotypes, using majority voting on the direct neighbours of the cell in the kNN graph will be used to impute. If no information/imputation is possible, the cell will be assume to express IgM. (Default: FALSE, i.e. no imputation will be performed)
+#' @param impute_positive_counts should cells with observed transcript counts be imputed using the neighbour-voting strategy detailed above? (Default: TRUE)
+#'
+#' @return a factor denoting the chosen isotype for each cell represented in \code{count_matrix}.
+#'
+#' @importFrom igraph neighbors
+#' @export getIsotype
+getIsotype <- function(count_matrix,
+                       summary_function = function(z) max(which(z > 0)) - 1,
+                       knn_graph = FALSE, impute_positive_counts = TRUE)
+{
+  if( inherits(knn_graph, 'Matrix')){
+    # convert the adjacency matrix into a igraph object
+    knn_graph <- igraph::graph_from_adjacency_matrix( knn_graph,
+                                                      diag = FALSE, mode = "undirected" )
+  }
+  o <- sapply(colnames(count_matrix), function(cell_name) {
+    x <- count_matrix[, cell_name]
+    pos <- which(x > 0) # positive entries
+    if(!impute_positive_counts) { # do not impute for cells already with positive counts
+      if( length(pos) != 0 ) return(summary_function(x))
+    }
+    if( inherits(knn_graph, 'igraph') ){
+      # majority voting using neighbours in the kNN graph where this information does exist
+      neighbours <- names(igraph::neighbors(knn_graph, cell_name))
+      if( length(neighbours) == 0 ) return( 0 ) # assume IgM
+      neighbours_jc <- apply(count_matrix[, neighbours, drop = FALSE], 2, function(xx){
+        poss <- which(xx > 0)
+        if( length(poss) > 0 ) return(summary_function(poss)) else return(NA)
+      })
+      o <- as.numeric( names(which.max(table(neighbours_jc))) )
+      if( length( o ) == 0 ) return(0) # assume IgM
+      else return(o)
+    } else return(0) # assume IgM
+  })
+  # now change these numbers to isotype names
+  c_genes <- rownames(count_matrix)
+  c_genes <- unique(gsub("-[A-Z]", "", c_genes))
+  o <- factor(o, levels = (1:length(c_genes)) - 1, labels = c_genes)
+  return(o)
+}
+
 #' score cells by their Class Switch Recombination (CSR) status
 #'
 #' @description
@@ -128,6 +181,8 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
     if( ! reference_based %in% c("human", "mouse") )
       stop("'reference_based' must be either 'human' or 'mouse'. If your data come from another species, or you wish to calculate CSR potential empirically, set reference_based = NULL. ")
   }
+  if( is.null( knn_graph ) )
+    stop("'knn_graph' must either be TRUE or FALSE, or an igraph object of the k-nearest neighbour graph.")
   if( !is.logical( knn_graph ) ){
     if( inherits( knn_graph, 'igraph') ){
       stop("'knn_graph' must either be TRUE or FALSE, or an igraph object of the k-nearest neighbour graph.")
@@ -161,45 +216,17 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
   if( is.null( c_gene_anno_name ) ){
     if( is.null( isotype_column_to_add ) )
       stop("'isotype_column_to_add' needs to be given if 'c_gene_anno_name' is NULL.")
-    jc_genes <- rownames(ighc_counts)[grepl("P$", rownames(ighc_counts))]
+    jc_genes <- rownames(ighc_counts)[grepl("-P$", rownames(ighc_counts))]
     jc_counts <- raw_counts[jc_genes, ] # use raw counts for productive reads
-    furthest_jc <- sapply(colnames(jc_counts), function(y) {
-      x <- jc_counts[, y]
-      if( mode == "furthest" ) {
-	      pos <- which(x > 0) # positive entries
-        if(length(pos) == 0) { # no productive IgH detected
-	        if( inherits(knn_graph, 'igraph') ){
-	          # majority voting using neighbours in the kNN graph where this information does exist
-	          neighbours <- names(igraph::neighbors(knn_graph, y))
-	          if( length(neighbours) == 0 ) return( 0 ) # assume IgM
-	          neighbours_jc <- apply(jc_counts[, neighbours, drop = FALSE], 2, function(xx){
-	            poss <- which(xx > 0)
-	            if( length(poss) > 0 ) return(max(poss) - 1) else return(NA)
-            })
-	          o <- as.numeric( names(which.max(table(neighbours_jc))) )
-	          if( length( o ) == 0 ) return(0) # assume IgM
-	          else return(o)
-	        } else return(0) # assume IgM
-	      } else return(max(pos) - 1)
-      } else if ( mode == "highest" ){
-        pos <- which(x > 0) # positive entries
-        if(length(pos) == 0) { # no productive IgH detected
-          if( inherits(knn_graph, 'igraph') ){
-            # majority voting using neighbours in the SNN graph where this information does exist
-            neighbours <- names(igraph::neighbors(knn_graph, y))
-	    if( length(neighbours) == 0 ) return( 0 ) # assume IgM
-            neighbours_jc <- apply(jc_counts[, neighbours, drop = FALSE], 2, function(xx){
-              poss <- which(xx > 0)
-              if( length(poss) > 0 ) return(max(which(xx == max(xx, na.rm = TRUE))) - 1) else return(NA)
-            })
-            o <- as.numeric( names(which.max(table(neighbours_jc))) )
-	    if( length( o ) == 0 ) return(0) else return( o )
-          } else return(0) # assume IgM
-        } else return(max(which(x == max(x, na.rm = TRUE))) - 1)
-      }
-    })
+    if( mode == "furthest" ) {
+      furthest_jc <- getIsotype(jc_counts, knn_graph = knn_graph, impute_positive_counts = FALSE,
+                                summary_function = function(z) max(which(z > 0)) - 1) # i.e. max of [indices with positive counts]; indices label the order of isotypes in the Igh locus
+    } else if ( mode == "highest" ){
+      furthest_jc <- getIsotype(jc_counts, knn_graph = knn_graph, impute_positive_counts = FALSE,
+                                summary_function = function(z) max(which(z == max(z, na.rm = TRUE))) - 1) # i.e. index of the isotype with max read count
+    }
     # now change these numbers to string and add to SeuratObj meta.data
-    c_gene_anno <- factor(furthest_jc, levels = (1:length(c_genes)) - 1,
+    c_gene_anno <- factor(furthest_jc, levels = levels(furthest_jc),
                           labels = c_genes)
     names(c_gene_anno) <- colnames(ighc_counts)
     SeuratObj <- Seurat::AddMetaData(SeuratObj, c_gene_anno,
@@ -227,12 +254,12 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
         else{
           # majority voting using neighbours in the SNN graph where this information does exist
           neighbours <- names(igraph::neighbors(knn_graph, x))
-	  if( length(neighbours) == 0 ) return(0) # assume IgM
+	        if( length(neighbours) == 0 ) return(0) # assume IgM
           neighbours_jc <- furthest_jc[neighbours]
           o <- as.numeric( names(which.max(table(neighbours_jc))) )
           if( length( o ) == 0 ) return(0) else return(o)
-	}
-      })
+	      }
+     })
     } else {
       furthest_jc[is.na(furthest_jc)] <- 0
     }
@@ -334,7 +361,7 @@ convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename,
 #' This function attempts to resolve such issues by extracting the nucleotide barcodes actually introduced in the experiment.
 #'
 #' @param cell_name character, a cell identifier, typicall with prefix and/or suffix (e.g. "ACTGATGCAT-1", "SampleA_ATGAACCTATGG")
-#' @param min_barcode_length minimum length of the nucleotide barcode (Default: 6)
+#' @param min_barcode_length integer, minimum length of the nucleotide barcode (Default: 6)
 #'
 #' @return a vector with the input \code{cell_name} decomposed into these three entries:
 #' \describe{
@@ -344,14 +371,17 @@ convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename,
 #' }
 #' @importFrom stringr str_detect str_locate str_sub
 #' @export guessBarcodes
-guessBarcodes <- function(cell_name, min_barcode_length = 6)
+guessBarcodes <- function(cell_name, min_barcode_length = 6L)
 {
   # guess the barcode contained in cell_name by looking for continuous
   # nucleotide-like strings in 'cell_name'
   # return a list of c(prefix, cell_name, suffix) (NA if none)
+  if( ! is.integer( min_barcode_length ) ){
+    stop("min_barcode_length should be an integer (make sure you have 'L' at the end of the number!).")
+  }
   if( ! stringr::str_detect(cell_name,
                             paste0("[ATCG]{", min_barcode_length, ",}")) ){
-    stop("the given cell_name doesn't appear to contain nucleotide barcode strings. Need a custom way to extract cell barcodes.")
+    stop("the given cell_name doesn't appear to contain nucleotide barcode strings with length of at least min_barcode_length. Need a custom way to extract cell barcodes.")
   }
   # it would only return the first instance
   barcode_pos <- stringr::str_locate(
@@ -575,7 +605,7 @@ run_scVelo <- function(anndata_file, anndata_out_filename, conda_env = 'scicsr',
                        scvelo_mode = "dynamical", reduction = "UMAP",
                        min_shared_counts = 20, n_top_genes = 2000)
 {
-  use_condaenv(conda_env, required = TRUE)  
+  use_condaenv(conda_env, required = TRUE)
   arguments <- paste0(
     paste0( system.file( package = "sciCSR" ), "/python/run_scvelo.py" ),
     " --anndata_file ", anndata_file,
@@ -673,12 +703,12 @@ fitTransitionModel <- function(anndata_file, conda_env = 'scicsr', mode = 'pseud
     exe <- file.path(sys$exec_prefix, "pythonw.exe")
     sys$executable <- exe
     sys$`_base_executable` <- exe
-    
+
     # update executable path in multiprocessing module
     multiprocessing <- import("multiprocessing")
     multiprocessing$set_executable(exe)
   }
-  
+
   py_run_string("import scanpy as sc")
   py_run_string(paste0("adata = sc.read_h5ad('", anndata_file, "')"))
   if( do_pca ){
