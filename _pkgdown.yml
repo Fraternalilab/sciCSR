@@ -66,8 +66,10 @@ reference:
   - getIGHreadType
   - getJunctionReads
   - summariseIGHreads
+  - mergeIgHCountsToSeurat
   - getCSRpotential
   - getSHM
+  - getIsotype
 - title: "RNA velocity"
   desc: "RNA velocity analysis in R by interfacing with python packages"
   contents:

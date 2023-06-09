@@ -169,30 +169,19 @@ hong_IGH2 <- hong_IGH2[which(rownames(hong_IGH2) %in% Cells(hong_b)), ]
 
 ```
 
-Now that we have this productive/sterile transcript count matrix, we would want to merge this count matrix as a new 'assay' in the Seurat object. Occassionally, there might be a few B cells do not have any productive/sterile reads (in this case 2 cells). This will cause problems in merging the data. We can add them back to the matrix and proceed with the creation of this new assay:
+Now that we have this productive/sterile transcript count matrix, we would want to merge this count matrix as a new 'assay' in the Seurat object. Occassionally, there might be a few B cells do not have any productive/sterile reads (in this case 2 cells). This will cause problems in merging the data. We can add them back to the matrix and proceed with the creation of this new assay, using the `mergeIgHCountsToSeurat` function:
 
 ```{r}
-hong_IGH2 <- rbind(
-  hong_IGH2, 
-  # a zero matrix for those 'missing' cells
-  matrix(0, 
-         # number of cells 'missing' in the productive/sterile count matrix
-         nrow = sum( ! Cells(hong_b) %in% rownames(hong_IGH2)), 
-         # number of productive/sterile transcripts
-         ncol = ncol(hong_IGH2),
-         dimnames =  list( 
-           # these are the cells without observed productive/sterile reads
-           Cells(hong_b)[which(!Cells(hong_b) %in% rownames(hong_IGH2))],
-           # productive/sterile transcript names
-           colnames(hong_IGH2)
-         ), byrow = TRUE)
+hong_b <- mergeIgHCountsToSeurat(
+  igh_counts = hong_IGH2, 
+  SeuratObj = hong_b,
+  # We will store the productive/sterile count matrix as a new
+  # assay called 'IGHC'
+  assay_name = "IGHC"
 )
-hong_IGH2 <- t( hong_IGH2 )
-hong_b[['IGHC']] <- CreateAssayObject( counts = hong_IGH2 )
-
 ```
 
-*Note*: This step can take a substantial amount of time depending on the size of BAM files. You may choose to use any high-performance computing (HPC) resources if you have access to those. That said, it should be entirely feasible to run these functions to count productive and sterile transcripts on a standard modern desktop computer, in a few hours' time.
+*Note*: The counting of productive/sterile transcripts can take a substantial amount of time depending on the size of BAM files. You may choose to use any high-performance computing (HPC) resources if you have access to those. That said, it should be entirely feasible to run these functions to count productive and sterile transcripts on a standard modern desktop computer, in a few hours' time.
 
 Now we have the productive/sterile transcript count per cell, added as a separate 'assay' in the Seurat object - below is a snippet of the count matrix:
 

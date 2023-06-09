@@ -745,7 +745,7 @@ fitTransitionModel <- function(anndata_file, conda_env = 'scicsr', mode = 'pseud
 #' These random fluxes help determine the significance of an observed flux, by calculating one-sided empirical probabilities of the observed flux larger than the that observed in the randomised models.
 #'
 #' @param anndata_file filename pointing to the AnnData file.
-#' @param CellrankObj the \code{cellrank_obj} entry of the output list of \code{\link{fitTransitionModel}()}.
+#' @param CellrankObj the output of \code{\link{fitTransitionModel}()}.
 #' @param group.cells.by character, column in the metadata to group cells
 #' @param source_state character, a value in the \code{group.cells.by} column which is taken as the source state for fitting transition path theory. All cells belonging to this group are considered as the source.
 #' @param target_state character, a value in the \code{group.cells.by} column which is taken as the target state for fitting transition path theory. All cells belonging to this group are considered as the target.

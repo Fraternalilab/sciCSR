@@ -1,3 +1,8 @@
+# sciCSR 0.3.0 (May 31, 2023)
+* new function `getIsotype` to allow grouping of cells based on any subset of the productive/sterile count matrix (i.e. allow grouping based on sterile transcript isotype)
+* new function `mergIgHCountsToSeurat` adds zeros for missing cells and merge productive/sterile count matrix into Seurat object.
+* unit tests implemented using `testthat`.
+
 # sciCSR 0.2.1 (Feb 1, 2023)
 * fixed issues re distributed computing in python across MacOS and Windows.
 * added functions for basic scRNA-seq data preprocessing (`normalise_dimreduce`) which includes customisable pruning of variably expressed genes, collapse VDJ (or other genes) into metagenes etc (`collapseIntoMetaGenes`).
