@@ -1,3 +1,6 @@
+# sciCSR 0.3.1 (Sep 12, 2023)
++ correct problems in `annotatePairing` to give correct classification of number of H/L BCR sequences annotated to each cell barcode.
+
 # sciCSR 0.3.0 (May 31, 2023)
 * new function `getIsotype` to allow grouping of cells based on any subset of the productive/sterile count matrix (i.e. allow grouping based on sterile transcript isotype)
 * new function `mergIgHCountsToSeurat` adds zeros for missing cells and merge productive/sterile count matrix into Seurat object.
