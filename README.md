@@ -13,19 +13,20 @@ Single-cell inference of Class Switch Recombination
 
 To cite sciCSR in publications, please use:
 
-Ng et al. sciCSR infers B cell state transition and predicts class-switch recombination dynamics using single-cell transcriptomic data. bioRxiv, doi:10.1101/2023.02.02.526789 (2023)
+Ng, J.C.F., Montamat Garcia, G., Stewart, A.T. et al. sciCSR infers B cell state transition and predicts class-switch recombination dynamics using single-cell transcriptomic data. Nat Methods (2023). https://doi.org/10.1038/s41592-023-02060-1
 
 Citation formatted in BibTEX:
 
 ```
-@article {sciCSR,
-        author = {Ng, Joseph CF and Garcia, Guillem Montamat and Stewart, Alexander T and Blair, Paul and Dunn-Walters, Deborah K and Mauri, Claudia and Fraternali, Franca},
-        title = {sciCSR infers B cell state transition and predicts class-switch recombination dynamics using single-cell transcriptomic data},
+@article{ng_scicsr_2023,
+        title = {{sciCSR} infers {B} cell state transition and predicts class-switch recombination dynamics using single-cell transcriptomic data},
+        issn = {1548-7105},
+        doi = {10.1038/s41592-023-02060-1},
+        journal = {Nature Methods},
+        author = {Ng, Joseph C. F. and Montamat Garcia, Guillem and Stewart, Alexander T. and Blair, Paul and Mauri, Claudia and Dunn-Walters, Deborah K. and Fraternali, Franca},
+        month = nov,
         year = {2023},
-        doi = {10.1101/2023.02.02.526789},
-        URL = {https://www.biorxiv.org/content/early/2023/02/03/2023.02.02.526789},
-        eprint = {https://www.biorxiv.org/content/early/2023/02/03/2023.02.02.526789.full.pdf},
-        journal = {bioRxiv}
+        pmid = {37932398},
 }
 
 ```
