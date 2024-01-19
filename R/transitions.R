@@ -315,7 +315,7 @@ getCSRpotential <- function(SeuratObj, ighc_count_assay_name = "IGHC",
 #'
 #' @import reticulate
 #' @importFrom Seurat Assays
-#' @importFrom SeuratDisk SaveH5Seurat Convert
+#' @importFrom sceasy convertFormat
 #' @export convertSeuratToH5ad
 convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename,
                                 conda_env = 'scicsr'){
@@ -329,22 +329,15 @@ convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename,
   }
   if( ! grepl(".h5ad$", h5ad_filename) )
     stop("The filename given in 'h5ad_filename' should end with the extension '.h5ad'.")
-  SeuratDisk::SaveH5Seurat(SeuratObj, gsub(".h5ad$", ".h5Seurat", h5ad_filename), overwrite = TRUE)
-  out_files = c()
+  use_condaenv(conda_env, required = TRUE)
+  out_files <- c()
   for(assay in assays){
     message(paste0("Writing assay '", assay, "' into .h5ad file."))
     if( ! assay %in% Seurat::Assays( SeuratObj ))
-      stop("The assay name given in 'ighc_count_assay_name' is not found in SeuatObj.")
+      stop(paste0("The assay name '", assay, "'given in 'assays' is not found in SeuatObj."))
     out_file <- gsub(".h5ad$", paste0("_assay-", assay, ".h5ad"), h5ad_filename)
-    SeuratDisk::Convert(gsub(".h5ad$", ".h5Seurat", h5ad_filename), out_file,
-                        assay = assay, overwrite = TRUE)
-    # see https://github.com/theislab/scvelo/issues/255
-    # here read the adata in and perform the fix
-    use_condaenv(conda_env, required = TRUE)
-    py_run_string("import scanpy as sc")
-    py_run_string(paste0("adata = sc.read_h5ad('", out_file, "')"))
-    py_run_string("adata.__dict__['_raw'].__dict__['_var'] = adata.__dict__['_raw'].__dict__['_var'].rename(columns={'_index': 'features'})")
-    py_run_string(paste0("adata.write_h5ad('", out_file, "')"))
+    sceasy::convertFormat(SeuratObj, from = "seurat", to = "anndata", outFile = out_file,
+                          assay = assay, main_layer = "scale.data")
     out_files <- c(out_files, out_file)
   }
   return( out_files )
@@ -654,8 +647,6 @@ splitAnnData <- function(anndata_file, split.by, levels, conda_env = 'scicsr')
     py_run_string(paste0("adata_subset = adata[adata.obs['", split.by, "'] == '", lvl, "']"))
     subset_filename <- paste0(gsub(".h5ad", "", basename(anndata_file)), "_", lvl, ".h5ad")
     subset_filename <- paste0(dirname(anndata_file), "/", fs::path_sanitize(subset_filename))
-    # see https://github.com/theislab/scvelo/issues/255
-    py_run_string("adata_subset.__dict__['_raw'].__dict__['_var'] = adata_subset.__dict__['_raw'].__dict__['_var'].rename(columns={'_index': 'features'})")
     py_run_string(paste0("adata_subset.write_h5ad('", subset_filename, "')"))
     out_fn <- c(out_fn, subset_filename)
   }
