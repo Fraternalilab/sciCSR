@@ -335,6 +335,9 @@ convertSeuratToH5ad <- function(SeuratObj, assays, h5ad_filename,
     message(paste0("Writing assay '", assay, "' into .h5ad file."))
     if( ! assay %in% Seurat::Assays( SeuratObj ))
       stop(paste0("The assay name '", assay, "'given in 'assays' is not found in SeuatObj."))
+    SeuratObj@assays[[assay]]@meta.features <- SeuratObj@assays[[assay]]@meta.features[
+      rownames(SeuratObj@assays[[assay]]@meta.features) %in% rownames(SeuratObj@assays[[assay]]@scale.data),
+    ]
     out_file <- gsub(".h5ad$", paste0("_assay-", assay, ".h5ad"), h5ad_filename)
     sceasy::convertFormat(SeuratObj, from = "seurat", to = "anndata", outFile = out_file,
                           assay = assay, main_layer = "scale.data")
