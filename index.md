@@ -18,7 +18,7 @@ if (!require('devtools')){
   install.packages('devtools')
 }
 devtools::install_github(
-  c("immunogenomics/harmony", "mojaveazure/seurat-disk", "Fraternalilab/sciCSR")
+  c("immunogenomics/harmony", "cellgeni/sceasy", "Fraternalilab/sciCSR")
 )
 ```
 
