@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sciCSR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="comparison_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Comparing state transitions inferred using CSR, SHM and RNA velocity</h1>
             
@@ -172,13 +171,13 @@
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># This is also reflected in the cell barcodes</span></span>
 <span><span class="co"># Cells from the MBC library</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://satijalab.org/seurat/reference/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">king</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">king</span><span class="op">$</span><span class="va">Sample</span> <span class="op">==</span> <span class="st">"BCP4_MBC"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SeuratObject/man/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">king</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">king</span><span class="op">$</span><span class="va">Sample</span> <span class="op">==</span> <span class="st">"BCP4_MBC"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "BCP4_MBC_AAACCTGCATAGTAAG" "BCP4_MBC_AAAGCAAGTACCAGTT"</span></span>
 <span><span class="co">## [3] "BCP4_MBC_AAAGCAAGTAGGCTGA" "BCP4_MBC_AACACGTAGATGTAAC"</span></span>
 <span><span class="co">## [5] "BCP4_MBC_AACTCAGCAAGTAATG" "BCP4_MBC_AACTGGTAGAGACGAA"</span></span></code></pre>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Cells from the Total library</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://satijalab.org/seurat/reference/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">king</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">king</span><span class="op">$</span><span class="va">Sample</span> <span class="op">==</span> <span class="st">"BCP4_Total"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SeuratObject/man/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">king</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">king</span><span class="op">$</span><span class="va">Sample</span> <span class="op">==</span> <span class="st">"BCP4_Total"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "BCP4_Total_AAATGCCTCGCCTGAG" "BCP4_Total_AACACGTTCTAACGGT"</span></span>
 <span><span class="co">## [3] "BCP4_Total_AACCATGAGAATTGTG" "BCP4_Total_AACCGCGGTCAGAGGT"</span></span>
 <span><span class="co">## [5] "BCP4_Total_AACCGCGGTTACCGAT" "BCP4_Total_AACTCAGCAAGCCCAC"</span></span></code></pre>
@@ -321,7 +320,7 @@
 </h2>
 <p>The visualisations above clearly show some similarities (for example, the transitions from MBC pointing towards the direction of germinal center [GC]) and differences (e.g. strong transitions in the GC based on RNA velocity appears not backed up with CSR/SHM) between inferences based on RNA velocity versus CSR/SHM. sciCSR provides further functionalities to compare these different sets of inferred transitions. One way to gain further insights would be to apply Transition Path Theory (TPT) to estimate the amount of fluxes between states - we have covered TPT in the <a href="csr.html">basic sciCSR usage vignette</a>. You may want to take a look at the vignette and see how we can do that.</p>
 <p>Here we show you another way to answer the question of ‘How different are the transitions inferred using CSR/SHM to those based on RNA velocity’. In sciCSR we uses CSR/SHM information to fit models of state transitions using Markov State Models (MSM). One powerful properties of MSM is, they specify the transition likelihoods between every state in the data, such that we can ‘generate’/‘simulate’ new transitions as if we have data from a new cell and follow how it moves across the landscape of states. Similar MSMs would produce similar pathways of transitions across this landscape; we can take a note at the frequencies each state is visited in these simulated pathways, and then derive a numerical metric to quantify the similarity in terms of the frequencies of visiting each states in these MSM-simulated paths (Illustration below).</p>
-<p><img src="images/sample_msm.png" title="Illustration of sampling MSM and comparing inferences" alt="Illustration of sampling MSM and comparing inferences" width="260"></p>
+<p><img src="images/sample_msm.png" alt="Illustration of sampling MSM and comparing inferences" width="260"></p>
 <p>In sciCSR, the way we can perform this analysis is, first fit transition models and obtain separate R objects which store these models. We can then use the function <code><a href="../reference/compareTransitionMatrices.html">compareTransitionMatrices()</a></code> to quantify the similarities of these transition models:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Let's first fit transition models using velocity/CSR/SHM</span></span>
@@ -349,7 +348,7 @@
 <span>  matrix_list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">g_velo</span><span class="op">$</span><span class="va">transition_matrix</span>,</span>
 <span>                     <span class="va">g_csr</span><span class="op">$</span><span class="va">transition_matrix</span>,</span>
 <span>                     <span class="va">g_shm</span><span class="op">$</span><span class="va">transition_matrix</span><span class="op">)</span>,</span>
-<span>  SeuratObj <span class="op">=</span> <span class="va">king</span>, cells <span class="op">=</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">king</span><span class="op">)</span>,</span>
+<span>  SeuratObj <span class="op">=</span> <span class="va">king</span>, cells <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/SeuratObject/man/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">king</span><span class="op">)</span>,</span>
 <span>  <span class="co"># how do we want to group the cells? we will describe</span></span>
 <span>  <span class="co"># each step in the simulated pathways using this</span></span>
 <span>  <span class="co"># in this case we want to describe pathways in terms</span></span>

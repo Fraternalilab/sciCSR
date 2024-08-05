@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sciCSR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="csr_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Analysing Class-Switch Recombination in B cell scRNA-seq data using sciCSR</h1>
             
@@ -181,7 +180,7 @@
 <code class="sourceCode R"><span><span class="co"># there is a column 'bcr_type' added to the Seurat object which indicates</span></span>
 <span><span class="co"># whether the cell is singlet/doublet etc. cells without BCR transcripts will</span></span>
 <span><span class="co"># be labelled NA</span></span>
-<span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="va">hong_sampled</span><span class="op">[</span>, <span class="fu"><a href="https://satijalab.org/seurat/reference/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">hong_sampled</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">hong_sampled</span><span class="op">$</span><span class="va">bcr_type</span><span class="op">)</span><span class="op">)</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="va">hong_sampled</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/pkg/SeuratObject/man/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">hong_sampled</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">hong_sampled</span><span class="op">$</span><span class="va">bcr_type</span><span class="op">)</span><span class="op">)</span><span class="op">]</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># subset to retain those cells positive for both CD19 and CD20 transcripts</span></span>
 <span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">hong_b</span>, subset <span class="op">=</span> <span class="op">(</span><span class="va">Ms4a1</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">Cd19</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
@@ -224,23 +223,23 @@
 <span>  <span class="co"># of each isotype per cell</span></span>
 <span>  <span class="va">out3</span>  </span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## /private/var/folders/n3/lvcd6wn56qjfwd2j66n8bqzh0000gn/T/RtmpVxCxwl/temp_libpath2c374fe31bd0/sciCSR/extdata/Hong_S1_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S1_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
-<pre><code><span><span class="co">## /private/var/folders/n3/lvcd6wn56qjfwd2j66n8bqzh0000gn/T/RtmpVxCxwl/temp_libpath2c374fe31bd0/sciCSR/extdata/Hong_S2_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S2_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
-<pre><code><span><span class="co">## /private/var/folders/n3/lvcd6wn56qjfwd2j66n8bqzh0000gn/T/RtmpVxCxwl/temp_libpath2c374fe31bd0/sciCSR/extdata/Hong_S3_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S3_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
-<pre><code><span><span class="co">## /private/var/folders/n3/lvcd6wn56qjfwd2j66n8bqzh0000gn/T/RtmpVxCxwl/temp_libpath2c374fe31bd0/sciCSR/extdata/Hong_S4_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S4_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
-<pre><code><span><span class="co">## /private/var/folders/n3/lvcd6wn56qjfwd2j66n8bqzh0000gn/T/RtmpVxCxwl/temp_libpath2c374fe31bd0/sciCSR/extdata/Hong_S5_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S5_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
@@ -258,29 +257,19 @@
 <span></span>
 <span><span class="co"># remove cells which are not in the Seurat object but happen to have</span></span>
 <span><span class="co"># observed productive/sterile transcripts</span></span>
-<span><span class="va">hong_IGH2</span> <span class="op">&lt;-</span> <span class="va">hong_IGH2</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">hong_IGH2</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://satijalab.org/seurat/reference/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">hong_b</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span></span></code></pre></div>
-<p>Now that we have this productive/sterile transcript count matrix, we would want to merge this count matrix as a new ‘assay’ in the Seurat object. Occassionally, there might be a few B cells do not have any productive/sterile reads (in this case 2 cells). This will cause problems in merging the data. We can add them back to the matrix and proceed with the creation of this new assay:</p>
+<span><span class="va">hong_IGH2</span> <span class="op">&lt;-</span> <span class="va">hong_IGH2</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">hong_IGH2</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/SeuratObject/man/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">hong_b</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span></span></code></pre></div>
+<p>Now that we have this productive/sterile transcript count matrix, we would want to merge this count matrix as a new ‘assay’ in the Seurat object. Occassionally, there might be a few B cells do not have any productive/sterile reads (in this case 2 cells). This will cause problems in merging the data. We can add them back to the matrix and proceed with the creation of this new assay, using the <code>mergeIgHCountsToSeurat</code> function:</p>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hong_IGH2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
-<span>  <span class="va">hong_IGH2</span>, </span>
-<span>  <span class="co"># a zero matrix for those 'missing' cells</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>, </span>
-<span>         <span class="co"># number of cells 'missing' in the productive/sterile count matrix</span></span>
-<span>         nrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span> <span class="op">!</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">hong_b</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">hong_IGH2</span><span class="op">)</span><span class="op">)</span>, </span>
-<span>         <span class="co"># number of productive/sterile transcripts</span></span>
-<span>         ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">hong_IGH2</span><span class="op">)</span>,</span>
-<span>         dimnames <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span> </span>
-<span>           <span class="co"># these are the cells without observed productive/sterile reads</span></span>
-<span>           <span class="fu"><a href="https://satijalab.org/seurat/reference/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">hong_b</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://satijalab.org/seurat/reference/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">hong_b</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">hong_IGH2</span><span class="op">)</span><span class="op">)</span><span class="op">]</span>,</span>
-<span>           <span class="co"># productive/sterile transcript names</span></span>
-<span>           <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">hong_IGH2</span><span class="op">)</span></span>
-<span>         <span class="op">)</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">hong_IGH2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span> <span class="va">hong_IGH2</span> <span class="op">)</span></span>
-<span><span class="va">hong_b</span><span class="op">[[</span><span class="st">'IGHC'</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/CreateAssayObject.html" class="external-link">CreateAssayObject</a></span><span class="op">(</span> counts <span class="op">=</span> <span class="va">hong_IGH2</span> <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mergeIgHCountsToSeurat.html">mergeIgHCountsToSeurat</a></span><span class="op">(</span></span>
+<span>  igh_counts <span class="op">=</span> <span class="va">hong_IGH2</span>, </span>
+<span>  SeuratObj <span class="op">=</span> <span class="va">hong_b</span>,</span>
+<span>  <span class="co"># We will store the productive/sterile count matrix as a new</span></span>
+<span>  <span class="co"># assay called 'IGHC'</span></span>
+<span>  assay_name <span class="op">=</span> <span class="st">"IGHC"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning: Feature names cannot have underscores ('_'), replacing with dashes</span></span>
 <span><span class="co">## ('-')</span></span></code></pre>
-<p><em>Note</em>: This step can take a substantial amount of time depending on the size of BAM files. You may choose to use any high-performance computing (HPC) resources if you have access to those. That said, it should be entirely feasible to run these functions to count productive and sterile transcripts on a standard modern desktop computer, in a few hours’ time.</p>
+<p><em>Note</em>: The counting of productive/sterile transcripts can take a substantial amount of time depending on the size of BAM files. You may choose to use any high-performance computing (HPC) resources if you have access to those. That said, it should be entirely feasible to run these functions to count productive and sterile transcripts on a standard modern desktop computer, in a few hours’ time.</p>
 <p>Now we have the productive/sterile transcript count per cell, added as a separate ‘assay’ in the Seurat object - below is a snippet of the count matrix:</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/methods/slot.html" class="external-link">slot</a></span><span class="op">(</span><span class="va">hong_b</span><span class="op">[[</span><span class="st">"IGHC"</span><span class="op">]</span><span class="op">]</span>, <span class="st">"counts"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">9</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span></code></pre></div>
@@ -312,6 +301,8 @@
 <span><span class="va">genes</span> <span class="op">&lt;-</span> <span class="va">genes</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"-[SP]$"</span>, <span class="va">genes</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://satijalab.org/seurat/reference/DotPlot.html" class="external-link">DotPlot</a></span><span class="op">(</span><span class="va">hong_b</span>, assay <span class="op">=</span> <span class="st">"IGHC"</span>, features <span class="op">=</span> <span class="va">genes</span>, group.by <span class="op">=</span> <span class="st">"Status"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">RotatedAxis</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: Scaling data with a low number of groups may produce misleading</span></span>
+<span><span class="co">## results</span></span></code></pre>
 <p><img src="csr_files/figure-html/unnamed-chunk-11-1.png" width="720"></p>
 <p>We can see already, without any inference, that the Il23 knockouts have lower expression level of the IgG2 subtypes.</p>
 </div>
@@ -322,7 +313,7 @@
 <p>sciCSR calculates a “CSR potential” which ranks cells from a naive state to a memory/plasma cell state, based on their expression pattern of the sterile and productive IgH transcripts. We ensure that these CSR potential scores can be compared across conditions and datasets, by making use of reference B cell atlases and training isotype “signatures” (i.e. the expression pattern of all isotypes’ sterile and productive transcripts altogether) from these references to be applied to any user-supplied datasets. We then use the CSR potentials as “pseudotime” ordering of the cells; this is provided as inputs to the CellRank method to infer transitions. As such, instead of RNA velocity which is typically used as input to CellRank, here we derive a CSR-based pseudotime ordering to infer the transitions of B cell states.</p>
 <p>Alternatively, sciCSR can also build transition models, but using SHM level as input. The function <code><a href="../reference/getSHM.html">getSHM()</a></code> will calculate SHM level using this formula:</p>
 <p><span class="math display">\[SHM = 1 - \text{sequence identity to germline V gene (%)}\]</span></p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># calculate CSR potential</span></span>
 <span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCSRpotential.html">getCSRpotential</a></span><span class="op">(</span></span>
 <span>  SeuratObj <span class="op">=</span> <span class="va">hong_b</span>, </span>
@@ -336,17 +327,17 @@
 <span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Regressing out nCount_RNA</span></span></code></pre>
 <pre><code><span><span class="co">## Centering and scaling data matrix</span></span></code></pre>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># get SHM frequency (= 1 - IGH_v_identity)</span></span>
 <span><span class="co"># we have merged the germline identity information from the</span></span>
 <span><span class="co"># repertoire to the Seurat object (column 'IGH_v_identity')</span></span>
 <span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getSHM.html">getSHM</a></span><span class="op">(</span><span class="va">hong_b</span>, v_identity_anno_name <span class="op">=</span> <span class="st">"IGH_v_identity"</span><span class="op">)</span></span></code></pre></div>
 <p>Now we have the necessary data to perform any inference of transitions. In sciCSR, we rely on the python package <a href="https://cellrank.readthedocs.io/en/stable/" class="external-link">CellRank</a> and a few other packages for the underlying calculations. First convert the Seurat object into AnnData (.h5ad) files.</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/convertSeuratToH5ad.html">convertSeuratToH5ad</a></span><span class="op">(</span><span class="va">hong_b</span>, assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"RNA"</span><span class="op">)</span>, <span class="st">"hong_sampled_bcells.h5ad"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "hong_sampled_bcells_assay-RNA.h5ad"</span></span></code></pre>
 <p>In this case we want to consider transitions for the WT and knockout conditions separately. Split the AnnData into two separate files:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># This information is stored in the 'Status' column in the </span></span>
 <span><span class="co"># Seurat object metadata</span></span>
 <span><span class="fu"><a href="../reference/splitAnnData.html">splitAnnData</a></span><span class="op">(</span></span>
@@ -358,7 +349,7 @@
 <pre><code><span><span class="co">## [1] "./hong_sampled_bcells_assay-RNA_WT.h5ad"    </span></span>
 <span><span class="co">## [2] "./hong_sampled_bcells_assay-RNA_IL23--.h5ad"</span></span></code></pre>
 <p>Every time these functions are called, the resulting AnnData filenames are written out so that you can keep track of the locations of these new files which are crucial inputs to the next steps. We will now use these two AnnData files as input to infer transitions separately for the wild-type and knockout conditions. Here, we use CSR and SHM potentials as pseudotime to build a cell-cell transition matrix which gives the probability of transitioning from the state of one cell to every other cell in the data. The inference is performed using CellRank, following the default settings - the only change here is the use of CSR/SHM information rather than pseudotime calculated using other means:</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># fit transitions based on CSR</span></span>
 <span><span class="co"># First Wild-Type</span></span>
 <span><span class="va">g_wt_csr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTransitionModel.html">fitTransitionModel</a></span><span class="op">(</span></span>
@@ -392,7 +383,7 @@
 <li>
 <code>source_state</code> and <code>target_state</code>: To apply TPT we need to indicate a source state and a target state for the algorithm to consider all likely paths starting from one state (‘source’) and finally reaching another given state (‘target’), regardless of any traversals in the middle of this ‘journey’. <strong>Our advise is to choose source and target states which are as far as possible apart from one another</strong>. For example, to analyse CSR in mouse the ideal setting would be to choose IgM as the source and IgA as the target. It is not important if you aren’t actually interested in switching from IgM to IgA - this merely asks the algorithm to consider the full spectrum of switches possible, and it is important to do so as TPT results will change if you omit states involved in important transitions implicated in the data. Finally, the chosen source and target states need to be present in the data (for example, if no cells are IgA+ in your data, choosing IgA as the target state will result in an error).</li>
 </ul>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># the function fitTPT() apply TPT on the transition </span></span>
 <span><span class="co"># matrices inferred using fitTransitionModel</span></span>
 <span></span>
@@ -423,7 +414,7 @@
 <h3 id="visualisation">Visualisation<a class="anchor" aria-label="anchor" href="#visualisation"></a>
 </h3>
 <p>We can now visualise these inferences - firstly, the function <code>plotStationaryDistribution</code> will display as a bar plot what is known as the ‘stationary distribution’ from TPT - this is the inferred distribution of states assuming the dynamics of the system has reached equilibrium. In the case of analysing CSR, think of this as the isotype distribution of the population of cells at a steady state, inferred given the data.</p>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot the WT and knockout separately as two plots</span></span>
 <span><span class="co"># plotStationaryDistribution refers a ggplot2 object</span></span>
 <span><span class="co"># we use the plot_grid() function in the cowplot package</span></span>
@@ -440,7 +431,7 @@
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-17-1.png" width="672"></p>
 <p>As these two plots are rendered separately the vertical axes do not conform to the same scale. If we pass <code>return_plot = FALSE</code> to the call of <code>plotStationaryDistribution</code>, the data frame underlying these bar plots will be returned, and we can plot these data in the same plot (by, e.g. representing the different conditions as colours) upon some manipulation, e.g.:</p>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stationary_distribution</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"WT"</span> <span class="op">=</span> <span class="fu"><a href="../reference/plotStationaryDistribution.html">plotStationaryDistribution</a></span><span class="op">(</span><span class="va">tpt_wt_csr</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>,</span>
 <span>                                    return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
@@ -466,7 +457,7 @@
 <span>    <span class="fu">cowplot</span><span class="fu">::</span><span class="fu"><a href="https://wilkelab.org/cowplot/reference/theme_cowplot.html" class="external-link">theme_cowplot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-18-1.png" width="480"></p>
 <p>Another way to visualise the inference is to visualise the inferred flux matrix itself, i.e. to compare the amount of transitions involving each pair of isotypes. The function <code>plotFluxMatrix</code> provides this visualisation:</p>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Once again we use the plot_grid() function in the cowplot package</span></span>
 <span><span class="co"># to arrange the two plots side by side</span></span>
 <span><span class="fu"><a href="https://wilkelab.org/cowplot/reference/plot_grid.html" class="external-link">plot_grid</a></span><span class="op">(</span></span>
@@ -478,7 +469,7 @@
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-19-1.png" width="768"></p>
 <p>We can also combine the plot into one. Similar to above we pass <code>return_plot = FALSE</code> to the function call. We then generate a column which stores the difference in the flux between the WT and the knockout conditions. We scale the bubble sizes by the stationary distribution in the knockout condition, so as to reflect the quantity of interest (we are primarily interested in what happens in the knockouts) prominently on the plot:</p>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#show flux difference instead</span></span>
 <span><span class="va">fluxes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/plotFluxMatrix.html">plotFluxMatrix</a></span><span class="op">(</span><span class="va">tpt_wt_csr</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>, return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
@@ -504,12 +495,15 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_size.html" class="external-link">scale_size_continuous</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">""</span>, guide<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_discrete.html" class="external-link">scale_x_discrete</a></span><span class="op">(</span>drop <span class="op">=</span> <span class="cn">FALSE</span>, position <span class="op">=</span> <span class="st">"top"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_discrete.html" class="external-link">scale_y_discrete</a></span><span class="op">(</span>drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> </span></code></pre></div>
-<pre><code><span><span class="co">## Warning: It is deprecated to specify `guide = FALSE` to remove a guide. Please</span></span>
-<span><span class="co">## use `guide = "none"` instead.</span></span></code></pre>
+<pre><code><span><span class="co">## Warning: `aes_string()` was deprecated in ggplot2 3.0.0.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use tidy evaluation ideoms with `aes()`</span></span></code></pre>
+<pre><code><span><span class="co">## Warning: The `guide` argument in `scale_*()` cannot be `FALSE`. This was deprecated in</span></span>
+<span><span class="co">## ggplot2 3.3.4.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use "none" instead.</span></span></code></pre>
 <p><img src="csr_files/figure-html/unnamed-chunk-20-1.png" width="480"></p>
 <p>We can reproduce the main finding from the Hong et al. paper that the Il23 knockout conditions would deplete switching to IgG2b. In this example we performed the analysis on sampled data (we cannot put datasets which are too large in the package!) so whilst other fluxes on the plot might be different had we use the entire dataset, it is encouraging that the major result involving IgG2b still comes up prominent in this visualisation.</p>
 <p>Finally, we can generate the same visualisation with the SHM-based inference. As in the code above, we performed the inference of transition matrix using SHM information, but for TPT we still group the cells by their isotypes and infer fluxes between isotypes. Since in theory CSR and SHM are both B cell maturation processes, we would expect inference from the two different sources of information to capture similar transitions.</p>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stationary_distribution_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"WT"</span> <span class="op">=</span> <span class="fu"><a href="../reference/plotStationaryDistribution.html">plotStationaryDistribution</a></span><span class="op">(</span><span class="va">tpt_wt_shm</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>,</span>
 <span>                                    return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
@@ -537,7 +531,7 @@
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Inference using SHM information"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu">cowplot</span><span class="fu">::</span><span class="fu"><a href="https://wilkelab.org/cowplot/reference/theme_cowplot.html" class="external-link">theme_cowplot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-21-1.png" width="480"></p>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fluxes_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/plotFluxMatrix.html">plotFluxMatrix</a></span><span class="op">(</span><span class="va">tpt_wt_shm</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>, return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/plotFluxMatrix.html">plotFluxMatrix</a></span><span class="op">(</span><span class="va">tpt_ko_shm</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>, return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -562,8 +556,6 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_size.html" class="external-link">scale_size_continuous</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">""</span>, guide<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_discrete.html" class="external-link">scale_x_discrete</a></span><span class="op">(</span>drop <span class="op">=</span> <span class="cn">FALSE</span>, position <span class="op">=</span> <span class="st">"top"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_discrete.html" class="external-link">scale_y_discrete</a></span><span class="op">(</span>drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> </span></code></pre></div>
-<pre><code><span><span class="co">## Warning: It is deprecated to specify `guide = FALSE` to remove a guide. Please</span></span>
-<span><span class="co">## use `guide = "none"` instead.</span></span></code></pre>
 <p><img src="csr_files/figure-html/unnamed-chunk-21-2.png" width="480"></p>
 <p>Congratulations, you have now gone through the major functionalities of sciCSR. sciCSR offers further capabilities to compare inference results based on CSR, SHM and RNA velocity. If you are interested, please check out <a href="comparison.html">this vignette</a> for a worked-out example on how sciCSR can help in this type of analysis.</p>
 </div>

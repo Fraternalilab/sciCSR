@@ -64,6 +64,9 @@
     <loc>https://http://josephng-bio.org/sciCSR/reference/getIGHreadType.html</loc>
   </url>
   <url>
+    <loc>https://http://josephng-bio.org/sciCSR/reference/getIsotype.html</loc>
+  </url>
+  <url>
     <loc>https://http://josephng-bio.org/sciCSR/reference/getJunctionReads.html</loc>
   </url>
   <url>
@@ -80,6 +83,9 @@
   </url>
   <url>
     <loc>https://http://josephng-bio.org/sciCSR/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>https://http://josephng-bio.org/sciCSR/reference/mergeIgHCountsToSeurat.html</loc>
   </url>
   <url>
     <loc>https://http://josephng-bio.org/sciCSR/reference/mergeVelocytoWithGEX.html</loc>

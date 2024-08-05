@@ -1,3 +1,6 @@
+# sciCSR 0.3.2 (Jul 11, 2024)
++ moved engine to convert between Seurat (`.rds`) and Scanpy (`.h5ad`) data objects to `sceasy`.
+
 # sciCSR 0.3.1 (Sep 12, 2023)
 + correct problems in `annotatePairing` to give correct classification of number of H/L BCR sequences annotated to each cell barcode.
 
