@@ -18,11 +18,11 @@ prepare_sciCSR <- function()
   }
   if( ! 'scicsr' %in% conda_list()[, "name"]){
     conda_create(envname = 'scicsr', python_version = '3.9')
-    conda_install(envname = 'scicsr', packages = c('scanpy', 'deeptime'), channel = 'conda-forge')
+    conda_install(envname = 'scicsr', packages = c('scanpy', 'deeptime==0.4.4'), channel = 'conda-forge')
     conda_install(envname = 'scicsr', packages = 'h5py', pip = TRUE, pip_options = "--force-reinstall")
     conda_install(envname = 'scicsr', packages = 'scvelo', pip = TRUE, pip_options = "-U")
     conda_install(envname = 'scicsr', packages = c('python-igraph', 'louvain'), pip = TRUE)
-    conda_install(envname = 'scicsr', packages = 'cellrank', pip = TRUE)
+    conda_install(envname = 'scicsr', packages = 'cellrank==1.5.1', pip = TRUE)
     conda_install(envname = 'scicsr', packages = 'networkx==2.8.2')
     conda_install(envname = 'scicsr', packages = 'multiprocess')
   }

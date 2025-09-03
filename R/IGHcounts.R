@@ -278,7 +278,7 @@ summariseIGHreads <- function(tb, definitions)
 #' @return A list with two items:
 #' \describe{
 #'   \item{read_count}{a data.frame in wide format indicating for each cell barcodes and UMI combination, the number of **reads** (Note: NOT UMI!) covering VDJ, and the Coding region (C) or 5' intronic region (I) of each IGH C gene.}
-#'   \item{junction_reads}{a data.frame of spliced reads and their mapped cell barcodes & UMIs. Either genuine spliced productive IgH transcripts, or strange molecules potentially worth detailed inspection.}
+#'   \item{junction_reads}{a data.frame of spliced reads and their mapped cell barcodes & UMIs. Either genuine spliced productive IgH transcripts, or strange molecules potentially worth detailed inspection. NULL if \code{getJunctionReads} return with an error.}
 #' }
 #'
 #' @importFrom GenomicRanges sort start end flank GRanges seqnames
@@ -387,7 +387,8 @@ getIGHmapping <- function(bam, definitions,
     if( nrow(C) > 0 ) C[, umiTag] <- "None"
     if( nrow(intronic) > 0 ) intronic[, umiTag] <- "None"
   }
-  junction_reads <- getJunctionReads( rbind(J, C, intronic) )
+  junction_reads <- try( getJunctionReads( rbind(J, C, intronic) ), silent = TRUE )
+  if( class(junction_reads) == 'try-error' ) junction_reads <- NULL
   J <- plyr::ddply(J, c(cellBarcodeTag, umiTag, "type"), function(x) length(unique(x[, "qname"])))
   C <- plyr::ddply(C, c(cellBarcodeTag, umiTag, "type"), function(x) length(unique(x[, "qname"])))
   intronic <- plyr::ddply(intronic, c(cellBarcodeTag, umiTag, "type"),
