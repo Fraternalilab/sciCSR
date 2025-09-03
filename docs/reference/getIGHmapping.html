@@ -120,7 +120,7 @@ and scan for sterile and productive IGH transcripts over each C gene as defined 
 <dd><p>a data.frame in wide format indicating for each cell barcodes and UMI combination, the number of **reads** (Note: NOT UMI!) covering VDJ, and the Coding region (C) or 5' intronic region (I) of each IGH C gene.</p></dd>
 
   <dt>junction_reads</dt>
-<dd><p>a data.frame of spliced reads and their mapped cell barcodes &amp; UMIs. Either genuine spliced productive IgH transcripts, or strange molecules potentially worth detailed inspection.</p></dd>
+<dd><p>a data.frame of spliced reads and their mapped cell barcodes &amp; UMIs. Either genuine spliced productive IgH transcripts, or strange molecules potentially worth detailed inspection. NULL if <code>getJunctionReads</code> return with an error.</p></dd>
 
 
 </dl></div>
