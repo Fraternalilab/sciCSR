@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sciCSR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,7 +81,8 @@
 
 
 
-<script src="comparison_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+
+<div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Comparing state transitions inferred using CSR, SHM and RNA velocity</h1>
             
@@ -95,8 +96,18 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>In this vignette we will show you how to compare the transitions inferred using CSR and SHM using sciCSR, against those based on RNA velocity. You are advised to follow the <a href="csr.html">Basic sciCSR usage vignette</a> first to understand the basic functionalities of sciCSR. Here, we will use sciCSR to infer state transitions from B cell scRNA-seq data based on CSR and SHM information, utilise the same framework to extrapolate transitions based on RNA velocity, and compare these inferences visually.</p>
-<p>Start by loading the sciCSR package. <strong>Before you run any examples/analysis with sciCSR for the FIRST time</strong>, run the <code><a href="../reference/prepare_sciCSR.html">prepare_sciCSR()</a></code> function - this will install all python dependencies for sciCSR to function.</p>
+<p>In this vignette we will show you how to compare the transitions
+inferred using CSR and SHM using sciCSR, against those based on RNA
+velocity. You are advised to follow the <a href="csr.html">Basic sciCSR
+usage vignette</a> first to understand the basic functionalities of
+sciCSR. Here, we will use sciCSR to infer state transitions from B cell
+scRNA-seq data based on CSR and SHM information, utilise the same
+framework to extrapolate transitions based on RNA velocity, and compare
+these inferences visually.</p>
+<p>Start by loading the sciCSR package. <strong>Before you run any
+examples/analysis with sciCSR for the FIRST time</strong>, run the
+<code><a href="../reference/prepare_sciCSR.html">prepare_sciCSR()</a></code> function - this will install all python
+dependencies for sciCSR to function.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">sciCSR</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co"># We also need the Seurat package as sciCSR interfaces </span></span>
@@ -111,7 +122,10 @@
 <div class="section level2">
 <h2 id="load-the-dataset">Load the dataset<a class="anchor" aria-label="anchor" href="#load-the-dataset"></a>
 </h2>
-<p>In this example we will utilise B cell scRNA-seq data from tonsil samples taken from <a href="https://doi.org/10.1126/sciimmunol.abe6291" class="external-link">King et al.</a>. Part of this data (from the donor BCP4) is included in the sciCSR package:</p>
+<p>In this example we will utilise B cell scRNA-seq data from tonsil
+samples taken from <a href="https://doi.org/10.1126/sciimmunol.abe6291" class="external-link">King et al.</a>. Part
+of this data (from the donor BCP4) is included in the sciCSR
+package:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">king</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/King_Tonsils_BCP4.rds"</span>, package <span class="op">=</span> <span class="st">"sciCSR"</span><span class="op">)</span></span>
 <span><span class="va">king</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">king</span><span class="op">)</span></span>
@@ -125,7 +139,16 @@
 <code class="sourceCode R"><span><span class="co"># Plot a UMAP projection</span></span>
 <span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">king</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="comparison_files/figure-html/unnamed-chunk-2-1.png" width="576"></p>
-<p>The dataset was downloaded from <a href="https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-9005?accession=E-MTAB-9005" class="external-link">ArrayExpress</a>; it came in the form of a Seurat data object where SHM information from scBCR-seq (i.e. single-cell BCR repertoire profiling) data was already added as cell metadata. For your convenience, we have used sciCSR to generate a count matrix for productive and sterile heavy-chain immunoglobulin transcripts, and attached it to the Seurat object. Check out the <a href="csr.html">basic sciCSR vignette</a> if you need any help on this analysis on your own datasets. Here, since we are going to use CSR and SHM information to infer transitions, let’s make sure we have these in place:</p>
+<p>The dataset was downloaded from <a href="https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-9005?accession=E-MTAB-9005" class="external-link">ArrayExpress</a>;
+it came in the form of a Seurat data object where SHM information from
+scBCR-seq (i.e. single-cell BCR repertoire profiling) data was already
+added as cell metadata. For your convenience, we have used sciCSR to
+generate a count matrix for productive and sterile heavy-chain
+immunoglobulin transcripts, and attached it to the Seurat object. Check
+out the <a href="csr.html">basic sciCSR vignette</a> if you need any
+help on this analysis on your own datasets. Here, since we are going to
+use CSR and SHM information to infer transitions, let’s make sure we
+have these in place:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># SHM is already included as a column in the metadata ('IGH_MU_FREQ')</span></span>
 <span><span class="co"># so is the BCR isotype from repertoire sequencing ('ISOTYPE')</span></span>
@@ -147,9 +170,21 @@
 <div class="section level2">
 <h2 id="rna-velocity-analysis">RNA velocity analysis<a class="anchor" aria-label="anchor" href="#rna-velocity-analysis"></a>
 </h2>
-<p>RNA velocity analysis is typically performed using the BAM files as input with the python packages <a href="http://velocyto.org/velocyto.py/index.html" class="external-link">velocyto</a> and <a href="https://scvelo.readthedocs.io/en/stable/" class="external-link">scVelo</a>. We <a href="http://velocyto.org/velocyto.py/tutorial/cli.html" class="external-link">usually</a> start with velocyto to generate a <code>.loom</code> file which contains quantification of spliced and unspliced transcripts, and then used packages such as scVelo to calculate RNA velocity and generate visualisations (e.g. plot streams of arrows on top of UMAP projection to depict the direction of flow based on RNA velocity.</p>
-<p>In sciCSR, we expect users to have run velocyto on the input BAM files, but we provide functions in R that interface with scVelo at the backend to perform RNA velocity calculations. As such, you can stay within R to perform these analyses!</p>
-<p>We have made avaialble 2 <code>.loom</code> files corresponds to the scRNA-seq data shown above. They are too large to be included in the sciCSR package itself, but you can download them and try this out yourself:</p>
+<p>RNA velocity analysis is typically performed using the BAM files as
+input with the python packages <a href="http://velocyto.org/velocyto.py/index.html" class="external-link">velocyto</a> and <a href="https://scvelo.readthedocs.io/en/stable/" class="external-link">scVelo</a>. We <a href="http://velocyto.org/velocyto.py/tutorial/cli.html" class="external-link">usually</a>
+start with velocyto to generate a <code>.loom</code> file which contains
+quantification of spliced and unspliced transcripts, and then used
+packages such as scVelo to calculate RNA velocity and generate
+visualisations (e.g. plot streams of arrows on top of UMAP projection to
+depict the direction of flow based on RNA velocity.</p>
+<p>In sciCSR, we expect users to have run velocyto on the input BAM
+files, but we provide functions in R that interface with scVelo at the
+backend to perform RNA velocity calculations. As such, you can stay
+within R to perform these analyses!</p>
+<p>We have made avaialble 2 <code>.loom</code> files corresponds to the
+scRNA-seq data shown above. They are too large to be included in the
+sciCSR package itself, but you can download them and try this out
+yourself:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">loom_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"https://josephng-bio.org/assets/suppdata/BCP004_Total.loom"</span>,</span>
@@ -159,9 +194,21 @@
 <span><span class="kw">for</span><span class="op">(</span><span class="va">file</span> <span class="kw">in</span> <span class="va">loom_files</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">file</span>, destfile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html" class="external-link">basename</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span>, mode <span class="op">=</span> <span class="st">'wb'</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>Here, sequencing reads from cells from the BCP004 samples come from two sequencing libraries, one specifically from the memory B cells (MBC) and another from total B cells. The <code>.loom</code> files contain counts of unspliced and spliced transcripts from each cell represented in the two libraries. Our goal is first to merge these two count matrices with the standard gene expression counts stored in the Seurat data object, and then pass this merged data to scVelo to calculate RNA velocity.</p>
-<p>sciCSR offers functions to merge these <code>.loom</code> files into one and subsequently to the Seurat object, and then export this for scVelo’s use by means of a python <a href="https://anndata.readthedocs.io/en/latest/" class="external-link">AnnData</a> object. But first, let’s have a deeper look into what exactly are the outstanding issues that sciCSR is trying to solve in this task.</p>
-<p>We can actually see the sequencing library information reflected in the Seurat data object:</p>
+<p>Here, sequencing reads from cells from the BCP004 samples come from
+two sequencing libraries, one specifically from the memory B cells (MBC)
+and another from total B cells. The <code>.loom</code> files contain
+counts of unspliced and spliced transcripts from each cell represented
+in the two libraries. Our goal is first to merge these two count
+matrices with the standard gene expression counts stored in the Seurat
+data object, and then pass this merged data to scVelo to calculate RNA
+velocity.</p>
+<p>sciCSR offers functions to merge these <code>.loom</code> files into
+one and subsequently to the Seurat object, and then export this for
+scVelo’s use by means of a python <a href="https://anndata.readthedocs.io/en/latest/" class="external-link">AnnData</a> object. But
+first, let’s have a deeper look into what exactly are the outstanding
+issues that sciCSR is trying to solve in this task.</p>
+<p>We can actually see the sequencing library information reflected in
+the Seurat data object:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># There is a column 'Sample' in the Seurat object that contains</span></span>
 <span><span class="co"># this information</span></span>
@@ -181,7 +228,9 @@
 <pre><code><span><span class="co">## [1] "BCP4_Total_AAATGCCTCGCCTGAG" "BCP4_Total_AACACGTTCTAACGGT"</span></span>
 <span><span class="co">## [3] "BCP4_Total_AACCATGAGAATTGTG" "BCP4_Total_AACCGCGGTCAGAGGT"</span></span>
 <span><span class="co">## [5] "BCP4_Total_AACCGCGGTTACCGAT" "BCP4_Total_AACTCAGCAAGCCCAC"</span></span></code></pre>
-<p>We have prefixes <code>BCP4_MBC_</code> and <code>BCP4_Total_</code> appended to the cell barcodes. If we inspect the two <code>.loom</code> files separately, this isn’t the case:</p>
+<p>We have prefixes <code>BCP4_MBC_</code> and <code>BCP4_Total_</code>
+appended to the cell barcodes. If we inspect the two <code>.loom</code>
+files separately, this isn’t the case:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># the function 'read.loom.matrices' simplified fron the one in the </span></span>
 <span><span class="co"># velocyto.R package can read each loom matrix separately</span></span>
@@ -207,7 +256,17 @@
 <span><span class="co">## FAM138A                                .</span></span>
 <span><span class="co">## AL627309.1                             .</span></span>
 <span><span class="co">## AL627309.3                             .</span></span></code></pre>
-<p>In this case, although for cell barcodes are also appended with a prefix, the formats of these are different: in the Seurat object, it is <code>BCP4_Total_</code>, here it is <code>BCP004_Total:</code> (notice ‘BCP004’ versus ‘BCP4’, and the underscore/colon at the trailing end). This will cause problems with merging if not addressed. Luckily, in sciCSR we offer a function <code><a href="../reference/combineLoomFiles.html">combineLoomFiles()</a></code> which allows you to combine separate loom files into one, while checking for these discrepancies of cell barcodes and try to correct them. You will need to pass the Seurat object as one of the arguments to call this function, while at the same time give a list of sample names, in the <em>same order</em> as the vector of loom files you supply - see below:</p>
+<p>In this case, although for cell barcodes are also appended with a
+prefix, the formats of these are different: in the Seurat object, it is
+<code>BCP4_Total_</code>, here it is <code>BCP004_Total:</code> (notice
+‘BCP004’ versus ‘BCP4’, and the underscore/colon at the trailing end).
+This will cause problems with merging if not addressed. Luckily, in
+sciCSR we offer a function <code><a href="../reference/combineLoomFiles.html">combineLoomFiles()</a></code> which allows
+you to combine separate loom files into one, while checking for these
+discrepancies of cell barcodes and try to correct them. You will need to
+pass the Seurat object as one of the arguments to call this function,
+while at the same time give a list of sample names, in the <em>same
+order</em> as the vector of loom files you supply - see below:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># merging loom files</span></span>
 <span><span class="fu"><a href="../reference/combineLoomFiles.html">combineLoomFiles</a></span><span class="op">(</span></span>
@@ -220,7 +279,13 @@
 <span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Assuming the order in sample_names correspond to the order in loom_files. If this is not the case please rerun this function ensuring the order of these vectors match up.</span></span></code></pre>
 <pre><code><span><span class="co">## [1] "Loom object with velocyto spliced/unspliced counts written to file 'King_Tonsils_BCP4_combined.loom'."</span></span></code></pre>
-<p>We are next ready to merge these unspliced and spliced counts to the annotated data object. Since we are going to rely on the python pacakge scVelo for RNA velocity analysis, here we convert the Seurat object into an AnnData file, and then merge the velocyto data into this AnnData object - we provide two separate functions, <code><a href="../reference/convertSeuratToH5ad.html">convertSeuratToH5ad()</a></code> and <code><a href="../reference/mergeVelocytoWithGEX.html">mergeVelocytoWithGEX()</a></code>.</p>
+<p>We are next ready to merge these unspliced and spliced counts to the
+annotated data object. Since we are going to rely on the python pacakge
+scVelo for RNA velocity analysis, here we convert the Seurat object into
+an AnnData file, and then merge the velocyto data into this AnnData
+object - we provide two separate functions,
+<code><a href="../reference/convertSeuratToH5ad.html">convertSeuratToH5ad()</a></code> and
+<code><a href="../reference/mergeVelocytoWithGEX.html">mergeVelocytoWithGEX()</a></code>.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># convert the Seurat object into AnnData</span></span>
 <span><span class="fu"><a href="../reference/convertSeuratToH5ad.html">convertSeuratToH5ad</a></span><span class="op">(</span></span>
@@ -236,15 +301,28 @@
 <span>  anndata_out_filename <span class="op">=</span> <span class="st">'King_Tonsils_BCP4_assay-RNA_velocyto.h5ad'</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "AnnData file with velocyto counts merged is written to King_Tonsils_BCP4_assay-RNA_velocyto.h5ad"</span></span></code></pre>
-<p>This file <code>King_Tonsils_BCP4_assay-RNA_velocyto.h5ad</code> contains the unspliced/spliced transcript counts which can be used as input to the scVelo RNA velocity calculation pipeline. In sciCSR we provide a R function <code><a href="../reference/run_scVelo.html">run_scVelo()</a></code> that calls scVelo at the backend to perform this calculation - all you need to do is to supply this file and a new filename where the calculated RNA velocity statistics will be stored.</p>
+<p>This file <code>King_Tonsils_BCP4_assay-RNA_velocyto.h5ad</code>
+contains the unspliced/spliced transcript counts which can be used as
+input to the scVelo RNA velocity calculation pipeline. In sciCSR we
+provide a R function <code><a href="../reference/run_scVelo.html">run_scVelo()</a></code> that calls scVelo at the
+backend to perform this calculation - all you need to do is to supply
+this file and a new filename where the calculated RNA velocity
+statistics will be stored.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># split into wt and kd</span></span>
 <span><span class="fu"><a href="../reference/run_scVelo.html">run_scVelo</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto.h5ad"</span>,</span>
 <span>  anndata_out_filename <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>We can project the RNA velocity results onto the UMAP using the plotting functionalities within scVelo. Once again, in sciCSR you can do this by calling a function in R without the need to code in python - sciCSR calls scVelo at the backend and return you the plot within R:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<p>We can project the RNA velocity results onto the UMAP using the
+plotting functionalities within scVelo. Once again, in sciCSR you can do
+this by calling a function in R without the need to code in python -
+sciCSR calls scVelo at the backend and return you the plot within R:</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_arrows.html">plot_arrows</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span>, </span>
 <span>  <span class="co"># we are using RNA velocity information to project arrows</span></span>
@@ -259,9 +337,15 @@
 <span>           <span class="st">"#F564E3"</span>, <span class="st">"#FF64B0"</span><span class="op">)</span>,</span>
 <span>  style <span class="op">=</span> <span class="st">"stream"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
 <p><img src="comparison_files/figure-html/unnamed-chunk-10-1.png" width="576"></p>
-<p>We now have a RNA velocity plot based on code entirely in R (sciCSR does all the magic in python in the backend)! We can also plot RNA velocity as a grid of arrows rather than as arrow streams as above:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<p>We now have a RNA velocity plot based on code entirely in R (sciCSR
+does all the magic in python in the backend)! We can also plot RNA
+velocity as a grid of arrows rather than as arrow streams as above:</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_arrows.html">plot_arrows</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span>, </span>
 <span>  <span class="co"># we are using RNA velocity information to project arrows</span></span>
@@ -279,15 +363,45 @@
 <span>  <span class="co"># (Optional) you can give the plot a customised title as well</span></span>
 <span>  title <span class="op">=</span> <span class="st">"King et al. Donor BCP4 RNA velocity on a grid"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
 <p><img src="comparison_files/figure-html/unnamed-chunk-11-1.png" width="576"></p>
 </div>
 <div class="section level2">
 <h2 id="plotting-transitions-based-on-csr-and-shm">Plotting transitions based on CSR and SHM<a class="anchor" aria-label="anchor" href="#plotting-transitions-based-on-csr-and-shm"></a>
 </h2>
-<p>Since sciCSR infers transitions using CSR and/or SHM information, we would ideally want to also visualise these, and compare these inferred transitions against those based on RNA velocity. We can do so by projecting the transitions onto UMAP similar to what is shown above for RNA velocity, thanks to functionalities support in the CellRank package. Before we show you these, however, some points of caution:</p>
-<p>Inferred transitions based on CSR and/or SHM can be substantially different from those based on RNA velocity. Specifically, it is fairly conceivable that depending on the dataset, even using CSR/SHM <em>we will not see much prominent transitional flows</em>. Part of it may be genuine (e.g. you are sampling mainly mature B cells at a steady state with little difference in CSR/SHM patterns) - in fact, it has been noticed that one <a href="https://doi.org/10.15252/msb.202110282" class="external-link">common problem with RNA velocity</a> is the prominence of flows (sometimes even pointing to a counterintuitive direction) in mature immune cell types where little dynamical behaviour is expected. Another potential reason for the lack of prominent flows in these sort of visualisation is, <em>cells are not necessarily organised by the states defined using CSR/SHM information on the UMAP</em>. For example, IgG1+ and IgA1+ B cells may occupy similar positions on a UMAP projection simply because they share transcriptomic similarities outside of the immunoglobulin loci. In this case, even it is conceivable that there can be a G1-to-A1 transition, projection of arrows onto the UMAP reduction isn’t particularly helpful as we may not have these states positioning on the UMAP in a way that we can highlight transitions between them using the arrows.</p>
-<p>Anyway, enough health warning - we can also use the <code><a href="../reference/plot_arrows.html">plot_arrows()</a></code> function to project CSR/SHM information onto the UMAP. Just indicate this in the <code>based_on</code> argument:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<p>Since sciCSR infers transitions using CSR and/or SHM information, we
+would ideally want to also visualise these, and compare these inferred
+transitions against those based on RNA velocity. We can do so by
+projecting the transitions onto UMAP similar to what is shown above for
+RNA velocity, thanks to functionalities support in the CellRank package.
+Before we show you these, however, some points of caution:</p>
+<p>Inferred transitions based on CSR and/or SHM can be substantially
+different from those based on RNA velocity. Specifically, it is fairly
+conceivable that depending on the dataset, even using CSR/SHM <em>we
+will not see much prominent transitional flows</em>. Part of it may be
+genuine (e.g. you are sampling mainly mature B cells at a steady state
+with little difference in CSR/SHM patterns) - in fact, it has been
+noticed that one <a href="https://doi.org/10.15252/msb.202110282" class="external-link">common
+problem with RNA velocity</a> is the prominence of flows (sometimes even
+pointing to a counterintuitive direction) in mature immune cell types
+where little dynamical behaviour is expected. Another potential reason
+for the lack of prominent flows in these sort of visualisation is,
+<em>cells are not necessarily organised by the states defined using
+CSR/SHM information on the UMAP</em>. For example, IgG1+ and IgA1+ B
+cells may occupy similar positions on a UMAP projection simply because
+they share transcriptomic similarities outside of the immunoglobulin
+loci. In this case, even it is conceivable that there can be a G1-to-A1
+transition, projection of arrows onto the UMAP reduction isn’t
+particularly helpful as we may not have these states positioning on the
+UMAP in a way that we can highlight transitions between them using the
+arrows.</p>
+<p>Anyway, enough health warning - we can also use the
+<code><a href="../reference/plot_arrows.html">plot_arrows()</a></code> function to project CSR/SHM information onto
+the UMAP. Just indicate this in the <code>based_on</code> argument:</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Let's say we want to first project CSR-inferred transitions </span></span>
 <span><span class="co"># onto the UMAP</span></span>
 <span></span>
@@ -301,9 +415,13 @@
 <span>           <span class="st">"#F564E3"</span>, <span class="st">"#FF64B0"</span><span class="op">)</span>,</span>
 <span>  style <span class="op">=</span> <span class="st">"stream"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
 <p><img src="comparison_files/figure-html/unnamed-chunk-12-1.png" width="576"></p>
 <p>And another plot using SHM information:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_arrows.html">plot_arrows</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span>, </span>
 <span>  based_on <span class="op">=</span> <span class="st">"shm"</span>,</span>
@@ -313,16 +431,46 @@
 <span>           <span class="st">"#F564E3"</span>, <span class="st">"#FF64B0"</span><span class="op">)</span>,</span>
 <span>  style <span class="op">=</span> <span class="st">"stream"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
 <p><img src="comparison_files/figure-html/unnamed-chunk-13-1.png" width="576"></p>
 </div>
 <div class="section level2">
 <h2 id="more-detailed-comparisons">More detailed comparisons<a class="anchor" aria-label="anchor" href="#more-detailed-comparisons"></a>
 </h2>
-<p>The visualisations above clearly show some similarities (for example, the transitions from MBC pointing towards the direction of germinal center [GC]) and differences (e.g. strong transitions in the GC based on RNA velocity appears not backed up with CSR/SHM) between inferences based on RNA velocity versus CSR/SHM. sciCSR provides further functionalities to compare these different sets of inferred transitions. One way to gain further insights would be to apply Transition Path Theory (TPT) to estimate the amount of fluxes between states - we have covered TPT in the <a href="csr.html">basic sciCSR usage vignette</a>. You may want to take a look at the vignette and see how we can do that.</p>
-<p>Here we show you another way to answer the question of ‘How different are the transitions inferred using CSR/SHM to those based on RNA velocity’. In sciCSR we uses CSR/SHM information to fit models of state transitions using Markov State Models (MSM). One powerful properties of MSM is, they specify the transition likelihoods between every state in the data, such that we can ‘generate’/‘simulate’ new transitions as if we have data from a new cell and follow how it moves across the landscape of states. Similar MSMs would produce similar pathways of transitions across this landscape; we can take a note at the frequencies each state is visited in these simulated pathways, and then derive a numerical metric to quantify the similarity in terms of the frequencies of visiting each states in these MSM-simulated paths (Illustration below).</p>
+<p>The visualisations above clearly show some similarities (for example,
+the transitions from MBC pointing towards the direction of germinal
+center [GC]) and differences (e.g. strong transitions in the GC based on
+RNA velocity appears not backed up with CSR/SHM) between inferences
+based on RNA velocity versus CSR/SHM. sciCSR provides further
+functionalities to compare these different sets of inferred transitions.
+One way to gain further insights would be to apply Transition Path
+Theory (TPT) to estimate the amount of fluxes between states - we have
+covered TPT in the <a href="csr.html">basic sciCSR usage vignette</a>.
+You may want to take a look at the vignette and see how we can do
+that.</p>
+<p>Here we show you another way to answer the question of ‘How different
+are the transitions inferred using CSR/SHM to those based on RNA
+velocity’. In sciCSR we uses CSR/SHM information to fit models of state
+transitions using Markov State Models (MSM). One powerful properties of
+MSM is, they specify the transition likelihoods between every state in
+the data, such that we can ‘generate’/‘simulate’ new transitions as if
+we have data from a new cell and follow how it moves across the
+landscape of states. Similar MSMs would produce similar pathways of
+transitions across this landscape; we can take a note at the frequencies
+each state is visited in these simulated pathways, and then derive a
+numerical metric to quantify the similarity in terms of the frequencies
+of visiting each states in these MSM-simulated paths (Illustration
+below).</p>
 <p><img src="images/sample_msm.png" alt="Illustration of sampling MSM and comparing inferences" width="260"></p>
-<p>In sciCSR, the way we can perform this analysis is, first fit transition models and obtain separate R objects which store these models. We can then use the function <code><a href="../reference/compareTransitionMatrices.html">compareTransitionMatrices()</a></code> to quantify the similarities of these transition models:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<p>In sciCSR, the way we can perform this analysis is, first fit
+transition models and obtain separate R objects which store these
+models. We can then use the function
+<code><a href="../reference/compareTransitionMatrices.html">compareTransitionMatrices()</a></code> to quantify the similarities of
+these transition models:</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Let's first fit transition models using velocity/CSR/SHM</span></span>
 <span><span class="co"># separately using fitTransitionModel()</span></span>
 <span></span>
@@ -330,19 +478,33 @@
 <span><span class="va">g_velo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTransitionModel.html">fitTransitionModel</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"velocity"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># CSR</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># CSR</span></span>
 <span><span class="va">g_csr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTransitionModel.html">fitTransitionModel</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"pseudotime"</span>, pseudotime_key <span class="op">=</span> <span class="st">"csr_pot"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># SHM</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># SHM</span></span>
 <span><span class="va">g_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTransitionModel.html">fitTransitionModel</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"King_Tonsils_BCP4_assay-RNA_velocyto_scVelo.h5ad"</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"pseudotime"</span>, pseudotime_key <span class="op">=</span> <span class="st">"shm"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compareTransitionMatrices.html">compareTransitionMatrices</a></span><span class="op">(</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compareTransitionMatrices.html">compareTransitionMatrices</a></span><span class="op">(</span></span>
 <span>  <span class="co"># these are the transition matrices based on</span></span>
 <span>  <span class="co"># velocity/CSR/SHM</span></span>
 <span>  matrix_list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">g_velo</span><span class="op">$</span><span class="va">transition_matrix</span>,</span>
@@ -363,8 +525,19 @@
 <pre><code><span><span class="co">## Sampling realisations from Markov chain 3 ...</span></span></code></pre>
 <pre><code><span><span class="co">## Comparing the list of transition models ...</span></span></code></pre>
 <pre><code><span><span class="co">## Metric: 'kullback-leibler' using unit: 'log2'; comparing: 3 vectors.</span></span></code></pre>
-<p>The output of this function is a list with two elements: the <code>sampled_transitions</code> are the frequencies each transition (i.e. in this case, moves from one cell type to another) is visited in the pathways sampled by considering the transition model fitted using velocity/CSR/SHM information. Another element of this list (name <code>distance</code>) is a matrix which shows the difference between each pair of transition matrix, ordered based on the one given in <code>matrix_list</code>. The values in this matrix is a divergence metric (in this case <a href="https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence" class="external-link">Kullback-Leibler divergence</a>) to quantify how different the transitions implicated in one distance matrix is different from another. The larger this value, the more different the implied transitions are.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<p>The output of this function is a list with two elements: the
+<code>sampled_transitions</code> are the frequencies each transition
+(i.e. in this case, moves from one cell type to another) is visited in
+the pathways sampled by considering the transition model fitted using
+velocity/CSR/SHM information. Another element of this list (name
+<code>distance</code>) is a matrix which shows the difference between
+each pair of transition matrix, ordered based on the one given in
+<code>matrix_list</code>. The values in this matrix is a divergence
+metric (in this case <a href="https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence" class="external-link">Kullback-Leibler
+divergence</a>) to quantify how different the transitions implicated in
+one distance matrix is different from another. The larger this value,
+the more different the implied transitions are.</p>
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">distance_matrix</span> <span class="op">&lt;-</span> <span class="va">comparison</span><span class="op">$</span><span class="va">distance</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">distance_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Velocity"</span>, <span class="st">"CSR"</span>, <span class="st">"SHM"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">distance_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Velocity"</span>, <span class="st">"CSR"</span>, <span class="st">"SHM"</span><span class="op">)</span></span>
@@ -373,7 +546,13 @@
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">pheatmap</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/pheatmap/man/pheatmap.html" class="external-link">pheatmap</a></span><span class="op">(</span><span class="va">distance_matrix</span>, display_numbers <span class="op">=</span> <span class="cn">TRUE</span>, number_format <span class="op">=</span> <span class="st">"%.4f"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="comparison_files/figure-html/unnamed-chunk-16-1.png" width="384"></p>
-<p>Based on this plot, we can see that velocity-based transitions are substantially more different than those based on CSR/SHM information. This serves more as an overall metric to quantify the differences between those transition models, whilst the arrow projection and/or TPT-based fluxes, both outputs of different sciCSR functions, will allow you to study further what exactly are the differences in the inferences made using each type of biological information (velocity/CSR/SHM)!</p>
+<p>Based on this plot, we can see that velocity-based transitions are
+substantially more different than those based on CSR/SHM information.
+This serves more as an overall metric to quantify the differences
+between those transition models, whilst the arrow projection and/or
+TPT-based fluxes, both outputs of different sciCSR functions, will allow
+you to study further what exactly are the differences in the inferences
+made using each type of biological information (velocity/CSR/SHM)!</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sciCSR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,7 +81,8 @@
 
 
 
-<script src="csr_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+
+<div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Analysing Class-Switch Recombination in B cell scRNA-seq data using sciCSR</h1>
             
@@ -95,8 +96,17 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>In this vignette we will demonstrate the basic functions in sciCSR to analyse CSR. Wherever applicable, the explanations on the theoretical background of sciCSR will be kept brief in this vignette. You are encouraged to consult the <a href="">sciCSR manuscript</a> for details. We will provide a concise summary of the basic background only to the level of guiding the application of the sciCSR package on a real scRNA-seq dataset.</p>
-<p>Start by loading the sciCSR package. <strong>Before you run any examples/analysis with sciCSR for the FIRST time</strong>, run the <code><a href="../reference/prepare_sciCSR.html">prepare_sciCSR()</a></code> function - this will install all python dependencies for sciCSR to function.</p>
+<p>In this vignette we will demonstrate the basic functions in sciCSR to
+analyse CSR. Wherever applicable, the explanations on the theoretical
+background of sciCSR will be kept brief in this vignette. You are
+encouraged to consult the <a href="">sciCSR manuscript</a> for details.
+We will provide a concise summary of the basic background only to the
+level of guiding the application of the sciCSR package on a real
+scRNA-seq dataset.</p>
+<p>Start by loading the sciCSR package. <strong>Before you run any
+examples/analysis with sciCSR for the FIRST time</strong>, run the
+<code><a href="../reference/prepare_sciCSR.html">prepare_sciCSR()</a></code> function - this will install all python
+dependencies for sciCSR to function.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">sciCSR</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co"># We also need the Seurat package as sciCSR interfaces </span></span>
@@ -111,7 +121,11 @@
 <div class="section level2">
 <h2 id="load-the-dataset">Load the dataset<a class="anchor" aria-label="anchor" href="#load-the-dataset"></a>
 </h2>
-<p>A subset of data from <a href="https://doi.org/10.4049/jimmunol.2000280" class="external-link">Hong et al.</a> is used as an example; in this dataset, knockout of the p19 component of Il23 reduces class-switching to the IgG2b isotype in mice. We shall use sciCSR to reproduce this finding. We have included in sciCSR a susbet of this data consisting of only 4000 cells and ~ 200 genes.</p>
+<p>A subset of data from <a href="https://doi.org/10.4049/jimmunol.2000280" class="external-link">Hong et al.</a> is used
+as an example; in this dataset, knockout of the p19 component of Il23
+reduces class-switching to the IgG2b isotype in mice. We shall use
+sciCSR to reproduce this finding. We have included in sciCSR a susbet of
+this data consisting of only 4000 cells and ~ 200 genes.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hong_sampled</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/hong_sampled.rds"</span>, package <span class="op">=</span> <span class="st">"sciCSR"</span><span class="op">)</span></span>
 <span><span class="va">hong_sampled</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">hong_sampled</span><span class="op">)</span></span>
@@ -124,8 +138,33 @@
 <div class="section level2">
 <h2 id="integrating-scbcr-seq-repertoire-data">Integrating scBCR-seq repertoire data<a class="anchor" aria-label="anchor" href="#integrating-scbcr-seq-repertoire-data"></a>
 </h2>
-<p>scBCR-seq (that is, single-cell BCR repertoire) data of the same set of cells are also available from the publication. We should integrate this data into the Seurat object so that we can benefit from the scBCR-seq data to calculate SHM levels of cells. sciCSR can also benefit from the isotype calls from scBCR-seq to group the cells by their isotypes (whilst this can in theory be also identified using scRNA-seq reads only [see below], since scBCR-seq libraries are enriched with BCR transcripts the isotype calls are typically more reliable). In the publication, Hong and colleagues also make use of the scBCR-seq data to remove non-B-cells from their analysis.</p>
-<p>sciCSR provides a series of functions to process the repertoire data tables, either in the form of <code>cellranger vdj</code> “filtered contig” CSV files or standard <a href="https://docs.airr-community.org/en/v1.3.0/datarep/format.html" class="external-link">AIRR format</a> files (or indeed any tabular format as long as the cell barcodes are available in the tables). We can then add selected features from the repertoire annotations as metadata in the Seurat data object. In this case we have the filtered contig annotation files from <code>cellranger vdj</code>, but these annotations do not contain information regarding SHM (e.g. the sequence identity when compared to the assigned germline alleles). We have ran <a href="https://www.imgt.org/HighV-QUEST/home.action" class="external-link">IMGT/HighV-Quest</a> on the filtered contig sequences and obtained an AIRR format table as output. Here we read in the cellranger contig annotations, merge this with the IgBLAST AIRR output, and then proceed to extract features from this merged table for adding them to the Seurat data object. <strong>If you wish to use SHM information for sciCSR, make sure you re-analyse the scBCR-seq contigs with another tool</strong> (e.g. IMGT/HighV-Quest, <a href="https://presto.readthedocs.io/en/stable/" class="external-link">pRESTO</a>, <a href="https://www.ncbi.nlm.nih.gov/igblast/" class="external-link">IgBLAST</a> etc., or any custom in-house scripts) <strong>before merging the data!</strong></p>
+<p>scBCR-seq (that is, single-cell BCR repertoire) data of the same set
+of cells are also available from the publication. We should integrate
+this data into the Seurat object so that we can benefit from the
+scBCR-seq data to calculate SHM levels of cells. sciCSR can also benefit
+from the isotype calls from scBCR-seq to group the cells by their
+isotypes (whilst this can in theory be also identified using scRNA-seq
+reads only [see below], since scBCR-seq libraries are enriched with BCR
+transcripts the isotype calls are typically more reliable). In the
+publication, Hong and colleagues also make use of the scBCR-seq data to
+remove non-B-cells from their analysis.</p>
+<p>sciCSR provides a series of functions to process the repertoire data
+tables, either in the form of <code>cellranger vdj</code> “filtered
+contig” CSV files or standard <a href="https://docs.airr-community.org/en/v1.3.0/datarep/format.html" class="external-link">AIRR
+format</a> files (or indeed any tabular format as long as the cell
+barcodes are available in the tables). We can then add selected features
+from the repertoire annotations as metadata in the Seurat data object.
+In this case we have the filtered contig annotation files from
+<code>cellranger vdj</code>, but these annotations do not contain
+information regarding SHM (e.g. the sequence identity when compared to
+the assigned germline alleles). We have ran <a href="https://www.imgt.org/HighV-QUEST/home.action" class="external-link">IMGT/HighV-Quest</a>
+on the filtered contig sequences and obtained an AIRR format table as
+output. Here we read in the cellranger contig annotations, merge this
+with the IgBLAST AIRR output, and then proceed to extract features from
+this merged table for adding them to the Seurat data object. <strong>If
+you wish to use SHM information for sciCSR, make sure you re-analyse the
+scBCR-seq contigs with another tool</strong> (e.g. IMGT/HighV-Quest, <a href="https://presto.readthedocs.io/en/stable/" class="external-link">pRESTO</a>, <a href="https://www.ncbi.nlm.nih.gov/igblast/" class="external-link">IgBLAST</a> etc., or any
+custom in-house scripts) <strong>before merging the data!</strong></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># this is the filtered_contig_annotations.csv file from cellranger vdj</span></span>
 <span><span class="va">vdj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/hong_sampled_cellranger_vdj.csv"</span>, package <span class="op">=</span> <span class="st">"sciCSR"</span><span class="op">)</span></span>
@@ -141,10 +180,21 @@
 <span><span class="va">vdj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">vdj</span>, <span class="va">vquest</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sequence_id"</span>, <span class="st">"v_identity"</span><span class="op">)</span><span class="op">]</span>,</span>
 <span>             by.x <span class="op">=</span> <span class="st">"contig_id"</span>, by.y <span class="op">=</span> <span class="st">"sequence_id"</span>, </span>
 <span>             all.x <span class="op">=</span> <span class="cn">TRUE</span>, all.y <span class="op">=</span> <span class="cn">FALSE</span>, sort <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p><code>collapseBCR</code> annotate for each cell as singlet/doublet etc. based on the number of heavy &amp; light transcripts associated with each cell barcode. The resulting data frame should have fewer lines than the input data frame - <code>collapseBCR</code> reduces the input data such that for each cell, at most 1 H and 1 L sequences are retained for merging into the Seurat object. The full table without removing those sequences can also be accessed, by indicating <code>full.table = TRUE</code> when calling <code>collapseBCR</code>.</p>
+<p><code>collapseBCR</code> annotate for each cell as singlet/doublet
+etc. based on the number of heavy &amp; light transcripts associated
+with each cell barcode. The resulting data frame should have fewer lines
+than the input data frame - <code>collapseBCR</code> reduces the input
+data such that for each cell, at most 1 H and 1 L sequences are retained
+for merging into the Seurat object. The full table without removing
+those sequences can also be accessed, by indicating
+<code>full.table = TRUE</code> when calling
+<code>collapseBCR</code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">collapsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/collapseBCR.html">collapseBCR</a></span><span class="op">(</span><span class="va">vdj</span>, format <span class="op">=</span> <span class="st">"10X"</span><span class="op">)</span></span></code></pre></div>
-<p>Below shows addition of annotations operating in both directions, i.e. extracting data from the Seurat object metadata to add to the repertoire tables, and extracting repertoire annotations for merging into the Seurat object as additional metadata columns.</p>
+<p>Below shows addition of annotations operating in both directions,
+i.e. extracting data from the Seurat object metadata to add to the
+repertoire tables, and extracting repertoire annotations for merging
+into the Seurat object as additional metadata columns.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># We can add annotations from the Seurat Object into the VDJ table</span></span>
 <span><span class="co"># e.g. we add 'Status' (WT/KD) from Seruat object into the repertoire </span></span>
@@ -175,7 +225,17 @@
 <span><span class="co"># to confirm the data merging has happened</span></span>
 <span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">hong_sampled</span>, group.by <span class="op">=</span> <span class="st">"IGH_c_gene"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
-<p>We see isotype annotations are available for a group of cells confined to the top right corner of the UMAP projection - whilst a minority of cells from this group do not have available isotype information (probably because BCR transcripts were not sampled in preparing the scBCR-seq library), cells outside of this quadrant on the UMAP are mostly absent for isotype information - most probably these would be non B cells which we aren’t interested in for the sciCSR analysis. Let’s subset this dataset so that we retain only B cells, using both the presence of BCR transcripts in the repertoire data and marker expression (<em>Cd19</em>, <em>Ms4a1</em> (CD20)) as criteria for filtering:</p>
+<p>We see isotype annotations are available for a group of cells
+confined to the top right corner of the UMAP projection - whilst a
+minority of cells from this group do not have available isotype
+information (probably because BCR transcripts were not sampled in
+preparing the scBCR-seq library), cells outside of this quadrant on the
+UMAP are mostly absent for isotype information - most probably these
+would be non B cells which we aren’t interested in for the sciCSR
+analysis. Let’s subset this dataset so that we retain only B cells,
+using both the presence of BCR transcripts in the repertoire data and
+marker expression (<em>Cd19</em>, <em>Ms4a1</em> (CD20)) as criteria for
+filtering:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># there is a column 'bcr_type' added to the Seurat object which indicates</span></span>
 <span><span class="co"># whether the cell is singlet/doublet etc. cells without BCR transcripts will</span></span>
@@ -189,12 +249,26 @@
 <span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindNeighbors.html" class="external-link">FindNeighbors</a></span><span class="op">(</span><span class="va">hong_b</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Computing nearest neighbor graph</span></span></code></pre>
 <pre><code><span><span class="co">## Computing SNN</span></span></code></pre>
-<p><em>Note</em>: Others (e.g. the <a href="https://immcantation.readthedocs.io/en/latest/tutorials/BCR_Seurat_tutorial.html" class="external-link">Immcantation</a> framework) have provided alternative routes to merge repertoire annotations into Seurat data object. Feel free to choose whichever tool you feel the most comfortable with. As long as there are columns indicating BCR isotypes and the sequence identity to germline alleles in the Seurat data object metadata, you can proceed to use sciCSR’s functionalities for inferring transitions using CSR/SHM information.</p>
+<p><em>Note</em>: Others (e.g. the <a href="https://immcantation.readthedocs.io/en/latest/tutorials/BCR_Seurat_tutorial.html" class="external-link">Immcantation</a>
+framework) have provided alternative routes to merge repertoire
+annotations into Seurat data object. Feel free to choose whichever tool
+you feel the most comfortable with. As long as there are columns
+indicating BCR isotypes and the sequence identity to germline alleles in
+the Seurat data object metadata, you can proceed to use sciCSR’s
+functionalities for inferring transitions using CSR/SHM information.</p>
 </div>
 <div class="section level2">
-<h2 id="enumerating-productive-and-sterile-immunoglobulin-heavy-chain-transcripts">Enumerating productive and sterile immunoglobulin heavy chain transcripts<a class="anchor" aria-label="anchor" href="#enumerating-productive-and-sterile-immunoglobulin-heavy-chain-transcripts"></a>
+<h2 id="enumerating-productive-and-sterile-immunoglobulin-heavy-chain-transcripts">Enumerating productive and sterile immunoglobulin heavy chain
+transcripts<a class="anchor" aria-label="anchor" href="#enumerating-productive-and-sterile-immunoglobulin-heavy-chain-transcripts"></a>
 </h2>
-<p>The first step to run sciCSR is to identify and count productive and sterile immunoglobulin heavy chain transcripts. These transcripts are not separately annotated in conventional scRNA-seq data pre-processing, but they are crucial to understand the dynamics of CSR: sterile transcription pre-conditions B cells to class-switch to a particular isotype. sciCSR implements a set of functions to perform this enumeration; the only required input is the BAM files from the data pre-processing pipeline (e.g. cellranger from 10X).</p>
+<p>The first step to run sciCSR is to identify and count productive and
+sterile immunoglobulin heavy chain transcripts. These transcripts are
+not separately annotated in conventional scRNA-seq data pre-processing,
+but they are crucial to understand the dynamics of CSR: sterile
+transcription pre-conditions B cells to class-switch to a particular
+isotype. sciCSR implements a set of functions to perform this
+enumeration; the only required input is the BAM files from the data
+pre-processing pipeline (e.g. cellranger from 10X).</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># We first need to load the genomic coordinates of the V, D and J genes</span></span>
 <span><span class="co"># change to 'human_definitions' if you are working on human data</span></span>
@@ -223,27 +297,31 @@
 <span>  <span class="co"># of each isotype per cell</span></span>
 <span>  <span class="va">out3</span>  </span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S1_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/Rtmp2ckpZG/temp_libpathc281c4fd13227/sciCSR/extdata/Hong_S1_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
-<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S2_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/Rtmp2ckpZG/temp_libpathc281c4fd13227/sciCSR/extdata/Hong_S2_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
-<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S3_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/Rtmp2ckpZG/temp_libpathc281c4fd13227/sciCSR/extdata/Hong_S3_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
-<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S4_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/Rtmp2ckpZG/temp_libpathc281c4fd13227/sciCSR/extdata/Hong_S4_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
-<pre><code><span><span class="co">## /tmp/RtmpeK0cOe/temp_libpath2aabce71d2c27c/sciCSR/extdata/Hong_S5_sampled_Igh.bam ...</span></span></code></pre>
+<pre><code><span><span class="co">## /tmp/Rtmp2ckpZG/temp_libpathc281c4fd13227/sciCSR/extdata/Hong_S5_sampled_Igh.bam ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to VDJ genes ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene coding regions ...</span></span></code></pre>
 <pre><code><span><span class="co">## Fetching reads mapped to C gene 5' regions ...</span></span></code></pre>
-<p>The cell barcodes may not match the cell barcodes in Seurat object, since the Seurat object is formed my aggregating data from different libraries. The function ‘repairBarcode’ will go through the Seurat object and make sure the cell barcodes of these count matrices match up the Seurat object:</p>
+<p>The cell barcodes may not match the cell barcodes in Seurat object,
+since the Seurat object is formed my aggregating data from different
+libraries. The function ‘repairBarcode’ will go through the Seurat
+object and make sure the cell barcodes of these count matrices match up
+the Seurat object:</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hong_IGH2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/repairBarcode.html">repairBarcode</a></span><span class="op">(</span></span>
 <span>  <span class="va">hong_IGH</span>, <span class="va">hong_b</span>,</span>
@@ -258,7 +336,13 @@
 <span><span class="co"># remove cells which are not in the Seurat object but happen to have</span></span>
 <span><span class="co"># observed productive/sterile transcripts</span></span>
 <span><span class="va">hong_IGH2</span> <span class="op">&lt;-</span> <span class="va">hong_IGH2</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">hong_IGH2</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/SeuratObject/man/Cells.html" class="external-link">Cells</a></span><span class="op">(</span><span class="va">hong_b</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span></span></code></pre></div>
-<p>Now that we have this productive/sterile transcript count matrix, we would want to merge this count matrix as a new ‘assay’ in the Seurat object. Occassionally, there might be a few B cells do not have any productive/sterile reads (in this case 2 cells). This will cause problems in merging the data. We can add them back to the matrix and proceed with the creation of this new assay, using the <code>mergeIgHCountsToSeurat</code> function:</p>
+<p>Now that we have this productive/sterile transcript count matrix, we
+would want to merge this count matrix as a new ‘assay’ in the Seurat
+object. Occassionally, there might be a few B cells do not have any
+productive/sterile reads (in this case 2 cells). This will cause
+problems in merging the data. We can add them back to the matrix and
+proceed with the creation of this new assay, using the
+<code>mergeIgHCountsToSeurat</code> function:</p>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mergeIgHCountsToSeurat.html">mergeIgHCountsToSeurat</a></span><span class="op">(</span></span>
 <span>  igh_counts <span class="op">=</span> <span class="va">hong_IGH2</span>, </span>
@@ -269,8 +353,15 @@
 <span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning: Feature names cannot have underscores ('_'), replacing with dashes</span></span>
 <span><span class="co">## ('-')</span></span></code></pre>
-<p><em>Note</em>: The counting of productive/sterile transcripts can take a substantial amount of time depending on the size of BAM files. You may choose to use any high-performance computing (HPC) resources if you have access to those. That said, it should be entirely feasible to run these functions to count productive and sterile transcripts on a standard modern desktop computer, in a few hours’ time.</p>
-<p>Now we have the productive/sterile transcript count per cell, added as a separate ‘assay’ in the Seurat object - below is a snippet of the count matrix:</p>
+<p><em>Note</em>: The counting of productive/sterile transcripts can
+take a substantial amount of time depending on the size of BAM files.
+You may choose to use any high-performance computing (HPC) resources if
+you have access to those. That said, it should be entirely feasible to
+run these functions to count productive and sterile transcripts on a
+standard modern desktop computer, in a few hours’ time.</p>
+<p>Now we have the productive/sterile transcript count per cell, added
+as a separate ‘assay’ in the Seurat object - below is a snippet of the
+count matrix:</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/methods/slot.html" class="external-link">slot</a></span><span class="op">(</span><span class="va">hong_b</span><span class="op">[[</span><span class="st">"IGHC"</span><span class="op">]</span><span class="op">]</span>, <span class="st">"counts"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">9</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## 9 x 3 sparse Matrix of class "dgCMatrix"</span></span>
@@ -288,9 +379,14 @@
 <ul>
 <li>‘-S’: these correspond to the sterile transcripts;</li>
 <li>‘-P’: these correspond to the productive transcripts;</li>
-<li>‘-C’: these corresponds to transcripts which cannot be classified as sterile or productive (e.g. only 1 read mapping to the coding exons are found, in this case it can be either sterile or productive, we do not have the confidence to assign this to either category).</li>
+<li>‘-C’: these corresponds to transcripts which cannot be classified as
+sterile or productive (e.g. only 1 read mapping to the coding exons are
+found, in this case it can be either sterile or productive, we do not
+have the confidence to assign this to either category).</li>
 </ul>
-<p>We can manipulate, normalise and visualise these data just like any count data. For example, here we log-normalise the data and plot a bubble plot comparing the WT cells and the Il23-/- cells:</p>
+<p>We can manipulate, normalise and visualise these data just like any
+count data. For example, here we log-normalise the data and plot a
+bubble plot comparing the WT cells and the Il23-/- cells:</p>
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Normalisation; 'IGHC' is the assay that holds the </span></span>
 <span><span class="co"># sterile/productive count data</span></span>
@@ -304,15 +400,38 @@
 <pre><code><span><span class="co">## Warning: Scaling data with a low number of groups may produce misleading</span></span>
 <span><span class="co">## results</span></span></code></pre>
 <p><img src="csr_files/figure-html/unnamed-chunk-11-1.png" width="720"></p>
-<p>We can see already, without any inference, that the Il23 knockouts have lower expression level of the IgG2 subtypes.</p>
+<p>We can see already, without any inference, that the Il23 knockouts
+have lower expression level of the IgG2 subtypes.</p>
 </div>
 <div class="section level2">
 <h2 id="inferring-transitions-using-csr-and-shm-information">Inferring transitions using CSR and SHM information<a class="anchor" aria-label="anchor" href="#inferring-transitions-using-csr-and-shm-information"></a>
 </h2>
-<p>In sciCSR we argue that the quantification of sterile and productive transcripts can be used as evidence to build models of cell state transitions, similar to how RNA velocity has been used to interpret the dynamics and trajectory of cell differentiation. Here, we can make use of the sterile and productive transcript count data to infer the patterns of CSR in the WT and knockout conditions; we would expect to reproduce the main finding from the Hong et al. manuscript that the Il23 knockouts bias cells away from IgG2b (which the authors established at the protein level using immunofluorescence techniques).</p>
-<p>sciCSR calculates a “CSR potential” which ranks cells from a naive state to a memory/plasma cell state, based on their expression pattern of the sterile and productive IgH transcripts. We ensure that these CSR potential scores can be compared across conditions and datasets, by making use of reference B cell atlases and training isotype “signatures” (i.e. the expression pattern of all isotypes’ sterile and productive transcripts altogether) from these references to be applied to any user-supplied datasets. We then use the CSR potentials as “pseudotime” ordering of the cells; this is provided as inputs to the CellRank method to infer transitions. As such, instead of RNA velocity which is typically used as input to CellRank, here we derive a CSR-based pseudotime ordering to infer the transitions of B cell states.</p>
-<p>Alternatively, sciCSR can also build transition models, but using SHM level as input. The function <code><a href="../reference/getSHM.html">getSHM()</a></code> will calculate SHM level using this formula:</p>
-<p><span class="math display">\[SHM = 1 - \text{sequence identity to germline V gene (%)}\]</span></p>
+<p>In sciCSR we argue that the quantification of sterile and productive
+transcripts can be used as evidence to build models of cell state
+transitions, similar to how RNA velocity has been used to interpret the
+dynamics and trajectory of cell differentiation. Here, we can make use
+of the sterile and productive transcript count data to infer the
+patterns of CSR in the WT and knockout conditions; we would expect to
+reproduce the main finding from the Hong et al. manuscript that the Il23
+knockouts bias cells away from IgG2b (which the authors established at
+the protein level using immunofluorescence techniques).</p>
+<p>sciCSR calculates a “CSR potential” which ranks cells from a naive
+state to a memory/plasma cell state, based on their expression pattern
+of the sterile and productive IgH transcripts. We ensure that these CSR
+potential scores can be compared across conditions and datasets, by
+making use of reference B cell atlases and training isotype “signatures”
+(i.e. the expression pattern of all isotypes’ sterile and productive
+transcripts altogether) from these references to be applied to any
+user-supplied datasets. We then use the CSR potentials as “pseudotime”
+ordering of the cells; this is provided as inputs to the CellRank method
+to infer transitions. As such, instead of RNA velocity which is
+typically used as input to CellRank, here we derive a CSR-based
+pseudotime ordering to infer the transitions of B cell states.</p>
+<p>Alternatively, sciCSR can also build transition models, but using SHM
+level as input. The function <code><a href="../reference/getSHM.html">getSHM()</a></code> will calculate SHM
+level using this formula:</p>
+<p><span class="math display">\[SHM = 1 - \text{sequence identity to
+germline V gene (%)}\]</span></p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># calculate CSR potential</span></span>
 <span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCSRpotential.html">getCSRpotential</a></span><span class="op">(</span></span>
@@ -332,11 +451,15 @@
 <span><span class="co"># we have merged the germline identity information from the</span></span>
 <span><span class="co"># repertoire to the Seurat object (column 'IGH_v_identity')</span></span>
 <span><span class="va">hong_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getSHM.html">getSHM</a></span><span class="op">(</span><span class="va">hong_b</span>, v_identity_anno_name <span class="op">=</span> <span class="st">"IGH_v_identity"</span><span class="op">)</span></span></code></pre></div>
-<p>Now we have the necessary data to perform any inference of transitions. In sciCSR, we rely on the python package <a href="https://cellrank.readthedocs.io/en/stable/" class="external-link">CellRank</a> and a few other packages for the underlying calculations. First convert the Seurat object into AnnData (.h5ad) files.</p>
+<p>Now we have the necessary data to perform any inference of
+transitions. In sciCSR, we rely on the python package <a href="https://cellrank.readthedocs.io/en/stable/" class="external-link">CellRank</a> and a few
+other packages for the underlying calculations. First convert the Seurat
+object into AnnData (.h5ad) files.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/convertSeuratToH5ad.html">convertSeuratToH5ad</a></span><span class="op">(</span><span class="va">hong_b</span>, assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"RNA"</span><span class="op">)</span>, <span class="st">"hong_sampled_bcells.h5ad"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "hong_sampled_bcells_assay-RNA.h5ad"</span></span></code></pre>
-<p>In this case we want to consider transitions for the WT and knockout conditions separately. Split the AnnData into two separate files:</p>
+<p>In this case we want to consider transitions for the WT and knockout
+conditions separately. Split the AnnData into two separate files:</p>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># This information is stored in the 'Status' column in the </span></span>
 <span><span class="co"># Seurat object metadata</span></span>
@@ -344,46 +467,128 @@
 <span>  anndata_file <span class="op">=</span> <span class="st">"hong_sampled_bcells_assay-RNA.h5ad"</span>,</span>
 <span>  split.by <span class="op">=</span> <span class="st">"Status"</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"WT"</span>, <span class="st">"IL23-/-"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
 <pre><code><span><span class="co">## Subsetting AnnData for Status == 'WT' ...</span></span></code></pre>
 <pre><code><span><span class="co">## Subsetting AnnData for Status == 'IL23-/-' ...</span></span></code></pre>
 <pre><code><span><span class="co">## [1] "./hong_sampled_bcells_assay-RNA_WT.h5ad"    </span></span>
 <span><span class="co">## [2] "./hong_sampled_bcells_assay-RNA_IL23--.h5ad"</span></span></code></pre>
-<p>Every time these functions are called, the resulting AnnData filenames are written out so that you can keep track of the locations of these new files which are crucial inputs to the next steps. We will now use these two AnnData files as input to infer transitions separately for the wild-type and knockout conditions. Here, we use CSR and SHM potentials as pseudotime to build a cell-cell transition matrix which gives the probability of transitioning from the state of one cell to every other cell in the data. The inference is performed using CellRank, following the default settings - the only change here is the use of CSR/SHM information rather than pseudotime calculated using other means:</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<p>Every time these functions are called, the resulting AnnData
+filenames are written out so that you can keep track of the locations of
+these new files which are crucial inputs to the next steps. We will now
+use these two AnnData files as input to infer transitions separately for
+the wild-type and knockout conditions. Here, we use CSR and SHM
+potentials as pseudotime to build a cell-cell transition matrix which
+gives the probability of transitioning from the state of one cell to
+every other cell in the data. The inference is performed using CellRank,
+following the default settings - the only change here is the use of
+CSR/SHM information rather than pseudotime calculated using other
+means:</p>
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># fit transitions based on CSR</span></span>
 <span><span class="co"># First Wild-Type</span></span>
 <span><span class="va">g_wt_csr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTransitionModel.html">fitTransitionModel</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"hong_sampled_bcells_assay-RNA_WT.h5ad"</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"pseudotime"</span>, pseudotime_key <span class="op">=</span> <span class="st">"csr_pot"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># Knockout</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Knockout</span></span>
 <span><span class="va">g_ko_csr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTransitionModel.html">fitTransitionModel</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"hong_sampled_bcells_assay-RNA_IL23--.h5ad"</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"pseudotime"</span>, pseudotime_key <span class="op">=</span> <span class="st">"csr_pot"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># fit transitions based on SHM</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># fit transitions based on SHM</span></span>
 <span><span class="co"># First Wild-Type</span></span>
 <span><span class="va">g_wt_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTransitionModel.html">fitTransitionModel</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"hong_sampled_bcells_assay-RNA_WT.h5ad"</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"pseudotime"</span>, pseudotime_key <span class="op">=</span> <span class="st">"shm"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># Knockout</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Knockout</span></span>
 <span><span class="va">g_ko_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTransitionModel.html">fitTransitionModel</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"hong_sampled_bcells_assay-RNA_IL23--.h5ad"</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"pseudotime"</span>, pseudotime_key <span class="op">=</span> <span class="st">"shm"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>sciCSR uses a series of python packages (<a href="https://scanpy.readthedocs.io/en/stable/" class="external-link">scanpy</a>, <a href="https://cellrank.readthedocs.io/en/stable/" class="external-link">CellRank</a>, <a href="https://deeptime-ml.github.io/latest/index.html" class="external-link">deeptime</a> etc.) to load these data and infer transitions - but python is called at the backend and you perform all your analysis in R thanks to the sciCSR package!</p>
-<p>We would ideally like some form of visualisation to demonstrate any difference in the inferred transitions. In our case, we would ideally expect a visualisation which indicates that the knockout condition has fewer switches involving IgG2b given this is what the other experiments have demonstrated in the Hong et al. manuscript. We can attempt to plot arrows similar to conventional RNA velocity projection on UMAP plots. However, this doesn’t always work for analysing class-switching, since quite often cells of different isotypes do not necessarily occupy distinct spaces in the UMAP projection - there are many other transcripts driving the variations in the data that dictates where they sit on the dimensionality projection. As such, projecting arrows directly on top of the UMAP may not be very informative.</p>
-<p>In sciCSR, we offer an alternative to an arrow visualisation, by passing through the inferred transitions through to Transition Path Theory (TPT) to summarise transitions between states (e.g. isotypes) as ‘fluxes’. TPT is a popular tool mainly in chemistry and physics in analysing the transitions of different conformational state of molecules. Here, we repurpose TPT to summarise the transitions between cellular states. For analysing CSR, we can consider isotypes as states, and TPT will group cells by their isotypes and calculate the amount of ‘flux’ between one isotype to another. Putting the inferred transition matrix through another step also has another advantage, that we can perform further computation to estimate the significance of an inferred flux, by generating randomised models by reshuffling the transition matrix and comparing the observed magnitudes of fluxes to these randomised models. These randomisation gives us guidance to down-weigh transitions which are likely to be improbable and artefactual merely arisen due to the structure of the data.</p>
-<p>TPT and these related randomisation routines are implemented under the function <code>fitTPT</code> Aside from the AnnData file and the output from <code>fitTransitionModel</code>, we need to indicate the followings to run <code>fitTPT</code>:</p>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<p>sciCSR uses a series of python packages (<a href="https://scanpy.readthedocs.io/en/stable/" class="external-link">scanpy</a>, <a href="https://cellrank.readthedocs.io/en/stable/" class="external-link">CellRank</a>, <a href="https://deeptime-ml.github.io/latest/index.html" class="external-link">deeptime</a>
+etc.) to load these data and infer transitions - but python is called at
+the backend and you perform all your analysis in R thanks to the sciCSR
+package!</p>
+<p>We would ideally like some form of visualisation to demonstrate any
+difference in the inferred transitions. In our case, we would ideally
+expect a visualisation which indicates that the knockout condition has
+fewer switches involving IgG2b given this is what the other experiments
+have demonstrated in the Hong et al. manuscript. We can attempt to plot
+arrows similar to conventional RNA velocity projection on UMAP plots.
+However, this doesn’t always work for analysing class-switching, since
+quite often cells of different isotypes do not necessarily occupy
+distinct spaces in the UMAP projection - there are many other
+transcripts driving the variations in the data that dictates where they
+sit on the dimensionality projection. As such, projecting arrows
+directly on top of the UMAP may not be very informative.</p>
+<p>In sciCSR, we offer an alternative to an arrow visualisation, by
+passing through the inferred transitions through to Transition Path
+Theory (TPT) to summarise transitions between states (e.g. isotypes) as
+‘fluxes’. TPT is a popular tool mainly in chemistry and physics in
+analysing the transitions of different conformational state of
+molecules. Here, we repurpose TPT to summarise the transitions between
+cellular states. For analysing CSR, we can consider isotypes as states,
+and TPT will group cells by their isotypes and calculate the amount of
+‘flux’ between one isotype to another. Putting the inferred transition
+matrix through another step also has another advantage, that we can
+perform further computation to estimate the significance of an inferred
+flux, by generating randomised models by reshuffling the transition
+matrix and comparing the observed magnitudes of fluxes to these
+randomised models. These randomisation gives us guidance to down-weigh
+transitions which are likely to be improbable and artefactual merely
+arisen due to the structure of the data.</p>
+<p>TPT and these related randomisation routines are implemented under
+the function <code>fitTPT</code> Aside from the AnnData file and the
+output from <code>fitTransitionModel</code>, we need to indicate the
+followings to run <code>fitTPT</code>:</p>
 <ul>
 <li>
-<code>group.cells.by</code>: How would you like to define states in the data? In our case we want to group cells by their BCR isotypes, and consider the flux from one isotype to another as a proxy of the likelihood of class-switching between specific pairs of isotypes.</li>
+<code>group.cells.by</code>: How would you like to define states in
+the data? In our case we want to group cells by their BCR isotypes, and
+consider the flux from one isotype to another as a proxy of the
+likelihood of class-switching between specific pairs of isotypes.</li>
 <li>
-<code>source_state</code> and <code>target_state</code>: To apply TPT we need to indicate a source state and a target state for the algorithm to consider all likely paths starting from one state (‘source’) and finally reaching another given state (‘target’), regardless of any traversals in the middle of this ‘journey’. <strong>Our advise is to choose source and target states which are as far as possible apart from one another</strong>. For example, to analyse CSR in mouse the ideal setting would be to choose IgM as the source and IgA as the target. It is not important if you aren’t actually interested in switching from IgM to IgA - this merely asks the algorithm to consider the full spectrum of switches possible, and it is important to do so as TPT results will change if you omit states involved in important transitions implicated in the data. Finally, the chosen source and target states need to be present in the data (for example, if no cells are IgA+ in your data, choosing IgA as the target state will result in an error).</li>
+<code>source_state</code> and <code>target_state</code>: To apply
+TPT we need to indicate a source state and a target state for the
+algorithm to consider all likely paths starting from one state
+(‘source’) and finally reaching another given state (‘target’),
+regardless of any traversals in the middle of this ‘journey’.
+<strong>Our advise is to choose source and target states which are as
+far as possible apart from one another</strong>. For example, to analyse
+CSR in mouse the ideal setting would be to choose IgM as the source and
+IgA as the target. It is not important if you aren’t actually interested
+in switching from IgM to IgA - this merely asks the algorithm to
+consider the full spectrum of switches possible, and it is important to
+do so as TPT results will change if you omit states involved in
+important transitions implicated in the data. Finally, the chosen source
+and target states need to be present in the data (for example, if no
+cells are IgA+ in your data, choosing IgA as the target state will
+result in an error).</li>
 </ul>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># the function fitTPT() apply TPT on the transition </span></span>
 <span><span class="co"># matrices inferred using fitTransitionModel</span></span>
 <span></span>
@@ -392,29 +597,53 @@
 <span>  anndata_file <span class="op">=</span> <span class="st">"hong_sampled_bcells_assay-RNA_IL23--.h5ad"</span>,</span>
 <span>  CellrankObj <span class="op">=</span> <span class="va">g_ko_csr</span>, group.cells.by <span class="op">=</span> <span class="st">"isotype"</span>,</span>
 <span>  source_state <span class="op">=</span> <span class="st">'M'</span>, target_state <span class="op">=</span> <span class="st">'A'</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">tpt_wt_csr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTPT.html">fitTPT</a></span><span class="op">(</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tpt_wt_csr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTPT.html">fitTPT</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"hong_sampled_bcells_assay-RNA_WT.h5ad"</span>,</span>
 <span>  CellrankObj <span class="op">=</span> <span class="va">g_wt_csr</span>, group.cells.by <span class="op">=</span> <span class="st">"isotype"</span>,</span>
 <span>  source_state <span class="op">=</span> <span class="st">'M'</span>, target_state <span class="op">=</span> <span class="st">'A'</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># TPT on the SHM-based matrices</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># TPT on the SHM-based matrices</span></span>
 <span><span class="va">tpt_ko_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTPT.html">fitTPT</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"hong_sampled_bcells_assay-RNA_IL23--.h5ad"</span>,</span>
 <span>  CellrankObj <span class="op">=</span> <span class="va">g_ko_shm</span>, group.cells.by <span class="op">=</span> <span class="st">"isotype"</span>,</span>
 <span>  source_state <span class="op">=</span> <span class="st">'M'</span>, target_state <span class="op">=</span> <span class="st">'A'</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">tpt_wt_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTPT.html">fitTPT</a></span><span class="op">(</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
+<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tpt_wt_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTPT.html">fitTPT</a></span><span class="op">(</span></span>
 <span>  anndata_file <span class="op">=</span> <span class="st">"hong_sampled_bcells_assay-RNA_WT.h5ad"</span>,</span>
 <span>  CellrankObj <span class="op">=</span> <span class="va">g_wt_shm</span>, group.cells.by <span class="op">=</span> <span class="st">"isotype"</span>,</span>
 <span>  source_state <span class="op">=</span> <span class="st">'M'</span>, target_state <span class="op">=</span> <span class="st">'A'</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The request to</span></span>
+<span><span class="co">## `use_python("/home/josephn/anaconda3/envs/scicsr/bin/python")` will be ignored</span></span>
+<span><span class="co">## because the environment variable RETICULATE_PYTHON is set to</span></span>
+<span><span class="co">## "/home/josephn/anaconda3/envs/scicsr/bin/python3.9"</span></span></code></pre>
 <div class="section level3">
 <h3 id="visualisation">Visualisation<a class="anchor" aria-label="anchor" href="#visualisation"></a>
 </h3>
-<p>We can now visualise these inferences - firstly, the function <code>plotStationaryDistribution</code> will display as a bar plot what is known as the ‘stationary distribution’ from TPT - this is the inferred distribution of states assuming the dynamics of the system has reached equilibrium. In the case of analysing CSR, think of this as the isotype distribution of the population of cells at a steady state, inferred given the data.</p>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<p>We can now visualise these inferences - firstly, the function
+<code>plotStationaryDistribution</code> will display as a bar plot what
+is known as the ‘stationary distribution’ from TPT - this is the
+inferred distribution of states assuming the dynamics of the system has
+reached equilibrium. In the case of analysing CSR, think of this as the
+isotype distribution of the population of cells at a steady state,
+inferred given the data.</p>
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot the WT and knockout separately as two plots</span></span>
 <span><span class="co"># plotStationaryDistribution refers a ggplot2 object</span></span>
 <span><span class="co"># we use the plot_grid() function in the cowplot package</span></span>
@@ -430,8 +659,13 @@
 <span>  nrow <span class="op">=</span> <span class="fl">1</span>, align <span class="op">=</span> <span class="st">"h"</span>, axis <span class="op">=</span> <span class="st">"tb"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-17-1.png" width="672"></p>
-<p>As these two plots are rendered separately the vertical axes do not conform to the same scale. If we pass <code>return_plot = FALSE</code> to the call of <code>plotStationaryDistribution</code>, the data frame underlying these bar plots will be returned, and we can plot these data in the same plot (by, e.g. representing the different conditions as colours) upon some manipulation, e.g.:</p>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<p>As these two plots are rendered separately the vertical axes do not
+conform to the same scale. If we pass <code>return_plot = FALSE</code>
+to the call of <code>plotStationaryDistribution</code>, the data frame
+underlying these bar plots will be returned, and we can plot these data
+in the same plot (by, e.g. representing the different conditions as
+colours) upon some manipulation, e.g.:</p>
+<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stationary_distribution</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"WT"</span> <span class="op">=</span> <span class="fu"><a href="../reference/plotStationaryDistribution.html">plotStationaryDistribution</a></span><span class="op">(</span><span class="va">tpt_wt_csr</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>,</span>
 <span>                                    return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
@@ -456,8 +690,11 @@
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"stationary distribution"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"isotype"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu">cowplot</span><span class="fu">::</span><span class="fu"><a href="https://wilkelab.org/cowplot/reference/theme_cowplot.html" class="external-link">theme_cowplot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-18-1.png" width="480"></p>
-<p>Another way to visualise the inference is to visualise the inferred flux matrix itself, i.e. to compare the amount of transitions involving each pair of isotypes. The function <code>plotFluxMatrix</code> provides this visualisation:</p>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<p>Another way to visualise the inference is to visualise the inferred
+flux matrix itself, i.e. to compare the amount of transitions involving
+each pair of isotypes. The function <code>plotFluxMatrix</code> provides
+this visualisation:</p>
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Once again we use the plot_grid() function in the cowplot package</span></span>
 <span><span class="co"># to arrange the two plots side by side</span></span>
 <span><span class="fu"><a href="https://wilkelab.org/cowplot/reference/plot_grid.html" class="external-link">plot_grid</a></span><span class="op">(</span></span>
@@ -468,8 +705,14 @@
 <span>  nrow <span class="op">=</span> <span class="fl">1</span>, align <span class="op">=</span> <span class="st">"h"</span>, axis <span class="op">=</span> <span class="st">"tb"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-19-1.png" width="768"></p>
-<p>We can also combine the plot into one. Similar to above we pass <code>return_plot = FALSE</code> to the function call. We then generate a column which stores the difference in the flux between the WT and the knockout conditions. We scale the bubble sizes by the stationary distribution in the knockout condition, so as to reflect the quantity of interest (we are primarily interested in what happens in the knockouts) prominently on the plot:</p>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<p>We can also combine the plot into one. Similar to above we pass
+<code>return_plot = FALSE</code> to the function call. We then generate
+a column which stores the difference in the flux between the WT and the
+knockout conditions. We scale the bubble sizes by the stationary
+distribution in the knockout condition, so as to reflect the quantity of
+interest (we are primarily interested in what happens in the knockouts)
+prominently on the plot:</p>
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#show flux difference instead</span></span>
 <span><span class="va">fluxes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/plotFluxMatrix.html">plotFluxMatrix</a></span><span class="op">(</span><span class="va">tpt_wt_csr</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>, return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
@@ -501,9 +744,21 @@
 <span><span class="co">## ggplot2 3.3.4.</span></span>
 <span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use "none" instead.</span></span></code></pre>
 <p><img src="csr_files/figure-html/unnamed-chunk-20-1.png" width="480"></p>
-<p>We can reproduce the main finding from the Hong et al. paper that the Il23 knockout conditions would deplete switching to IgG2b. In this example we performed the analysis on sampled data (we cannot put datasets which are too large in the package!) so whilst other fluxes on the plot might be different had we use the entire dataset, it is encouraging that the major result involving IgG2b still comes up prominent in this visualisation.</p>
-<p>Finally, we can generate the same visualisation with the SHM-based inference. As in the code above, we performed the inference of transition matrix using SHM information, but for TPT we still group the cells by their isotypes and infer fluxes between isotypes. Since in theory CSR and SHM are both B cell maturation processes, we would expect inference from the two different sources of information to capture similar transitions.</p>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<p>We can reproduce the main finding from the Hong et al. paper that the
+Il23 knockout conditions would deplete switching to IgG2b. In this
+example we performed the analysis on sampled data (we cannot put
+datasets which are too large in the package!) so whilst other fluxes on
+the plot might be different had we use the entire dataset, it is
+encouraging that the major result involving IgG2b still comes up
+prominent in this visualisation.</p>
+<p>Finally, we can generate the same visualisation with the SHM-based
+inference. As in the code above, we performed the inference of
+transition matrix using SHM information, but for TPT we still group the
+cells by their isotypes and infer fluxes between isotypes. Since in
+theory CSR and SHM are both B cell maturation processes, we would expect
+inference from the two different sources of information to capture
+similar transitions.</p>
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stationary_distribution_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"WT"</span> <span class="op">=</span> <span class="fu"><a href="../reference/plotStationaryDistribution.html">plotStationaryDistribution</a></span><span class="op">(</span><span class="va">tpt_wt_shm</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>,</span>
 <span>                                    return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
@@ -531,7 +786,7 @@
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Inference using SHM information"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu">cowplot</span><span class="fu">::</span><span class="fu"><a href="https://wilkelab.org/cowplot/reference/theme_cowplot.html" class="external-link">theme_cowplot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-21-1.png" width="480"></p>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fluxes_shm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/plotFluxMatrix.html">plotFluxMatrix</a></span><span class="op">(</span><span class="va">tpt_wt_shm</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>, return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/plotFluxMatrix.html">plotFluxMatrix</a></span><span class="op">(</span><span class="va">tpt_ko_shm</span>, SeuratObj <span class="op">=</span> <span class="va">hong_b</span>, return_plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -557,7 +812,11 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_discrete.html" class="external-link">scale_x_discrete</a></span><span class="op">(</span>drop <span class="op">=</span> <span class="cn">FALSE</span>, position <span class="op">=</span> <span class="st">"top"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_discrete.html" class="external-link">scale_y_discrete</a></span><span class="op">(</span>drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> </span></code></pre></div>
 <p><img src="csr_files/figure-html/unnamed-chunk-21-2.png" width="480"></p>
-<p>Congratulations, you have now gone through the major functionalities of sciCSR. sciCSR offers further capabilities to compare inference results based on CSR, SHM and RNA velocity. If you are interested, please check out <a href="comparison.html">this vignette</a> for a worked-out example on how sciCSR can help in this type of analysis.</p>
+<p>Congratulations, you have now gone through the major functionalities
+of sciCSR. sciCSR offers further capabilities to compare inference
+results based on CSR, SHM and RNA velocity. If you are interested,
+please check out <a href="comparison.html">this vignette</a> for a
+worked-out example on how sciCSR can help in this type of analysis.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

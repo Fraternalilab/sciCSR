@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="index.html">sciCSR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,7 +98,7 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'devtools'</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"immunogenomics/harmony"</span>, <span class="st">"mojaveazure/seurat-disk"</span>, <span class="st">"Fraternalilab/sciCSR"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"immunogenomics/harmony"</span>, <span class="st">"cellgeni/sceasy"</span>, <span class="st">"Fraternalilab/sciCSR"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre>
 <p>The installation of the sciCSR package itself takes around 30 seconds on a modern standard Windows laptop.</p>
 <p>sciCSR requires a few python packages to be installed (<a href="https://scanpy.readthedocs.io/" class="external-link">scanpy</a>, <a href="https://scvelo.readthedocs.io/en/stable/" class="external-link">scvelo</a>, cellrank etc.) as its functionalities depend on these python packages. We recommend setting up a <a href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html" class="external-link">conda environment</a> with these dependencies so that sciCSR exclusively calls packages from this environment; this will avoid problems with messing up your local installation of python (if any) if you have previously set up these packages for other uses. You don’t need to externally set this up - <strong>before the first time you run any examples/analyses with sciCSR, just run the following lines in R</strong> after finishing the sciCSR installation:</p>

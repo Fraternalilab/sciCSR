@@ -1,10 +1,10 @@
-pandoc: 2.9.2.1
+pandoc: 2.19.2
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   comparison: comparison.html
   csr: csr.html
-last_built: 2024-02-20T13:22Z
+last_built: 2025-09-03T12:27Z
 urls:
   reference: https://http://josephng-bio.org/sciCSR/reference
   article: https://http://josephng-bio.org/sciCSR/articles

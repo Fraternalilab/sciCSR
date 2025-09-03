@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sciCSR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,8 +64,17 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.3" id="scicsr-033-sep-3-2025">sciCSR 0.3.3 (Sep 3, 2025)<a class="anchor" aria-label="anchor" href="#scicsr-033-sep-3-2025"></a></h2>
+<ul><li>Fixed problem in <code>getIGHmapping</code> returning errors when no intronic reads could be found in the supplied BAM file. Now the <code>junction_reads</code> slot of the output of <code>getIGHmapping</code> will be NULL if this is the case.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.2" id="scicsr-032-jul-11-2024">sciCSR 0.3.2 (Jul 11, 2024)<a class="anchor" aria-label="anchor" href="#scicsr-032-jul-11-2024"></a></h2>
+<ul><li>moved engine to convert between Seurat (<code>.rds</code>) and Scanpy (<code>.h5ad</code>) data objects to <code>sceasy</code>.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.1" id="scicsr-031-sep-12-2023">sciCSR 0.3.1 (Sep 12, 2023)<a class="anchor" aria-label="anchor" href="#scicsr-031-sep-12-2023"></a></h2>
-<ul><li>correct problems in <code>annotatePairing</code> to give correct classification of number of H/L BCR sequences annotated to each cell barcode.</li></ul></div>
+<ul><li>correct problems in <code>annotatePairing</code> to give correct classification of number of H/L BCR sequences annotated to each cell barcode.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="scicsr-030-may-31-2023">sciCSR 0.3.0 (May 31, 2023)<a class="anchor" aria-label="anchor" href="#scicsr-030-may-31-2023"></a></h2>
 <ul><li>new function <code>getIsotype</code> to allow grouping of cells based on any subset of the productive/sterile count matrix (i.e. allow grouping based on sterile transcript isotype)</li>
@@ -94,7 +103,8 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="scicsr-010-sep-8-2022">sciCSR 0.1.0 (Sep 8, 2022)<a class="anchor" aria-label="anchor" href="#scicsr-010-sep-8-2022"></a></h2>
-<ul><li>first version of working package.</li></ul></div>
+<ul><li>first version of working package.</li>
+</ul></div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
