@@ -66,6 +66,7 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.3" id="scicsr-033-sep-3-2025">sciCSR 0.3.3 (Sep 3, 2025)<a class="anchor" aria-label="anchor" href="#scicsr-033-sep-3-2025"></a></h2>
 <ul><li>Fixed problem in <code>getIGHmapping</code> returning errors when no intronic reads could be found in the supplied BAM file. Now the <code>junction_reads</code> slot of the output of <code>getIGHmapping</code> will be NULL if this is the case.</li>
+<li>Fixed problem in <code>mergeIgHCountsToSeurat</code> for discrepancies between cell barcodes in Seurat object and sterile/productive transcript count matrix.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.2" id="scicsr-032-jul-11-2024">sciCSR 0.3.2 (Jul 11, 2024)<a class="anchor" aria-label="anchor" href="#scicsr-032-jul-11-2024"></a></h2>

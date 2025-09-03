@@ -1,5 +1,6 @@
 # sciCSR 0.3.3 (Sep 3, 2025)
 + Fixed problem in `getIGHmapping` returning errors when no intronic reads could be found in the supplied BAM file. Now the `junction_reads` slot of the output of `getIGHmapping` will be NULL if this is the case.
++ Fixed problem in `mergeIgHCountsToSeurat` for discrepancies between cell barcodes in Seurat object and sterile/productive transcript count matrix.
 
 # sciCSR 0.3.2 (Jul 11, 2024)
 + moved engine to convert between Seurat (`.rds`) and Scanpy (`.h5ad`) data objects to `sceasy`.

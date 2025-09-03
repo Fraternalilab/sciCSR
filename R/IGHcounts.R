@@ -470,6 +470,8 @@ getJunctionReads <- function(read_info)
 #' @export mergeIgHCountsToSeurat
 mergeIgHCountsToSeurat <- function(igh_counts, SeuratObj, assay_name = "IGHC")
 {
+  # get rid of rows (cells) in igh_counts not in Seurat object
+  igh_counts <- igh_counts[ which( rownames(igh_counts) %in% Cells(SeuratObj) ), ]
   igh_counts <- rbind(
     igh_counts,
     # a zero matrix for those 'missing' cells
