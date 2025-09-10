@@ -83,10 +83,11 @@ normalise_dimreduce <- function(obj, var_explained_lim = 0.015,
              var_explained_lim, ".\n"))
   if(run.harmony){
     obj <- RunUMAP(obj, reduction = "harmony", dims = 1:dim, ...)
+    obj <- FindNeighbors(obj, reduction = "harmony", dims = 1:dim, ...)
   } else {
     obj <- RunUMAP(obj, reduction = "pca", dims = 1:dim, ...)
+    obj <- FindNeighbors(obj, reduction = "pca", dims = 1:dim, ...)
   }
-  obj <- FindNeighbors(obj, dims = 1:dim, ...)
   obj <- FindClusters(obj, ...)
   obj
 }
