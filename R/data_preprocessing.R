@@ -59,12 +59,18 @@ normalise_dimreduce <- function(obj, var_explained_lim = 0.015,
   } else {
     obj <- NormalizeData(obj, ...)
     obj <- FindVariableFeatures(obj, ...)
-    all.genes <- rownames(obj)
-    obj <- ScaleData(obj, features = all.genes, ...)
     assay.use <- "RNA"
   }
   varfeat <- VariableFeatures(obj)
   varfeat <- varfeat[!grepl(paste(features_exclude, collapse = "|"), varfeat)]
+  if(SCT){
+    if(length(Cells(obj) >= 100000){ # failsafe in case ScaleData take too much memory/crash if too many cells
+      obj <- ScaleData(obj, features = varfeat, ...)
+    } else {
+      all.genes <- rownames(obj)
+      obj <- ScaleData(obj, features = all.genes, ...)
+    }
+  }
   obj <- RunPCA(obj, features = varfeat, ...)
   if(run.harmony){
     obj <- harmony::RunHarmony(obj, assay.use = assay.use,
