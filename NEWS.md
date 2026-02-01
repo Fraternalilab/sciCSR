@@ -1,3 +1,7 @@
+# sciCSR 0.3.4 (Feb 1, 2026)
++ Fixed problem in running TPT when it got stuck (as per issue #13). Due to dtype conflicts in python code.
++ Specify python package versions in `prepare_sciCSR` to match those used in original conda environment when developing the package. Now it specifies running cellrank v1 as well as a few other packages to avoid conflicts for new users when setting up.
+
 # sciCSR 0.3.3 (Sep 3, 2025)
 + Fixed problem in `getIGHmapping` returning errors when no intronic reads could be found in the supplied BAM file. Now the `junction_reads` slot of the output of `getIGHmapping` will be NULL if this is the case.
 + Fixed problem in `mergeIgHCountsToSeurat` for discrepancies between cell barcodes in Seurat object and sterile/productive transcript count matrix.
