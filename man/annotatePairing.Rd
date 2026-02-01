@@ -12,7 +12,7 @@ annotatePairing(tb_list, c_gene_column = "c_gene")
 \item{c_gene_column}{Column name indicating where the isotype/light chain type information is stored in the data.frames in \code{tb_list}.}
 }
 \value{
-Any one of 'singlet', 'BCR_doublet', 'multi_LC_same_class', 'multi_LC_diff_class' or 'multi_HC', according to the rules stated in the 'Details' section.
+Any one of 'singlet', 'singlet_H', 'singlet_L', 'BCR_doublet', 'multi_LC_same_class', 'multi_LC_diff_class' or 'multi_HC', according to the rules stated in the 'Details' section.
 }
 \description{
 \code{annotatePairing} checks the repertoire table to annotate heavy-light chain pairing. This function classifies for a given cell (i.e. a given cell barcode)
@@ -26,6 +26,8 @@ Based on the number of heavy and light chain sequences associated with a given c
   \item{multi_LC_diff_class}{Exactly 1 H and more than 1 L per cell barcode, both kappa and lambda light chains are found}
   \item{multi_LC_same_class}{Exactly 1 H and more than 1 L per cell barcode, light chains are either all kappa or all lambda}
   \item{multi_HC}{More than 1 H and exacly 1 L per cell barcode}
-  \item{singlet}{Exactly 1 H and/or exactly 1 L per cell barcode}
+  \item{singlet_H}{Exactly 1 H and no L per cell barcode}
+  \item{singlet_L}{Extract 1 L and no H per cell barcode}
+  \item{singlet}{Exactly 1 H and exactly 1 L per cell barcode}
 }
 }

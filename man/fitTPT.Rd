@@ -19,7 +19,7 @@ fitTPT(
 \arguments{
 \item{anndata_file}{filename pointing to the AnnData file.}
 
-\item{CellrankObj}{the \code{cellrank_obj} entry of the output list of \code{\link{fitTransitionModel}()}.}
+\item{CellrankObj}{the output of \code{\link{fitTransitionModel}()}.}
 
 \item{group.cells.by}{character, column in the metadata to group cells}
 

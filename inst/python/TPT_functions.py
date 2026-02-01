@@ -449,7 +449,13 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     # determine 'significance' of each transition (one-sided test,
     # i.e. number of times the observed gross-flux is larger than the randomised flux
     comparison = np.zeros(gross_flux.shape)
-    random_gross_flux = np.array([m['gross_flux'].todense() for m in random_flux], dtype = 'float64')
+    random_gross_flux = []
+    for m in random_flux:
+        if type(m['gross_flux']) is np.ndarray:
+            random_gross_flux.append(m['gross_flux'])
+        else:
+            random_gross_flux.append(m['gross_flux'].todense())
+    random_gross_flux = np.array(random_gross_flux, dtype = 'float64')
     mean = np.mean(random_gross_flux[:, :, :])
     sd = np.std(random_gross_flux[:, :, :])
     for i in range(gross_flux.shape[0]):
@@ -462,8 +468,10 @@ def fit_coarse_grain_tpt(transition_matrix, cluster_ident,
     # get bootstrap sampling of stationary distribution
     bootstrap_stationary = [getStationaryDistribution( flux.stationary_distribution, cluster_ident, i) for i in range(int(random_n))]
     bootstrap_stationary = { state: [j[state] for j in bootstrap_stationary] for state in cluster_ident.keys() }
+    if type(gross_flux) is not np.ndarray:
+        gross_flux = gross_flux.todense()
 
-    return {'coarse_grain_tpt': tpt_coarse, 'gross_flux': gross_flux.todense(), \
+    return {'coarse_grain_tpt': tpt_coarse, 'gross_flux': gross_flux, \
             'gross_flux_randomised': random_gross_flux, \
             'pathways': pd.DataFrame(path_dist), 'randomised_tpt': random_flux, \
             'significance': comparison, 

@@ -30,7 +30,7 @@ getIGHmapping(
 A list with two items:
 \describe{
   \item{read_count}{a data.frame in wide format indicating for each cell barcodes and UMI combination, the number of **reads** (Note: NOT UMI!) covering VDJ, and the Coding region (C) or 5' intronic region (I) of each IGH C gene.}
-  \item{junction_reads}{a data.frame of spliced reads and their mapped cell barcodes & UMIs. Either genuine spliced productive IgH transcripts, or strange molecules potentially worth detailed inspection.}
+  \item{junction_reads}{a data.frame of spliced reads and their mapped cell barcodes & UMIs. Either genuine spliced productive IgH transcripts, or strange molecules potentially worth detailed inspection. NULL if \code{getJunctionReads} return with an error.}
 }
 }
 \description{
