@@ -105,22 +105,26 @@ def _set_up_linear_system(K, A, B):
     """Assemble left-hand side W for linear system"""
     import scipy.sparse as sparse
     import numpy as np
+    # Convert A and B to numpy arrays with proper dtype
+    A = np.array(list(A), dtype=np.int32)
+    B = np.array(list(B), dtype=np.int32)
+
     """Equation (I)"""
     W = 1.0 * K
     """Equation (II)"""
     if sparse.issparse(W):
-        W[list(A), :] = 0.0
-        W = W + sparse.coo_matrix((np.ones(len(A)), (list(A), list(A))), shape=W.shape).tocsr()
+        W[A, :] = 0.0
+        W = W + sparse.coo_matrix((np.ones(len(A)), (A, A)), shape=W.shape).tocsr()
     else:
-        W[list(A), :] = 0.0
-        W[list(A), list(A)] = 1.0
+        W[A, :] = 0.0
+        W[A, A] = 1.0
     """Equation (III)"""
     if sparse.issparse(W):
-        W[list(B), :] = 0.0
-        W = W + sparse.coo_matrix((np.ones(len(B)), (list(B), list(B))), shape=W.shape).tocsr()
+        W[B, :] = 0.0
+        W = W + sparse.coo_matrix((np.ones(len(B)), (B, B)), shape=W.shape).tocsr()
     else:
-        W[list(B), :] = 0.0
-        W[list(B), list(B)] = 1.0
+        W[B, :] = 0.0
+        W[B, B] = 1.0
     return W
 
 
