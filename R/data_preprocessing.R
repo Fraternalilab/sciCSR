@@ -63,7 +63,7 @@ normalise_dimreduce <- function(obj, var_explained_lim = 0.015,
   }
   varfeat <- VariableFeatures(obj)
   varfeat <- varfeat[!grepl(paste(features_exclude, collapse = "|"), varfeat)]
-  if(SCT){
+  if(!SCT){
     if(length(Cells(obj)) >= 100000){ # failsafe in case ScaleData take too much memory/crash if too many cells
       obj <- ScaleData(obj, features = varfeat, ...)
     } else {
