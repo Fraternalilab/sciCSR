@@ -9,6 +9,7 @@ plotFluxMatrix(
   SeuratObj,
   ighc_count_assay_name = "IGHC",
   mask_improbable_csr = TRUE,
+  fdr_correction = TRUE,
   return_plot = TRUE
 )
 }
@@ -20,6 +21,8 @@ plotFluxMatrix(
 \item{ighc_count_assay_name}{name of assay in SeuratObj which holds the IgH productive/sterile transcript counts. (Default: "IGHC")}
 
 \item{mask_improbable_csr}{Should isotype combinations which represents improbable Class-switch recombination events (i.e. switching back to an isotype 5' to the current one) be removed from visualisation? (Default: TRUE)}
+
+\item{fdr_correction}{Should False Discovery Rate (FDR) correction (using the \code{p.adjust} function) be performed on the p-values? (Default: TRUE). You may want to try changing to FALSE in cases where this is not visually helpful for the plot.}
 
 \item{return_plot}{Should the CSR transition plot be returned? If FALSE, a named list of \code{stationary_distribution} and \code{flux} will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)}
 }

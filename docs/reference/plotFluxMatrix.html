@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sciCSR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,6 +75,7 @@
 <span>  <span class="va">SeuratObj</span>,</span>
 <span>  ighc_count_assay_name <span class="op">=</span> <span class="st">"IGHC"</span>,</span>
 <span>  mask_improbable_csr <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  fdr_correction <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  return_plot <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -95,6 +96,10 @@
 
 <dt>mask_improbable_csr</dt>
 <dd><p>Should isotype combinations which represents improbable Class-switch recombination events (i.e. switching back to an isotype 5' to the current one) be removed from visualisation? (Default: TRUE)</p></dd>
+
+
+<dt>fdr_correction</dt>
+<dd><p>Should False Discovery Rate (FDR) correction (using the <code>p.adjust</code> function) be performed on the p-values? (Default: TRUE). You may want to try changing to FALSE in cases where this is not visually helpful for the plot.</p></dd>
 
 
 <dt>return_plot</dt>
