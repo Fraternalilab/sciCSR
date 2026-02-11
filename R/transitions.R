@@ -896,13 +896,18 @@ plotFluxMatrix <- function(TPTObj, SeuratObj,
                  reshape2::melt(significance_matrix, varnames = c("from", "to"),
                                 value.name = "pval"))
   if(fdr_correction){
-    graph$signif <- -log(p.adjust(graph$pval))
+    adjusted_p <- p.adjust(graph$pval)
+    adjusted_p[which(adjusted_p < 0.01)] <- 0.01
+    graph$signif <- -log(adjusted_p)
   } else {
-    graph$signif <- -log(graph$pval)
+    pval <- graph$pval
+    pval[which(pval < 0.01)] <- 0.01
+    graph$signif <- -log(pval)
   }
   p <- ggplot(graph, aes_string(x = "from", y = "to", color = "flux", size = "signif")) +
     geom_point() + cowplot::theme_cowplot() + scale_colour_gradient2(name = "% flux") +
-    scale_size_continuous(name = "p-value", breaks = c(-log(1), -log(0.5), -log(0.1), -log(0.05)),
+    scale_size_continuous(name = "p-value", limits = c(-log(1), -log(0.01)),
+                          breaks = c(-log(1), -log(0.5), -log(0.1), -log(0.05)),
                           labels = c("1", "0.5", "0.1", "0.05")) +
     scale_x_discrete(drop = FALSE, position = "top") + scale_y_discrete(drop = FALSE)
   if( return_plot ) return(p)
