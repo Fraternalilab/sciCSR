@@ -1,3 +1,7 @@
+# sciCSR 0.3.5 (Feb 11, 2026)
++ Fixed issues with `normalise_dimreduce` where ScaleData was not performed if SCT set to FALSE.
++ Add option in `plotFluxMatrix` to turn on/off FDR correction in the bubble size.
+
 # sciCSR 0.3.4 (Feb 1, 2026)
 + Fixed problem in running TPT when it got stuck (as per issue #13). Due to dtype conflicts in python code.
 + Specify python package versions in `prepare_sciCSR` to match those used in original conda environment when developing the package. Now it specifies running cellrank v1 as well as a few other packages to avoid conflicts for new users when setting up.

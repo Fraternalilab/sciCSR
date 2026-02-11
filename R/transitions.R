@@ -834,6 +834,7 @@ fitTPT <- function(anndata_file, CellrankObj,
 #' @param SeuratObj Seurat object
 #' @param ighc_count_assay_name name of assay in SeuratObj which holds the IgH productive/sterile transcript counts. (Default: "IGHC")
 #' @param mask_improbable_csr Should isotype combinations which represents improbable Class-switch recombination events (i.e. switching back to an isotype 5' to the current one) be removed from visualisation? (Default: TRUE)
+#' @param fdr_correction Should False Discovery Rate (FDR) correction (using the \code{p.adjust} function) be performed on the p-values? (Default: TRUE). You may want to try changing to FALSE in cases where this is not visually helpful for the plot.
 #' @param return_plot Should the CSR transition plot be returned? If FALSE, a named list of \code{stationary_distribution} and \code{flux} will be returned which contains the data frames to be visualised in this plot. (Default: TRUE)
 #'
 #' @return A ggplot2 object showing the flux matrix and the associated significance level in the form a bubble plot. See 'Description' for details.
@@ -847,6 +848,7 @@ fitTPT <- function(anndata_file, CellrankObj,
 plotFluxMatrix <- function(TPTObj, SeuratObj,
                            ighc_count_assay_name = "IGHC",
                            mask_improbable_csr = TRUE,
+                           fdr_correction = TRUE,
                            return_plot = TRUE)
 {
   flux_matrix <- TPTObj$gross_flux
@@ -893,7 +895,11 @@ plotFluxMatrix <- function(TPTObj, SeuratObj,
   graph <- merge(graph,
                  reshape2::melt(significance_matrix, varnames = c("from", "to"),
                                 value.name = "pval"))
-  graph$signif <- -log(p.adjust(graph$pval))
+  if(fdr_correction){
+    graph$signif <- -log(p.adjust(graph$pval))
+  } else {
+    graph$signif <- -log(graph$pval)
+  }
   p <- ggplot(graph, aes_string(x = "from", y = "to", color = "flux", size = "signif")) +
     geom_point() + cowplot::theme_cowplot() + scale_colour_gradient2(name = "% flux") +
     scale_size_continuous(name = "p-value", breaks = c(-log(1), -log(0.5), -log(0.1), -log(0.05)),
