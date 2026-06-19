@@ -150,7 +150,7 @@ getIGHreadType <- function(tb)
       # if all 0, it is not a Sterile - either Productive or uninformative
       # check majority-voted C gene on the CDS reads and report
       # based on whether J reads are found
-      c_isotypes <- gsub("_C$", "", columns[ c_col[which(c_reads == max(c_reads))] ], "")
+      c_isotypes <- gsub("_C$", "", columns[ c_col[which(c_reads == max(c_reads))] ])
       if( length(c_isotypes) == 1 ){
         if( x[j_col] > 0 ) o <- c("isotype" = c_isotypes, "transcript_type" = "P")
         else o <- c("isotype" = c_isotypes, "transcript_type" = "C")
@@ -162,7 +162,7 @@ getIGHreadType <- function(tb)
       }
     } else {
       # check the intronic reads; get the majority-voted C gene
-      i_isotypes <- gsub("_I$", "", columns[ i_col[which(i_reads == max(i_reads))] ], "")
+      i_isotypes <- gsub("_I$", "", columns[ i_col[which(i_reads == max(i_reads))] ])
       # majority voting on CDS reads:
       # (1) If no CDS reads at all, either set Sterile or Productive depending on J reads
       #     (if unique intronic isotype) or set indeterminate (since failed to
@@ -178,7 +178,7 @@ getIGHreadType <- function(tb)
         }
       }
       # check the CDS reads; get the majority-voted C gene
-      c_isotypes <- gsub("_C$", "", columns[ c_col[which(c_reads == max(c_reads))] ], "")
+      c_isotypes <- gsub("_C$", "", columns[ c_col[which(c_reads == max(c_reads))] ])
       if( length(i_isotypes) == 1 ){
         # (2) check re Productive or Sterile depending on whether CDS reads of the
         #     *same isotype* are found
